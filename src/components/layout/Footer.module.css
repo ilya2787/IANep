@@ -1,0 +1,38 @@
+.footer {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-background);
+  color: var(--color-text);
+  border-top: 1px solid var(--color-border);
+}
+
+.inner { position: relative; padding-block: var(--space-8) var(--space-7); }
+.columns { position: relative; display: grid; grid-template-columns: 1.25fr 1fr 1fr 1fr; gap: var(--space-7); }
+.brand { font-size: clamp(3rem, 5.5vw, 5.5rem); font-weight: 750; letter-spacing: var(--tracking-tight); line-height: var(--leading-tight); }
+.brand span { color: var(--color-lavender); }
+.tagline { max-width: 25ch; margin-top: var(--space-5); color: var(--color-muted); font-size: var(--text-lg); }
+.heading { margin-bottom: var(--space-4); font-size: var(--text-md); font-weight: 600; line-height: var(--leading-body); letter-spacing: 0; text-transform: uppercase; }
+.list { list-style: none; padding: 0; margin: 0; }
+.link { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--color-muted); text-decoration: none; }
+.link:hover { color: var(--color-text); text-decoration: underline; }
+.link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; border-radius: 2px; }
+.contact { display: flex; align-items: center; gap: var(--space-4); min-height: 3.25rem; color: var(--color-muted); }
+.contact svg, .location svg { width: 1.5rem; height: 1.5rem; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.contact svg { color: var(--color-lavender); }
+.bottom { position: relative; display: grid; grid-template-columns: 1.25fr 2fr 1fr; gap: var(--space-7); margin-top: var(--space-8); padding-top: var(--space-6); border-top: 1px solid var(--color-border); color: var(--color-muted); font-size: var(--text-sm); }
+.bottom p:first-child { color: var(--color-text); }
+.location { display: flex; align-items: center; gap: var(--space-2); }
+.location svg { width: 1rem; height: 1rem; }
+.wordmark { position: absolute; right: var(--container-gutter); bottom: 0; color: var(--color-text); opacity: .025; font-size: clamp(8rem, 22vw, 21rem); line-height: .85; font-weight: 750; letter-spacing: var(--tracking-tight); pointer-events: none; user-select: none; }
+
+@media (max-width: 64rem) {
+  .columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-5); }
+}
+
+@media (max-width: 36rem) {
+  .inner { padding-block: var(--space-7); }
+  .columns { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  .heading { margin-bottom: var(--space-2); }
+  .bottom { flex-direction: column; gap: var(--space-4); margin-top: var(--space-7); }
+}

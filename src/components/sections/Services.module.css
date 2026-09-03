@@ -1,0 +1,120 @@
+.services {
+  padding-block: var(--space-section);
+  color: var(--color-text);
+  background: var(--color-background);
+}
+.intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  margin-bottom: var(--space-7);
+}
+.title {
+  font-size: var(--text-section);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+.cta {
+  display: inline-flex;
+  flex-shrink: 0;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 550;
+  text-decoration-color: var(--color-border);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.card { min-width: 0; }
+.cardContent {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  height: 100%;
+  min-height: 17rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+.cardCopy {
+  align-self: center;
+  min-width: 0;
+  padding: clamp(1.25rem, 2.3vw, 2rem);
+}
+.cardTitle {
+  font-size: clamp(1.35rem, 1.85vw, 1.65rem);
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -0.025em;
+  hyphens: none;
+  overflow-wrap: normal;
+  text-wrap: initial;
+}
+.cardDescription {
+  margin-top: var(--space-3);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  line-height: 1.65;
+}
+.visual {
+  position: relative;
+  min-width: 0;
+  min-height: 17rem;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.visual::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--color-surface), color-mix(in srgb, var(--color-surface) 65%, transparent) 18%, transparent 62%);
+}
+.visualImage {
+  object-fit: cover;
+  object-position: center;
+  transition: opacity 200ms var(--ease-out);
+}
+/* Keep the stray lettering at the source image's left edge outside the frame. */
+.card[id="service-multipage-site"] .visualImage {
+  transform: scale(1.12);
+}
+.darkImage { opacity: 0; }
+:global(:root[data-theme="dark"]) .lightImage { opacity: 0; }
+:global(:root[data-theme="dark"]) .darkImage { opacity: 1; }
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme="light"])) .lightImage { opacity: 0; }
+  :global(:root:not([data-theme="light"])) .darkImage { opacity: 1; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .cta:hover { color: var(--color-lavender); }
+}
+@media (min-width: 48.001rem) and (max-width: 75rem) {
+  .cardContent { grid-template-columns: 1fr; grid-template-rows: auto 8rem; }
+  .cardCopy { align-self: start; }
+  .visual { min-height: 8rem; }
+  .visual::after { background: linear-gradient(180deg, var(--color-surface), transparent 85%); }
+}
+@media (max-width: 48rem) {
+  .intro { align-items: flex-start; flex-direction: column; gap: var(--space-3); }
+  .grid { grid-template-columns: 1fr; gap: var(--space-4); }
+  .cardTitle { font-size: clamp(1.4rem, 5vw, 1.75rem); }
+  .cardContent { grid-template-columns: 1fr; min-height: 0; }
+  .cardCopy { padding: 1.5rem; }
+  .visual { min-height: 0; height: 7.5rem; }
+  .visual::after { background: linear-gradient(180deg, var(--color-surface), color-mix(in srgb, var(--color-surface) 45%, transparent) 45%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cta, .visualImage { transition: none; }
+}

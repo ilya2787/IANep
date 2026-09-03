@@ -1,0 +1,96 @@
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--color-text);
+  background: var(--color-background);
+}
+.content {
+  display: flex;
+  min-height: min(52rem, 100svh);
+  align-items: center;
+  padding-top: 8rem;
+  padding-bottom: 5rem;
+}
+.copy { position: relative; z-index: 1; width: 56%; }
+.title {
+  max-width: none;
+  font-size: clamp(2.75rem, 4.25vw, 4rem);
+  font-weight: 680;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  text-wrap: initial;
+}
+.titleLine {
+  display: block;
+  overflow: clip;
+  padding-block: .12em;
+  margin-block: -.12em;
+}
+.titleLineInner { display: block; }
+.accent { color: var(--color-lavender); }
+.description {
+  max-width: 34rem;
+  margin-top: var(--space-5);
+  color: var(--color-muted);
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.7;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: var(--space-6);
+}
+.primaryAction { min-height: 3.25rem; padding-inline: 1.5rem; }
+.secondaryAction {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: .65rem;
+  color: var(--color-text);
+  text-decoration-color: var(--color-border);
+  text-underline-offset: .35rem;
+}
+.showcase {
+  position: absolute;
+  top: 54%;
+  right: 2%;
+  width: 45%;
+  aspect-ratio: 1.2;
+  transform: translateY(-45%);
+  isolation: isolate;
+}
+.showcaseGlow {
+  position: absolute;
+  z-index: -1;
+  inset: 12% -4% 0;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--color-lavender) 20%, transparent), transparent 68%);
+  pointer-events: none;
+}
+.brandSymbol { position: absolute; inset: 0 0 20%; opacity: .12; }
+.brandSymbolImage { object-fit: contain; }
+.mascot { position: absolute; inset: 16% 0 0; }
+.mascotImage { object-fit: contain; object-position: center bottom; }
+.platform { display: none; }
+@media (max-width: 64rem) and (min-width: 48.001rem) {
+  .title { font-size: clamp(2.5rem, 5.3vw, 3.5rem); }
+  .content { min-height: 42rem; }
+  .copy { width: 57%; }
+}
+@media (max-width: 48rem) {
+  .hero { display: flex; flex-direction: column; }
+  .content { order: 1; min-height: 0; padding-top: 7.5rem; padding-bottom: 0; }
+  .copy { width: 100%; }
+  .title { max-width: 18ch; font-size: clamp(2rem, 8vw, 3.5rem); line-height: 1.12; }
+  .description { max-width: 35rem; margin-top: 1.25rem; }
+  .description br { display: none; }
+  .actions { margin-top: 1.5rem; gap: .75rem 1.5rem; }
+  .showcase { position: relative; order: 2; top: auto; right: auto; width: min(82%, 26rem); margin: .75rem auto 1.5rem; transform: none; aspect-ratio: 1.45; }
+  .mascot { inset: 0; }
+  .brandSymbol { inset: -10% 0 0; }
+}
+@media (max-width: 36rem) {
+  .actions { align-items: flex-start; flex-direction: column; gap: .5rem; }
+}

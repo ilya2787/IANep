@@ -1,0 +1,97 @@
+.faq {
+  padding-block: var(--space-section);
+  color: var(--color-text);
+  background: var(--color-background);
+  scroll-margin-top: var(--space-6);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.7fr);
+  gap: clamp(2.5rem, 6vw, 6rem);
+  align-items: start;
+}
+
+.intro,
+.accordion { min-width: 0; }
+
+.title {
+  font-size: var(--text-section);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.title span { color: var(--color-lavender); }
+
+.description {
+  max-width: 23rem;
+  margin-top: var(--space-6);
+  color: var(--color-muted);
+  font-size: clamp(1rem, 1.25vw, 1.2rem);
+  line-height: 1.5;
+}
+
+.accordion {
+  display: grid;
+  gap: 0;
+  padding-top: 0;
+}
+
+.item {
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+}
+
+.question { font-size: clamp(1rem, 1.45vw, 1.3rem); font-weight: 550; letter-spacing: -0.02em; }
+
+.trigger {
+  display: flex;
+  width: 100%;
+  min-height: 5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-5) 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.trigger:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+.item:has(.trigger:hover) { border-color: var(--color-lavender); }
+.indicator { flex: 0 0 1.25rem; color: var(--color-lavender); font-size: 1.75rem; font-weight: 400; text-align: center; line-height: 1; }
+
+.panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  opacity: 0;
+  transition: grid-template-rows 240ms var(--ease-out), opacity 180ms var(--ease-out), visibility 240ms;
+}
+
+.item[data-open="true"] .panel { grid-template-rows: 1fr; visibility: visible; opacity: 1; }
+.panelInner { min-height: 0; overflow: hidden; }
+.answer { max-width: none; padding: 0 2rem var(--space-5) 0; color: var(--color-muted); font-size: clamp(1rem, 1.2vw, 1.125rem); line-height: var(--leading-body); }
+
+@media (max-width: 64rem) {
+  .layout { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr); gap: var(--space-6); }
+  .title { font-size: var(--text-section); }
+}
+
+@media (max-width: 48rem) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-7); }
+  .title { font-size: var(--text-section); }
+  .description { margin-top: var(--space-5); }
+  .accordion { padding-top: 0; }
+  .trigger { min-height: 4.5rem; gap: var(--space-4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item,
+  .panel { transition: none; }
+}

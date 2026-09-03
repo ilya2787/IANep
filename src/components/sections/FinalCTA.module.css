@@ -1,0 +1,143 @@
+.section {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding-block: var(--space-section);
+  color: var(--color-text);
+  background: var(--color-background);
+  scroll-margin-top: var(--space-6);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: clamp(2rem, 4vw, 4rem);
+}
+
+.copy,
+.visual { min-width: 0; }
+
+.title {
+  max-width: 19ch;
+  font-size: clamp(2.5rem, 4.5vw, 4.5rem);
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: var(--tracking-tight);
+}
+
+.title span { color: var(--color-lavender); }
+
+.description {
+  max-width: 31rem;
+  margin-top: var(--space-6);
+  color: var(--color-muted);
+  font-size: clamp(1rem, 1.25vw, 1.2rem);
+  line-height: var(--leading-body);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  margin-top: clamp(2rem, 4vw, 4rem);
+}
+
+.primary { min-height: 3.5rem; padding-inline: var(--space-6); }
+.primary:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 4px; }
+.secondary:disabled { color: var(--color-muted); opacity: 1; padding-inline: 0; }
+.image { width: 100%; height: auto; object-fit: contain; }
+
+@media (max-width: 48rem) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-7); }
+  .title { max-width: 19ch; font-size: clamp(2.25rem, 8vw, 3.5rem); }
+  .visual { width: 100%; max-width: 38rem; margin-inline: auto; }
+}
+
+@media (max-width: 30rem) {
+  .actions { align-items: stretch; flex-direction: column; }
+  .secondary { align-self: center; }
+}
+
+.visual {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 1 / 1;
+  max-width: 26rem;
+  justify-self: center;
+}
+
+.gradient {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.gradient::before,
+.gradient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  filter: blur(44px) saturate(1.35);
+  background:
+    radial-gradient(ellipse 23% 30% at 18% 28%, color-mix(in srgb, var(--color-lavender) 36%, transparent), transparent 100%),
+    radial-gradient(ellipse 26% 28% at 78% 76%, color-mix(in srgb, var(--color-sky) 40%, transparent), transparent 100%);
+  opacity: .3;
+}
+
+.gradient::after {
+  background:
+    radial-gradient(ellipse 24% 28% at 83% 24%, color-mix(in srgb, var(--color-peach) 38%, transparent), transparent 100%),
+    radial-gradient(ellipse 20% 23% at 42% 80%, color-mix(in srgb, var(--color-lavender) 26%, transparent), transparent 100%);
+  animation-duration: 10s;
+  animation-delay: -5s;
+  animation-direction: reverse;
+}
+
+.brand {
+  position: absolute;
+  top: 0;
+  right: -2%;
+  width: 88%;
+  aspect-ratio: 3 / 2;
+  opacity: 0.1;
+  filter: saturate(0.9) brightness(1.05);
+  transform: translateY(-4%) scale(1.05);
+  pointer-events: none;
+}
+
+.mascot {
+  position: relative;
+  width: 72%;
+  margin-left: auto;
+  margin-right: 4%;
+  transform-origin: 50% 90%;
+
+}
+
+@keyframes invitation {
+  0%, 55%, 100% { transform: translateY(0) rotate(0); }
+  22% { transform: translateY(-8px) rotate(-1.5deg); }
+  38% { transform: translateY(-4px) rotate(0.5deg); }
+}
+
+@keyframes gradientWave {
+  0%, 100% { transform: translate(-4%, 2%) rotate(-6deg) scale(1.02, 0.94); }
+  25% { transform: translate(1%, -4%) rotate(0deg) scale(1.1, 1.02); }
+  50% { transform: translate(5%, 1%) rotate(6deg) scale(0.96, 1.1); }
+  75% { transform: translate(-1%, 5%) rotate(0deg) scale(1.08, 1.02); }
+}
+
+@media (max-width: 48rem) {
+  .visual { max-width: 32rem; }
+  .gradient::before,
+  .gradient::after { filter: blur(28px) saturate(1.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient::before,
+  .gradient::after,
+  .mascot { animation: none; }
+}

@@ -1,0 +1,456 @@
+.projects {
+  position: relative;
+  overflow: hidden;
+  padding-block: var(--space-section);
+  color: var(--color-text);
+  background:
+    radial-gradient(circle at 87% 15%, color-mix(in srgb, var(--color-lavender) 9%, transparent), transparent 22rem),
+    var(--color-background);
+}
+
+.projects::before {
+  display: none;
+}
+
+.intro {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-7);
+  margin-bottom: var(--space-7);
+}
+
+.title {
+  font-size: var(--text-section);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.title span {
+  color: var(--color-lavender);
+}
+
+.lead {
+  max-width: 36rem;
+  margin-top: var(--space-5);
+  color: var(--color-muted);
+  font-size: clamp(1rem, 1.35vw, 1.2rem);
+}
+
+.allProjectsLink,
+.footerLink {
+  display: inline-flex;
+  min-height: 3rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-lavender) 70%, var(--color-border));
+  border-radius: var(--radius-sm);
+  padding-inline: 1.15rem;
+  color: var(--color-lavender);
+  font-weight: 650;
+  text-decoration: none;
+  transition: background-color 320ms var(--ease-out), color 320ms var(--ease-out), transform 320ms var(--ease-out);
+}
+
+.projectList {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3.5rem, 7vw, 6rem);
+}
+
+.project {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  align-items: center;
+  grid-template-columns: minmax(17rem, 0.7fr) minmax(0, 1.65fr);
+  gap: clamp(2rem, 6vw, 7rem);
+}
+
+.projectCopy {
+  position: relative;
+  z-index: 3;
+  align-self: center;
+}
+
+.projectMeta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  color: var(--color-lavender);
+}
+
+.number {
+  display: none;
+}
+
+.type {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.type::before {
+  content: none;
+}
+
+.projectTitle {
+  max-width: 15ch;
+  margin-top: var(--space-5);
+  font-size: clamp(1.8rem, 3vw, 3.2rem);
+  font-weight: 650;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  margin: var(--space-6) 0 0;
+  padding: 0;
+  gap: var(--space-2) var(--space-3);
+  list-style: none;
+}
+
+.steps li {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.steps li:not(:last-child)::after {
+  margin-left: var(--space-3);
+  color: var(--color-lavender);
+  content: "→";
+}
+
+.description {
+  max-width: 31rem;
+  margin-top: var(--space-5);
+  color: var(--color-muted);
+}
+
+.caseLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  color: var(--color-lavender);
+  font-weight: 650;
+  text-decoration-color: color-mix(in srgb, var(--color-lavender) 50%, transparent);
+  transition: color 320ms var(--ease-out), transform 320ms var(--ease-out);
+}
+
+.scene {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 3 / 2;
+}
+
+.scene::before {
+  display: none;
+}
+
+.deviceCanvas {
+  position: absolute;
+  isolation: isolate;
+  top: 50%;
+  right: -4%;
+  left: 0;
+  aspect-ratio: 3 / 2;
+  transform: translateY(-50%);
+}
+
+.mainDevice,
+.phoneDevice {
+  position: absolute;
+}
+
+.mainDevice {
+  z-index: 1;
+  inset: 0;
+}
+
+.phoneDevice {
+  z-index: 3;
+  top: 31%;
+  right: 1%;
+  width: 22%;
+  aspect-ratio: 2 / 3;
+}
+
+.deviceImage,
+.phoneImage {
+  z-index: 1;
+  object-fit: contain;
+}
+
+.mainScreen,
+.phoneScreen {
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  background: #0b0c10;
+}
+
+.desktopImage,
+.mobileImage {
+  object-fit: cover;
+  object-position: top center;
+}
+
+.onyx .mainScreen {
+  inset: 10% 9.7% 13.2%;
+  border-radius: 2%;
+}
+
+.phoneScreen {
+  inset: 5.5% 20.5% 6.5%;
+  border-radius: 9% / 4%;
+}
+
+.pass-system .deviceCanvas {
+  right: 0;
+  left: -4%;
+}
+
+.pass-system .mainDevice {
+  inset: 4% 0 4% 3%;
+}
+
+.pass-system .mainScreen {
+  inset: 10% 9.7% 13.2%;
+  border-radius: 2%;
+}
+
+.pass-system .phoneDevice {
+  top: 27%;
+  right: auto;
+  left: 0;
+}
+
+.pass-system {
+  grid-template-columns: minmax(0, 1.65fr) minmax(17rem, 0.7fr);
+}
+
+.pass-system .projectCopy {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.pass-system .scene {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.portfolioFooter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-7);
+  margin-top: clamp(4rem, 6vw, 6rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: clamp(1.5rem, 4vw, 3.25rem);
+  background: color-mix(in srgb, var(--color-surface) 84%, transparent);
+}
+
+.portfolioMascot {
+  position: absolute;
+  z-index: 2;
+  bottom: calc(100% - 5.5rem);
+  left: 1.5rem;
+  width: clamp(8rem, 10vw, 10rem);
+  aspect-ratio: 2 / 3;
+  pointer-events: none;
+  transform: scaleX(-1);
+}
+
+.portfolioMascotImage {
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 1rem 1.5rem color-mix(in srgb, #000 30%, transparent));
+}
+
+.portfolioFooterCopy {
+  padding-left: clamp(8rem, 11vw, 10.5rem);
+}
+
+.portfolioFooter h3 {
+  max-width: 25ch;
+  font-size: clamp(1.4rem, 2.4vw, 2.2rem);
+}
+
+.portfolioFooter p {
+  margin-top: var(--space-2);
+  color: var(--color-muted);
+}
+
+.allProjectsLink:focus-visible,
+.footerLink:focus-visible,
+.caseLink:focus-visible {
+  border-radius: var(--radius-sm);
+  outline: 3px solid color-mix(in srgb, var(--color-focus) 45%, transparent);
+  outline-offset: 4px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .allProjectsLink:hover,
+  .footerLink:hover {
+    color: var(--color-on-accent);
+    background: var(--color-action);
+    transform: translateX(2px);
+  }
+
+  .caseLink:hover {
+    color: color-mix(in srgb, var(--color-lavender) 76%, var(--color-text));
+    transform: translateX(3px);
+  }
+}
+
+@media (max-width: 64rem) {
+  .project,
+  .pass-system {
+    min-height: auto;
+    grid-template-columns: minmax(15rem, 0.72fr) minmax(0, 1.28fr);
+    gap: var(--space-6);
+  }
+
+  .scene {
+    min-height: 0;
+  }
+
+  .pass-system {
+    grid-template-columns: minmax(0, 1.28fr) minmax(15rem, 0.72fr);
+  }
+
+  .portfolioMascot {
+    left: 1.25rem;
+    width: 9rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .projects::before {
+    display: none;
+  }
+
+  .intro {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .project,
+  .pass-system {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-7);
+  }
+
+  .projectCopy,
+  .pass-system .projectCopy,
+  .pass-system .scene {
+    width: 100%;
+  }
+
+  .scene {
+    min-height: clamp(26rem, 92vw, 42rem);
+  }
+
+  .deviceCanvas {
+    right: -2%;
+    left: -2%;
+  }
+
+  .pass-system .deviceCanvas {
+    right: -2%;
+    left: -2%;
+  }
+
+  .portfolioFooter {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-top: 4.5rem;
+  }
+
+  .portfolioMascot {
+    right: auto;
+    bottom: calc(100% - 4.75rem);
+    left: 1rem;
+    width: 8rem;
+  }
+
+  .portfolioFooterCopy {
+    padding-left: 7.5rem;
+  }
+}
+
+@media (max-width: 36rem) {
+  .title {
+    font-size: var(--text-section);
+  }
+
+  .projectList {
+    gap: 4.75rem;
+  }
+
+  .projectTitle {
+    font-size: clamp(1.75rem, 8vw, 2.6rem);
+  }
+
+  .scene {
+    min-height: 25rem;
+  }
+
+  .deviceCanvas,
+  .pass-system .deviceCanvas {
+    right: -6%;
+    left: -6%;
+  }
+
+  .steps {
+    gap: var(--space-2);
+  }
+
+  .steps li:not(:last-child)::after {
+    margin-left: var(--space-2);
+  }
+
+  .portfolioFooter {
+    padding: 4rem var(--space-5) var(--space-5);
+  }
+
+  .portfolioMascot {
+    right: auto;
+    bottom: calc(100% - 4rem);
+    left: 0.5rem;
+    width: 7rem;
+  }
+
+  .portfolioFooterCopy {
+    padding-left: 0;
+  }
+
+  .portfolioFooter { padding-top: 5.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .allProjectsLink,
+  .footerLink,
+  .caseLink {
+    transition: none;
+  }
+}
+
+@media (max-width: 48rem) {
+  .scene { min-height: 0; aspect-ratio: 3 / 2; }
+}

@@ -1,0 +1,101 @@
+:root {
+  color-scheme: light;
+
+  /* Brand colors derived from the approved IANep reference pack. */
+  --color-background: #f8f8fc;
+  --color-surface: #ffffff;
+  --color-surface-raised: #f1f0f8;
+  --color-text: #11111a;
+  --color-muted: #666572;
+  --color-lavender: #6846df;
+  --color-lavender-soft: #e8e3ff;
+  --color-peach: #ff9aa8;
+  --color-sky: #9db8ff;
+  --color-border: #dedde8;
+  --color-focus: #7457ff;
+  --color-on-accent: #ffffff;
+  --color-logo-text: #11111a;
+  --color-action: #6f52ff;
+  --color-action-hover: #6042ed;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-pill: 999px;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-section: clamp(4.5rem, 7vw, 6.5rem);
+  --text-section: clamp(2rem, 3.7vw, 3.5rem);
+
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: clamp(1.5rem, 2vw, 2rem);
+  --text-display: clamp(2.5rem, 6vw, 5.5rem);
+  --leading-tight: 1.05;
+  --leading-heading: 1.15;
+  --leading-body: 1.6;
+  --tracking-tight: -0.03em;
+
+  --container-max: 90rem;
+  --container-gutter: clamp(1.25rem, 4vw, 4rem);
+
+  /* Documented responsive contract. CSS custom properties cannot be used in media conditions. */
+  --breakpoint-sm: 30rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+
+  --duration-fast: 160ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root[data-theme="light"] {
+  --color-logo-text: #11111a;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-background: #05050c;
+  --color-surface: #0d0d18;
+  --color-surface-raised: #151425;
+  --color-text: #f7f7fb;
+  --color-muted: #a4a2b0;
+  --color-lavender: #a38cff;
+  --color-lavender-soft: #251e4d;
+  --color-peach: #ff9aa8;
+  --color-sky: #9db8ff;
+  --color-border: #29283a;
+  --color-focus: #a895ff;
+  --color-on-accent: #ffffff;
+  --color-logo-text: #f8f7ff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-background: #05050c;
+    --color-surface: #0d0d18;
+    --color-surface-raised: #151425;
+    --color-text: #f7f7fb;
+    --color-muted: #a4a2b0;
+    --color-lavender: #a38cff;
+    --color-lavender-soft: #251e4d;
+    --color-peach: #ff9aa8;
+    --color-sky: #9db8ff;
+    --color-border: #29283a;
+    --color-focus: #a895ff;
+    --color-on-accent: #ffffff;
+    --color-logo-text: #f8f7ff;
+  }
+}

@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum BriefRequestStatus {
+  NEW
+  IN_REVIEW
+  CONTACTED
+  ARCHIVED
+}
+
+model BriefRequest {
+  id          String             @id @default(uuid()) @db.Uuid
+  number      Int                @unique @default(autoincrement()) @map("public_number")
+  name        String
+  contact     String
+  projectType String
+  answers     Json
+  status      BriefRequestStatus @default(NEW)
+  source      String             @default("PUBLIC_BRIEF")
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([status, createdAt])
+  @@map("brief_requests")
+}
+
+model AuditEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  eventType  String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_events")
+}
