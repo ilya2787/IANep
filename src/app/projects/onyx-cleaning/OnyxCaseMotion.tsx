@@ -12,6 +12,11 @@ export function OnyxCaseMotion({ children }: { children: ReactNode }) {
 
   useGSAP(() => {
     if (!root.current) return;
+    const documentElement = document.documentElement;
+    const previousScrollBehavior = documentElement.style.scrollBehavior;
+    documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, 0);
+    documentElement.style.scrollBehavior = previousScrollBehavior;
     const media = gsap.matchMedia();
 
     media.add({

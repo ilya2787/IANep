@@ -39,7 +39,7 @@ export function ProjectCase({ project }: ProjectCaseProps) {
         </ol>
 
         <p className={styles.description}>{project.description}</p>
-        <Link className={styles.caseLink} href={project.href}>
+        <Link className={styles.caseLink} href={project.href} scroll>
           Смотреть кейс <span aria-hidden="true">→</span>
         </Link>
       </div>
