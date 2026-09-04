@@ -27,7 +27,7 @@ export const projects: Project[] = [
     type: "Многостраничный сайт",
     description: "Сайт клининговой компании с каталогом услуг и системой заявок.",
     steps: ["Сайт", "Каталог услуг", "Заявки"],
-    href: "#project-onyx-cleaning",
+    href: "/projects/onyx-cleaning",
     deviceImage: "/images/projects/devices/separate/tablet.png",
     deviceAlt: "Фотореалистичный планшет",
     desktopImage: "/images/projects/onyx-cleaning/header.png",
