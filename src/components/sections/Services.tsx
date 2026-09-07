@@ -19,7 +19,7 @@ export function Services() {
 						</h2>
 					</div>
 					<Link className={styles.cta} href='#brief'>
-						Помочь выбрать решение <span aria-hidden='true'>→</span>
+						Рассчитать проект <span aria-hidden='true'>→</span>
 					</Link>
 				</div>
 

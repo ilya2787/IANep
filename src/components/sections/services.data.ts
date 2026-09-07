@@ -15,7 +15,7 @@ export const services: Service[] = [
     number: "01",
     title: "Landing Page",
     description: "Для продукта, услуги или рекламной кампании.",
-    image: "/services/landing-page.png",
+    image: "/services/landing-page-light-hq.png",
     imageDark: "/services/landing-page-dark.png",
   },
   {
@@ -23,7 +23,7 @@ export const services: Service[] = [
     number: "02",
     title: "Многостраничный сайт",
     description: "Для компании, услуг и сложной структуры контента.",
-    image: "/services/multipage-site.png",
+    image: "/services/multipage-site-light-hq.png",
     imageDark: "/services/multipage-site-dark.png",
     motionAnchor: "services-multipage",
   },
@@ -32,7 +32,7 @@ export const services: Service[] = [
     number: "03",
     title: "Интернет-магазин",
     description: "Каталог, корзина и оформление заказов.",
-    image: "/services/online-store.png",
+    image: "/services/online-store-light-hq.png",
     imageDark: "/services/online-store-dark.png",
   },
   {
@@ -40,7 +40,7 @@ export const services: Service[] = [
     number: "04",
     title: "Web-приложения",
     description: "Инструменты и системы под конкретные задачи.",
-    image: "/services/web-apps.png",
+    image: "/services/web-apps-light-hq.png",
     imageDark: "/services/web-apps-dark.png",
   },
   {
@@ -48,7 +48,7 @@ export const services: Service[] = [
     number: "05",
     title: "Доработка сайтов",
     description: "Развитие и изменение существующих проектов.",
-    image: "/services/site-improvements.png",
+    image: "/services/site-improvements-light-hq.png",
     imageDark: "/services/site-improvements-dark.png",
   },
   {
@@ -56,7 +56,7 @@ export const services: Service[] = [
     number: "06",
     title: "Поддержка",
     description: "Помощь после запуска и дальнейшее развитие.",
-    image: "/services/support.png",
+    image: "/services/support-light-hq.png",
     imageDark: "/services/support-dark.png",
   },
 ];

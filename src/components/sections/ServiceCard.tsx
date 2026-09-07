@@ -27,7 +27,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
             alt=""
             fill
             quality={90}
-            sizes="(max-width: 768px) 90vw, 40vw"
+            sizes="(max-width: 768px) 90vw, (max-width: 1200px) 46vw, 55vw"
           />
           <Image
             className={`${styles.visualImage} ${styles.darkImage}`}
@@ -35,7 +35,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
             alt=""
             fill
             quality={90}
-            sizes="(max-width: 768px) 90vw, 40vw"
+            sizes="(max-width: 768px) 90vw, (max-width: 1200px) 46vw, 55vw"
           />
         </div>
       </article>

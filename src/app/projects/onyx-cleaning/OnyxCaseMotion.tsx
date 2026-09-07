@@ -12,11 +12,6 @@ export function OnyxCaseMotion({ children }: { children: ReactNode }) {
 
   useGSAP(() => {
     if (!root.current) return;
-    const documentElement = document.documentElement;
-    const previousScrollBehavior = documentElement.style.scrollBehavior;
-    documentElement.style.scrollBehavior = "auto";
-    window.scrollTo(0, 0);
-    documentElement.style.scrollBehavior = previousScrollBehavior;
     const media = gsap.matchMedia();
 
     media.add({
@@ -40,40 +35,6 @@ export function OnyxCaseMotion({ children }: { children: ReactNode }) {
           scrollTrigger: { trigger: target, start: "clamp(top 86%)", once: true },
         });
       });
-
-      if (desktop) {
-        const calc = gsap.timeline({
-          defaults: { ease: "none" },
-          scrollTrigger: {
-            trigger: "[data-calculator-stage]",
-            start: "top 12%",
-            end: "+=1600",
-            pin: true,
-            scrub: 0.8,
-          },
-        });
-        calc.to("[data-calc-screen]", { xPercent: -12, scale: 0.91, autoAlpha: 0.36, duration: 1 })
-          .fromTo("[data-order-screen]", { xPercent: 22, autoAlpha: 0 }, { xPercent: 0, autoAlpha: 1, duration: 1 }, 0.2)
-          .fromTo("[data-mobile-screen]", { yPercent: 20, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.65 }, 0.68);
-
-        gsap.timeline({
-          scrollTrigger: { trigger: "[data-order-summary]", start: "top 72%", end: "center 45%", scrub: 0.7 },
-        }).from("[data-order-summary]", { xPercent: -9, autoAlpha: 0 })
-          .from("[data-delivery-line]", { scaleX: 0, transformOrigin: "left center" }, 0.28)
-          .from("[data-telegram-frame]", { xPercent: 12, autoAlpha: 0 }, 0.5);
-
-        gsap.from("[data-admin-detail]", {
-          xPercent: 12, yPercent: 12, autoAlpha: 0,
-          scrollTrigger: { trigger: "[data-admin-main]", start: "top 55%", end: "center 38%", scrub: 0.6 },
-        });
-      } else {
-        gsap.utils.toArray<HTMLElement>("[data-mobile-screen], [data-telegram-frame], [data-admin-detail]").forEach((target) => {
-          gsap.from(target, {
-            y: 22, autoAlpha: 0, duration: 0.75, ease: "power3.out",
-            scrollTrigger: { trigger: target, start: "clamp(top 86%)", once: true },
-          });
-        });
-      }
 
       let active = true;
       void document.fonts.ready.then(() => { if (active) ScrollTrigger.refresh(); });

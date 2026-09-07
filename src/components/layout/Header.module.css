@@ -1,10 +1,25 @@
 .header {
-	position: absolute;
-	z-index: 3;
+	position: fixed;
+	z-index: 30;
 	top: 0;
 	left: 0;
 	width: 100%;
 	padding-block: 1rem;
+	border-bottom: 1px solid transparent;
+	transition:
+		padding 320ms var(--ease-out),
+		border-color 320ms var(--ease-out),
+		background-color 320ms var(--ease-out),
+		box-shadow 320ms var(--ease-out);
+}
+
+.header[data-floating] {
+	padding-block: 0.55rem;
+	border-bottom-color: var(--color-border);
+	background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+	box-shadow: 0 0.75rem 2.5rem color-mix(in srgb, var(--color-lavender) 8%, transparent);
+	-webkit-backdrop-filter: blur(18px) saturate(1.25);
+	backdrop-filter: blur(18px) saturate(1.25);
 }
 
 .inner {
@@ -122,6 +137,62 @@
 	cursor: pointer;
 }
 
+.header[data-inverse] .logoText,
+.header[data-inverse] .navLink {
+	color: color-mix(in srgb, var(--hero-ink, #ffffff) 88%, transparent);
+}
+
+.header[data-inverse] .logoMark {
+	filter: brightness(0) invert(1);
+}
+
+.header[data-inverse] .menuButton {
+	border-color: var(--hero-secondary-border, rgba(255, 255, 255, 0.28));
+	color: var(--hero-ink, #ffffff);
+	background: var(--hero-secondary-bg, rgba(24, 13, 82, 0.32));
+}
+
+.header[data-inverse] .cta {
+	color: var(--hero-primary-ink, #4326bd);
+	background: var(--hero-primary-bg, #ffffff);
+}
+
+:global(:root[data-theme='light']) .header[data-inverse] .logoMark {
+	filter: none;
+}
+
+:global(:root[data-theme='light']) .header[data-inverse] .logoText {
+	color: #17122c;
+}
+
+:global(:root[data-theme='light']) .header[data-inverse] .navLink {
+	color: rgba(23, 18, 44, 0.78);
+}
+
+:global(:root[data-theme='light']) .header[data-inverse] .menuButton {
+	border-color: rgba(40, 25, 91, 0.24);
+	color: #17122c;
+	background: rgba(255, 255, 255, 0.72);
+}
+
+:global(:root[data-theme='light']) .header[data-inverse] .cta {
+	color: #ffffff;
+	background: #22164e;
+	box-shadow: 0 0.75rem 2rem rgba(34, 22, 78, 0.18);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	:global(:root[data-theme='light']) .header[data-inverse] .navLink:hover {
+		color: #22164e;
+		background: rgba(111, 82, 255, 0.1);
+	}
+
+	:global(:root[data-theme='light']) .header[data-inverse] .cta:hover {
+		color: #ffffff;
+		background: #3d277c;
+	}
+}
+
 @media (max-width: 71.999rem) {
 	.inner { flex-wrap: wrap; gap: 0.75rem; }
 	.actions { margin-left: auto; gap: 0.75rem; }
@@ -152,6 +223,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.header,
 	.navLink,
 	.navLink::after,
 	.logoText {
@@ -159,11 +231,11 @@
 	}
 }
 
-:global(:root[data-theme='light']) .navLink {
+:global(:root[data-theme='light']) .header:not([data-inverse]) .navLink {
 	color: rgba(17, 17, 26, 0.78);
 }
 
-:global(:root[data-theme='light']) .navLink:hover {
+:global(:root[data-theme='light']) .header:not([data-inverse]) .navLink:hover {
 	color: #11111a;
 	background: rgba(111, 82, 255, 0.1);
 }

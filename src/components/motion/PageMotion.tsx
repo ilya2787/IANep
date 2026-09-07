@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -10,6 +10,30 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 /** Server-rendered content stays visible until the motion layer is ready. */
 export function PageMotion({ children }: { children: ReactNode }) {
   const root = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    if (!id) return;
+
+    let secondFrame = 0;
+    const frame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        const target = document.getElementById(id);
+        if (!target) return;
+
+        const documentElement = document.documentElement;
+        const previousScrollBehavior = documentElement.style.scrollBehavior;
+        documentElement.style.scrollBehavior = "auto";
+        target.scrollIntoView({ block: "start" });
+        documentElement.style.scrollBehavior = previousScrollBehavior;
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, []);
 
   useGSAP(() => {
     const element = root.current;
@@ -26,6 +50,9 @@ export function PageMotion({ children }: { children: ReactNode }) {
       const select = gsap.utils.selector(element);
       const entrances = new Map<Element, gsap.core.Animation>();
       const heroCopy = element.querySelector<HTMLElement>("[data-hero-copy]");
+      const hero = element.querySelector<HTMLElement>("[data-hero]");
+      const heroMascot = element.querySelector<HTMLElement>("[data-hero-mascot-motion]");
+      const heroEyes = element.querySelector<HTMLElement>("[data-hero-eyes]");
       // Start when the hero is visible, including after returning from an anchor.
       // A URL hash or restored scroll position must not permanently skip the intro.
       const intro = gsap.timeline({
@@ -72,6 +99,46 @@ export function PageMotion({ children }: { children: ReactNode }) {
       }
 
       if (heroCopy) heroObserver.observe(heroCopy);
+
+      let removeHeroPointerMotion = () => {};
+      if (desktop && hero && heroMascot && heroEyes) {
+        const moveEyesX = gsap.quickTo(heroEyes, "x", { duration: 0.28, ease: "power3.out" });
+        const moveEyesY = gsap.quickTo(heroEyes, "y", { duration: 0.28, ease: "power3.out" });
+
+        const onPointerMove = (event: PointerEvent) => {
+          const heroRect = hero.getBoundingClientRect();
+          if (heroRect.bottom < 0 || heroRect.top > window.innerHeight) return;
+
+          const mascotRect = heroMascot.getBoundingClientRect();
+          const centerX = mascotRect.left + mascotRect.width * 0.49;
+          const centerY = mascotRect.top + mascotRect.height * 0.385;
+          const deltaX = event.clientX - centerX;
+          const deltaY = event.clientY - centerY;
+          const distance = Math.hypot(deltaX, deltaY) || 1;
+          const intensity = Math.min(distance / 180, 1);
+          const maxX = mascotRect.width * 0.04;
+          const maxY = mascotRect.height * 0.021;
+
+          moveEyesX((deltaX / distance) * maxX * intensity);
+          moveEyesY((deltaY / distance) * maxY * intensity);
+        };
+        const resetPointerMotion = () => {
+          moveEyesX(0);
+          moveEyesY(0);
+        };
+        const onPointerOut = (event: PointerEvent) => {
+          if (!event.relatedTarget) resetPointerMotion();
+        };
+
+        window.addEventListener("pointermove", onPointerMove, { passive: true });
+        window.addEventListener("pointerout", onPointerOut, { passive: true });
+        window.addEventListener("blur", resetPointerMotion);
+        removeHeroPointerMotion = () => {
+          window.removeEventListener("pointermove", onPointerMove);
+          window.removeEventListener("pointerout", onPointerOut);
+          window.removeEventListener("blur", resetPointerMotion);
+        };
+      }
 
       // Observe actual visibility in both scroll directions. One-shot scroll
       // thresholds can be consumed off screen by browser scroll restoration.
@@ -155,6 +222,7 @@ export function PageMotion({ children }: { children: ReactNode }) {
         heroObserver.disconnect();
         revealObserver.disconnect();
         clearTimeout(refreshTimer);
+        removeHeroPointerMotion();
         element.removeEventListener("focusin", onFocus);
       };
     });

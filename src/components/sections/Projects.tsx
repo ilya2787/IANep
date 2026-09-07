@@ -46,8 +46,8 @@ export function Projects() {
             />
           </div>
           <div className={styles.portfolioFooterCopy}>
-            <h3>Больше кейсов и деталей — в полном портфолио</h3>
-            <p>Каждый проект — история решения конкретной задачи.</p>
+            <h3>Больше кейсов и деталей в полном портфолио</h3>
+            <p>Каждый проект показывает решение конкретной задачи.</p>
           </div>
           <Link className={styles.footerLink} href="#projects">
             Смотреть все проекты <span aria-hidden="true">→</span>

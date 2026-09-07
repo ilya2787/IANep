@@ -6,6 +6,8 @@ import type {
 import { BriefConflict } from "./brief.receipt";
 import { prisma } from "@/server/db/prisma";
 
+export class BriefStatusConflict extends Error {}
+
 export type CreateBriefRequestData = {
   name: string;
   contact: string;
@@ -17,6 +19,60 @@ export type CreateBriefRequestData = {
 
 export class BriefRepository {
   constructor(private readonly db: PrismaClient = prisma) {}
+
+  async findManyForAdmin() {
+    return this.db.briefRequest.findMany({
+      select: {
+        id: true,
+        number: true,
+        name: true,
+        contact: true,
+        projectType: true,
+        source: true,
+        status: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    });
+  }
+
+  async findByIdForAdmin(id: string) {
+    return this.db.briefRequest.findUnique({ where: { id } });
+  }
+
+  async findEventsForAdmin(id: string) {
+    return this.db.auditEvent.findMany({
+      where: { entityType: "BriefRequest", entityId: id },
+      select: { id: true, eventType: true, metadata: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  async changeStatus(id: string, newStatus: BriefRequest["status"]) {
+    return this.db.$transaction(async (transaction) => {
+      const current = await transaction.briefRequest.findUnique({ where: { id }, select: { status: true } });
+      if (!current) return null;
+      if (current.status === newStatus) return { status: current.status, changed: false };
+
+      const updated = await transaction.briefRequest.updateMany({
+        where: { id, status: current.status },
+        data: { status: newStatus },
+      });
+      if (updated.count !== 1) throw new BriefStatusConflict("STATUS_CHANGED_CONCURRENTLY");
+
+      await transaction.auditEvent.create({
+        data: {
+          eventType: "BRIEF_STATUS_CHANGED",
+          entityType: "BriefRequest",
+          entityId: id,
+          metadata: { previousStatus: current.status, newStatus, actor: "ADMIN" },
+        },
+      });
+
+      return { status: newStatus, changed: true };
+    });
+  }
 
   async findByReceipt(receiptHash: string) {
     const event = await this.db.auditEvent.findFirst({

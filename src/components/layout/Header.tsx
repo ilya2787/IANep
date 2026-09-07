@@ -15,8 +15,9 @@ const navigation = [
   { href: "#brief", label: "Рассчитать проект" },
 ];
 
-export function Header() {
+export function Header({ inverse = false }: { inverse?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [floating, setFloating] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -28,15 +29,29 @@ export function Header() {
     return () => desktop.removeEventListener("change", closeOnDesktop);
   }, []);
 
+  useEffect(() => {
+    const hero = document.querySelector<HTMLElement>("[data-hero]");
+    if (!hero) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      const shouldFloat = entry.intersectionRatio < 0.995;
+      setFloating(shouldFloat);
+      if (shouldFloat) setMenuOpen(false);
+    }, { threshold: [0.995] });
+
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <header className={styles.header} onKeyDown={(event) => {
+    <header className={styles.header} data-inverse={inverse && !floating || undefined} data-floating={floating || undefined} onKeyDown={(event) => {
       if (event.key === "Escape" && menuOpen) {
         setMenuOpen(false);
         menuButton.current?.focus();
       }
     }}>
       <Container className={styles.inner}>
-        <Link className={styles.logo} href="/" aria-label="IANep — главная">
+        <Link className={styles.logo} href="/" aria-label="IANep, главная">
           <Image
             className={styles.logoMark}
             src="/reference/logo-ia.png"
@@ -66,7 +81,7 @@ export function Header() {
             <span aria-hidden="true">{menuOpen ? "×" : "☰"}</span>
           </button>
           <Link className={styles.cta} href="#brief" variant="primary">
-            Обсудить проект <span aria-hidden="true">→</span>
+            Рассчитать проект <span aria-hidden="true">→</span>
           </Link>
         </div>
       </Container>

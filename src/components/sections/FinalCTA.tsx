@@ -19,7 +19,7 @@ export function FinalCTA() {
             Обсудим <span>ваш проект?</span>
           </h2>
           <p className={styles.description}>
-            Расскажите о своей задаче — мы предложим лучшее решение и поможем достичь результата.
+            Расскажите о своей задаче. Мы предложим подходящее решение и поможем достичь результата.
           </p>
           <div className={styles.actions}>
             <Link className={styles.primary} href="#brief" variant="primary">

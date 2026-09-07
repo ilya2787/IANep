@@ -1,7 +1,11 @@
 .services {
+  position: relative;
+  overflow: hidden;
   padding-block: var(--space-section);
   color: var(--color-text);
-  background: var(--color-background);
+  background:
+    radial-gradient(circle at 8% 18%, color-mix(in srgb, var(--color-lavender) 7%, transparent), transparent 24rem),
+    var(--color-background);
 }
 .intro {
   display: flex;
@@ -29,13 +33,19 @@
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--space-5);
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.card { min-width: 0; }
+.card { min-width: 0; grid-column: span 6; }
+.card:nth-child(1),
+.card:nth-child(4),
+.card:nth-child(5) { grid-column: span 7; }
+.card:nth-child(2),
+.card:nth-child(3),
+.card:nth-child(6) { grid-column: span 5; }
 .cardContent {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
@@ -46,6 +56,18 @@
   border-radius: var(--radius-lg);
   background: var(--color-surface);
 }
+.card:nth-child(1) .cardContent,
+.card:nth-child(4) .cardContent,
+.card:nth-child(5) .cardContent { min-height: 20rem; }
+.card:nth-child(2) .cardContent,
+.card:nth-child(3) .cardContent,
+.card:nth-child(6) .cardContent {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(9rem, 1fr);
+  min-height: 20rem;
+}
+.card:nth-child(4) .cardContent { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); }
+.card:nth-child(5) .cardContent { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
 .cardCopy {
   align-self: center;
   min-width: 0;
@@ -73,6 +95,9 @@
   overflow: hidden;
   background: var(--color-surface);
 }
+.card:nth-child(2) .visual,
+.card:nth-child(3) .visual,
+.card:nth-child(6) .visual { min-height: 9rem; }
 .visual::after {
   position: absolute;
   z-index: 1;
@@ -80,6 +105,11 @@
   content: "";
   pointer-events: none;
   background: linear-gradient(90deg, var(--color-surface), color-mix(in srgb, var(--color-surface) 65%, transparent) 18%, transparent 62%);
+}
+.card:nth-child(2) .visual::after,
+.card:nth-child(3) .visual::after,
+.card:nth-child(6) .visual::after {
+  background: linear-gradient(180deg, var(--color-surface), color-mix(in srgb, var(--color-surface) 35%, transparent) 42%, transparent 78%);
 }
 .visualImage {
   object-fit: cover;
@@ -99,22 +129,33 @@
 }
 @media (hover: hover) and (pointer: fine) {
   .cta:hover { color: var(--color-lavender); }
+  .cardContent { transition: border-color 260ms var(--ease-out), transform 260ms var(--ease-out); }
+  .card:hover .cardContent { border-color: color-mix(in srgb, var(--color-lavender) 42%, var(--color-border)); transform: translateY(-3px); }
 }
 @media (min-width: 48.001rem) and (max-width: 75rem) {
+  .card,
+  .card:nth-child(n) { grid-column: span 6; }
   .cardContent { grid-template-columns: 1fr; grid-template-rows: auto 8rem; }
+  .card:nth-child(n) .cardContent { grid-template-columns: 1fr; grid-template-rows: auto 8rem; min-height: 18rem; }
   .cardCopy { align-self: start; }
-  .visual { min-height: 8rem; }
+  .visual,
+  .card:nth-child(n) .visual { min-height: 8rem; }
   .visual::after { background: linear-gradient(180deg, var(--color-surface), transparent 85%); }
 }
 @media (max-width: 48rem) {
   .intro { align-items: flex-start; flex-direction: column; gap: var(--space-3); }
   .grid { grid-template-columns: 1fr; gap: var(--space-4); }
+  .card,
+  .card:nth-child(n) { grid-column: 1; }
   .cardTitle { font-size: clamp(1.4rem, 5vw, 1.75rem); }
-  .cardContent { grid-template-columns: 1fr; min-height: 0; }
+  .cardContent,
+  .card:nth-child(n) .cardContent { grid-template-columns: 1fr; grid-template-rows: auto 8rem; min-height: 0; }
   .cardCopy { padding: 1.5rem; }
-  .visual { min-height: 0; height: 7.5rem; }
+  .visual,
+  .card:nth-child(n) .visual { min-height: 0; height: 8rem; }
   .visual::after { background: linear-gradient(180deg, var(--color-surface), color-mix(in srgb, var(--color-surface) 45%, transparent) 45%, transparent); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cta, .visualImage { transition: none; }
+  .cta, .visualImage, .cardContent { transition: none; }
+  .card:hover .cardContent { transform: none; }
 }

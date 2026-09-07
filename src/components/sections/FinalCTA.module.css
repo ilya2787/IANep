@@ -63,8 +63,9 @@
 .visual {
   position: relative;
   isolation: isolate;
-  aspect-ratio: 1 / 1;
-  max-width: 26rem;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  max-width: 32rem;
   justify-self: center;
 }
 
@@ -98,9 +99,9 @@
 
 .brand {
   position: absolute;
-  top: 0;
-  right: -2%;
-  width: 88%;
+  top: 3%;
+  right: -5%;
+  width: 96%;
   aspect-ratio: 3 / 2;
   opacity: 0.1;
   filter: saturate(0.9) brightness(1.05);
@@ -110,9 +111,9 @@
 
 .mascot {
   position: relative;
-  width: 72%;
+  width: 94%;
   margin-left: auto;
-  margin-right: 4%;
+  margin-right: 0;
   transform-origin: 50% 90%;
 
 }
@@ -131,7 +132,8 @@
 }
 
 @media (max-width: 48rem) {
-  .visual { max-width: 32rem; }
+  .visual { max-width: 28rem; }
+  .mascot { width: 88%; margin-inline: auto; }
   .gradient::before,
   .gradient::after { filter: blur(28px) saturate(1.35); }
 }

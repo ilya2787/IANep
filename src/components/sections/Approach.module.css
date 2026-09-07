@@ -1,9 +1,21 @@
 .approach {
+  position: relative;
   padding-block: var(--space-section);
   color: var(--color-text);
-  background: var(--color-background);
+  background:
+    radial-gradient(circle at 82% 72%, color-mix(in srgb, var(--color-sky) 7%, transparent), transparent 28rem),
+    var(--color-background);
 }
-.intro { margin-bottom: clamp(2.5rem, 5vw, 4rem); }
+.layout {
+  display: grid;
+  grid-template-columns: minmax(16rem, .72fr) minmax(0, 1.55fr);
+  gap: clamp(3rem, 8vw, 8rem);
+  align-items: start;
+}
+.intro {
+  position: sticky;
+  top: 6rem;
+}
 .title {
   font-size: var(--text-section);
   font-weight: 650;
@@ -11,30 +23,46 @@
   letter-spacing: -.035em;
 }
 .subtitle {
-  max-width: 62ch;
+  max-width: 34ch;
   margin-top: 1.25rem;
   color: var(--color-muted);
   font-size: var(--text-md);
   line-height: 1.6;
 }
 .steps {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(1.25rem, 2.5vw, 2.5rem);
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.step { min-width: 0; }
-.frame { display: flex; height: 100%; flex-direction: column; }
-.stepHeader {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1rem;
-  min-height: 7.5rem;
+.step {
+  min-width: 0;
+  border-top: 1px solid var(--color-border);
 }
-.number { color: var(--color-muted); font-size: var(--text-sm); font-weight: 500; }
+.step:last-child { border-bottom: 1px solid var(--color-border); }
+.frame {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, .72fr);
+  grid-template-areas:
+    "heading visual"
+    "description visual";
+  column-gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+  min-height: 14rem;
+  padding-block: 1.5rem;
+}
+.stepHeader {
+  grid-area: heading;
+  display: flex;
+  align-items: baseline;
+  gap: clamp(1rem, 2vw, 2rem);
+}
+.number {
+  flex: 0 0 auto;
+  color: var(--color-lavender);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
 .stepTitle {
   font-size: clamp(1.4rem, 1.8vw, 1.7rem);
   font-weight: 700;
@@ -44,19 +72,21 @@
 }
 .connector { display: none; }
 .description {
-  margin-top: 1rem;
-  margin-bottom: 1.5rem;
+  grid-area: description;
+  max-width: 38ch;
+  margin-top: .75rem;
+  padding-left: clamp(2.6rem, 4vw, 4rem);
   color: var(--color-muted);
   font-size: var(--text-md);
   line-height: 1.6;
 }
 .visual {
+  grid-area: visual;
   position: relative;
-  height: 8rem;
-  margin-top: auto;
+  height: 11rem;
   overflow: hidden;
   border-radius: var(--radius-md);
-  background: var(--color-background);
+  background: var(--color-surface);
 }
 .visual::after {
   position: absolute;
@@ -64,25 +94,32 @@
   inset: 0;
   content: "";
   pointer-events: none;
-  background: linear-gradient(180deg, var(--color-background), transparent 45%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-surface) 70%, transparent), transparent 55%);
 }
 .visualImage { object-fit: cover; object-position: center 45%; }
-.lightImage { opacity: .65; }
+.lightImage { opacity: .82; }
 .darkImage { opacity: 0; }
 :global(:root[data-theme="dark"]) .lightImage { opacity: 0; }
-:global(:root[data-theme="dark"]) .darkImage { opacity: .65; }
+:global(:root[data-theme="dark"]) .darkImage { opacity: .78; }
 @media (prefers-color-scheme: dark) {
   :global(:root:not([data-theme="light"])) .lightImage { opacity: 0; }
-  :global(:root:not([data-theme="light"])) .darkImage { opacity: .65; }
+  :global(:root:not([data-theme="light"])) .darkImage { opacity: .78; }
 }
 @media (max-width: 64rem) {
-  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.5rem; }
-  .stepHeader { min-height: 6.5rem; }
+  .layout { grid-template-columns: 1fr; gap: var(--space-7); }
+  .intro { position: static; }
+  .subtitle { max-width: 58ch; }
+  .frame { min-height: 13rem; }
 }
 @media (max-width: 36rem) {
-  .steps { grid-template-columns: 1fr; gap: 2.5rem; }
-  .stepHeader { min-height: 0; gap: .75rem; }
+  .frame {
+    grid-template-columns: 1fr;
+    grid-template-areas: "heading" "description" "visual";
+    gap: 0;
+    padding-block: 1.5rem;
+  }
+  .stepHeader { gap: .75rem; }
   .stepTitle { font-size: 1.6rem; }
-  .description { margin-top: .75rem; margin-bottom: 1rem; }
-  .visual { height: 6.5rem; }
+  .description { margin-top: .75rem; padding-left: 0; }
+  .visual { height: 8.5rem; margin-top: 1.25rem; }
 }

@@ -1,64 +1,78 @@
-import Image from "next/image";
-import { Container, Header } from "@/components/layout";
-import { Link } from "@/components/ui";
-import styles from "./Hero.module.css";
+import { Container } from '@/components/layout'
+import { Link } from '@/components/ui'
+import Image from 'next/image'
+import styles from './Hero.module.css'
 
 export function Hero() {
-  return (
-    <section className={styles.hero} aria-labelledby="hero-title">
-      <Header />
-      <div className={styles.showcase} aria-label="Примеры интерфейсов, разработанных IANep">
-        <div className={styles.showcaseGlow} aria-hidden="true" />
-        <div data-hero-brand className={styles.brandSymbol} aria-hidden="true">
-          <Image
-            className={styles.brandSymbolImage}
-            src="/reference/brand-symbol.png"
-            alt=""
-            fill
-            priority
-            sizes="(max-width: 768px) 95vw, 52vw"
-          />
-        </div>
-        <div className={styles.platform} aria-hidden="true" />
-        <div data-hero-mascot className={styles.mascot}>
-          <Image
-            className={styles.mascotImage}
-            src="/images/hero-mascot-v1.png"
-            alt="Цифровой помощник IANep работает над сайтом за ноутбуком"
-            fill
-            priority
-            sizes="(max-width: 768px) 100vw, 58vw"
-          />
-        </div>
-      </div>
+	return (
+		<section data-hero className={styles.hero} aria-labelledby='hero-title'>
+			<Container className={styles.stage}>
+				<div className={styles.ambientGlow} aria-hidden='true' />
 
-      <Container className={styles.content}>
-        <div data-hero-copy className={styles.copy}>
-          <h1 className={styles.title} id="hero-title">
-            <span className={styles.titleLine}>
-              <span data-hero-title-line className={styles.titleLineInner}>
-                Разрабатываем <span className={styles.accent}>сайты</span>
-              </span>
-            </span>
-            {" "}<span className={styles.titleLine}>
-              <span data-hero-title-line className={styles.titleLineInner}>под ваш бизнес</span>
-            </span>
-          </h1>
-          <p className={styles.description}>
-            Продумываем функционал под задачи
-            <br /> и создаём решения, которые помогают расти.
-          </p>
-          <div className={styles.actions}>
-            <Link className={styles.primaryAction} href="#brief" variant="primary">
-              Рассчитать проект <span aria-hidden="true">→</span>
-            </Link>
-            <Link className={styles.secondaryAction} href="#projects">
-              Посмотреть работы <span aria-hidden="true">↗</span>
-            </Link>
-          </div>
-        </div>
-      </Container>
+				<h1 className={styles.title} id='hero-title'>
+					<span
+						data-hero-title-line
+						className={`${styles.titlePiece} ${styles.titleStart}`}
+					>
+						Разрабатываем
+					</span>
+					<span
+						data-hero-title-line
+						className={`${styles.titlePiece} ${styles.titleAccent}`}
+					>
+						сайты
+					</span>
+					<span
+						data-hero-title-line
+						className={`${styles.titlePiece} ${styles.titleEnd}`}
+					>
+						под ваш бизнес
+					</span>
+				</h1>
 
-    </section>
-  );
+				<div data-hero-mascot className={styles.mascotStage}>
+					<div data-hero-mascot-motion className={styles.mascot}>
+						<Image
+							className={styles.mascotImage}
+							src='/images/hero-mascot-front-no-eyes-v3.png'
+							alt='Фирменный цифровой помощник IANep'
+							fill
+							priority
+							unoptimized
+							sizes='(max-width: 768px) 88vw, 42vw'
+						/>
+						<div className={styles.visor} aria-hidden='true'>
+							<div data-hero-eyes className={styles.eyes}>
+								<span className={`${styles.eye} ${styles.eyeLeft}`} />
+								<span className={`${styles.eye} ${styles.eyeRight}`} />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div data-hero-copy className={styles.copy}>
+					<p className={styles.description}>
+						Продумываем функционал и создаём решения, которые помогают бизнесу
+						расти.
+					</p>
+					<div className={styles.actions}>
+						<Link
+							className={styles.primaryAction}
+							href='#brief'
+							variant='primary'
+						>
+							<span className={styles.actionLabel}>Рассчитать проект</span>
+							<svg
+								className={styles.actionArrow}
+								viewBox='0 0 20 20'
+								aria-hidden='true'
+							>
+								<path d='M4 10h11m-4.5-4.5L15 10l-4.5 4.5' />
+							</svg>
+						</Link>
+					</div>
+				</div>
+			</Container>
+		</section>
+	)
 }

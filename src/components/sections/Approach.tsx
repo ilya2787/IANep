@@ -14,25 +14,27 @@ export function Approach() {
       data-motion-to="brief"
     >
       <Container>
-        <div data-reveal className={styles.intro}>
-          <h2 className={styles.title} id="approach-title">
-            От идеи до запуска
-          </h2>
-          <p className={styles.subtitle}>
-            Чёткий процесс, прозрачная коммуникация и внимание к деталям на
-            каждом этапе.
-          </p>
-        </div>
+        <div className={styles.layout}>
+          <div data-reveal className={styles.intro}>
+            <h2 className={styles.title} id="approach-title">
+              От идеи до запуска
+            </h2>
+            <p className={styles.subtitle}>
+              Чёткий процесс, прозрачная коммуникация и внимание к деталям на
+              каждом этапе.
+            </p>
+          </div>
 
-        <ol className={styles.steps} aria-label="Этапы подхода к проекту">
-          {approachSteps.map((step, index) => (
-            <ApproachFrame
-              key={step.id}
-              step={step}
-              isLast={index === approachSteps.length - 1}
-            />
-          ))}
-        </ol>
+          <ol className={styles.steps} aria-label="Этапы подхода к проекту">
+            {approachSteps.map((step, index) => (
+              <ApproachFrame
+                key={step.id}
+                step={step}
+                isLast={index === approachSteps.length - 1}
+              />
+            ))}
+          </ol>
+        </div>
       </Container>
     </section>
   );

@@ -1,8 +1,11 @@
 import type { SubmitBriefPayload } from './brief.schema';
 import { BriefConflict, briefNumber, createBriefReceipt, hashBriefReceipt, normalizeBriefContact } from './brief.receipt';
 import type { BriefRequest, Prisma } from "@/generated/prisma/client";
+import { requireAdmin } from "@/server/auth/admin-auth";
+import { z } from "zod";
 import {
   briefRepository,
+  BriefStatusConflict,
   type BriefRepository,
 } from "@/server/brief/brief.repository";
 
@@ -38,6 +41,50 @@ export class BriefService {
 
   async submit(input: SubmitBriefInput): Promise<BriefRequest> {
     return this.repository.create({ ...input, source: input.source ?? "PUBLIC_BRIEF" });
+  }
+
+  async listForAdmin() {
+    await requireAdmin();
+    return this.repository.findManyForAdmin();
+  }
+
+  async getForAdmin(id: string) {
+    await requireAdmin();
+    if (!z.uuid().safeParse(id).success) return null;
+    return this.repository.findByIdForAdmin(id);
+  }
+
+  async getHistoryForAdmin(id: string) {
+    await requireAdmin();
+    if (!z.uuid().safeParse(id).success) return [];
+    const events = await this.repository.findEventsForAdmin(id);
+
+    return events.map((event) => {
+      const metadata = event.metadata && typeof event.metadata === "object" && !Array.isArray(event.metadata)
+        ? event.metadata as Record<string, unknown>
+        : {};
+      return {
+        id: event.id,
+        eventType: event.eventType,
+        createdAt: event.createdAt,
+        previousStatus: typeof metadata.previousStatus === "string" ? metadata.previousStatus : null,
+        newStatus: typeof metadata.newStatus === "string" ? metadata.newStatus : null,
+        source: typeof metadata.source === "string" ? metadata.source : null,
+      };
+    });
+  }
+
+  async changeStatusForAdmin(id: string, status: unknown) {
+    await requireAdmin();
+    const input = z.object({ id: z.uuid(), status: z.enum(["NEW", "IN_REVIEW", "CONTACTED", "ARCHIVED"]) }).safeParse({ id, status });
+    if (!input.success) return { ok: false as const, reason: "INVALID" as const };
+    try {
+      const result = await this.repository.changeStatus(input.data.id, input.data.status);
+      return result ? { ok: true as const, ...result } : { ok: false as const, reason: "NOT_FOUND" as const };
+    } catch (error) {
+      if (error instanceof BriefStatusConflict) return { ok: false as const, reason: "CONFLICT" as const };
+      throw error;
+    }
   }
 }
 

@@ -35,16 +35,16 @@ export function ApproachFrame({ step, isLast }: ApproachFrameProps) {
             src={step.imageLight}
             alt=""
             fill
-            quality={90}
-            sizes="(max-width: 48rem) 86vw, (max-width: 64rem) 42vw, 23vw"
+            quality={82}
+            sizes="(max-width: 48rem) 86vw, (max-width: 64rem) 44vw, 28vw"
           />
           <Image
             className={`${styles.visualImage} ${styles.darkImage}`}
             src={step.imageDark}
             alt=""
             fill
-            quality={90}
-            sizes="(max-width: 48rem) 86vw, (max-width: 64rem) 42vw, 23vw"
+            quality={82}
+            sizes="(max-width: 48rem) 86vw, (max-width: 64rem) 44vw, 28vw"
           />
         </div>
       </article>

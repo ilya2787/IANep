@@ -75,7 +75,7 @@ canvas {
   outline-offset: 4px;
 }
 
-section[id], article[id], li[id] { scroll-margin-top: 2rem; }
+section[id], article[id], li[id] { scroll-margin-top: 5.5rem; }
 
 .skip-link {
   position: fixed;

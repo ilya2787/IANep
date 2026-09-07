@@ -65,7 +65,7 @@ export const submitBriefSchema = z.object({
     : a.contactMethod === 'Телефон'
       ? /^\+?[\d\s()\-]+$/.test(data.contact) && data.contact.replace(/\D/g, '').length >= 10 && data.contact.replace(/\D/g, '').length <= 15
       : /^@[a-zA-Z0-9_]{5,32}$/.test(data.contact);
-  if (!contactValid) ctx.addIssue({ code: 'custom', path: ['contact'], message: a.contactMethod === 'Email' ? 'Укажите корректный email' : a.contactMethod === 'Телефон' ? 'Укажите телефон: от 10 до 15 цифр' : 'Укажите Telegram в формате @username (5–32 символа)' });
+  if (!contactValid) ctx.addIssue({ code: 'custom', path: ['contact'], message: a.contactMethod === 'Email' ? 'Укажите корректный email' : a.contactMethod === 'Телефон' ? 'Укажите телефон: от 10 до 15 цифр' : 'Укажите Telegram в формате @username (5-32 символа)' });
 });
 
 export type SubmitBriefPayload = z.infer<typeof submitBriefSchema>;

@@ -1,0 +1,47 @@
+[
+  {
+    "production": "public/images/projects/propusc-case/home.png",
+    "source": "references/projects/pass-system/main/localhost_5173_.png",
+    "sha256": "cf686760fc459a24991d1737832c4514d3819fdfb212f123bade5d9e59238c21"
+  },
+  {
+    "production": "public/images/projects/propusc-case/phone.png",
+    "source": "references/projects/pass-system/phone/localhost_5173_(iPhone 14 Pro Max).png",
+    "sha256": "bc828321eeda41ff0f34ae56b3b6cf5b5a79299e3b6f84dcec46995d8c7ac8f0"
+  },
+  {
+    "production": "public/images/projects/propusc-case/creation.png",
+    "source": "references/projects/pass-system/card/Снимок экрана — 2026-09-07 в 10.56.22.png",
+    "sha256": "fa2f83d3ad63c47d7be58545fab0e7be3b1f0cdb0cc6e5a667704146e498d210"
+  },
+  {
+    "production": "public/images/projects/propusc-case/preview.png",
+    "source": "references/projects/pass-system/card/Снимок экрана — 2026-09-07 в 10.57.08.png",
+    "sha256": "e403ddbf845df31a296a25bd9c78fb501d7ef3e4f8d855d66225d1f51c986232"
+  },
+  {
+    "production": "public/images/projects/propusc-case/print.png",
+    "source": "references/projects/pass-system/card/Снимок экрана — 2026-09-07 в 10.57.32.png",
+    "sha256": "879e6656ce00bd2d466828d42cc02e5fa8bb94f2e73c1d0e270041619f6924d4"
+  },
+  {
+    "production": "public/images/projects/propusc-case/editor.png",
+    "source": "references/projects/pass-system/editor/Снимок экрана — 2026-09-07 в 10.50.47.png",
+    "sha256": "35e7256b5a96342a7dde1b5732e873f47bb0950ee522a12cb3100d15216839c1"
+  },
+  {
+    "production": "public/images/projects/propusc-case/users.png",
+    "source": "references/projects/pass-system/admin/Снимок экрана — 2026-09-07 в 10.58.12.png",
+    "sha256": "1f70ec1e26864f2e12eac78606e35c0dc2befd921638a3ae9a2886e7a9975376"
+  },
+  {
+    "production": "public/images/projects/propusc-case/audit.png",
+    "source": "references/projects/pass-system/admin/Снимок экрана — 2026-09-07 в 10.58.38.png",
+    "sha256": "9e706a0450b73f3047609ce0342eb57f287ee43a793c6777dec6ce76c8107717"
+  },
+  {
+    "production": "public/images/projects/propusc-case/system.png",
+    "source": "references/projects/pass-system/admin/Снимок экрана — 2026-09-07 в 10.58.56.png",
+    "sha256": "9ba9b5d816631de7da83af737bbf7faad131a07e7f64f1d11478225415b6a477"
+  }
+]

@@ -7,9 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:integration": "node --env-file=.env.local --import tsx --test src/server/brief/brief.service.integration.test.ts src/app/api/brief/route.integration.test.ts src/server/brief/brief.schema.test.ts",
+    "test:integration": "node --env-file=.env.local --import tsx --test src/server/auth/admin-auth.integration.test.ts src/server/brief/brief.service.integration.test.ts src/app/api/brief/route.integration.test.ts src/server/brief/brief.schema.test.ts",
     "db:validate": "prisma validate",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "admin:upsert": "node --env-file=.env.local --import tsx scripts/upsert-admin.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

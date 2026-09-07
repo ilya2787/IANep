@@ -111,3 +111,33 @@ test('ошибка аудита откатывает замену предыду
     await prisma.$disconnect();
   }
 });
+
+test("смена статуса создаёт минимальное событие аудита", async () => {
+  const request = await prisma.briefRequest.create({ data: {
+    name: "Проверка статуса", contact: "status-test@example.com", projectType: "landing-page", answers: {}, source: "INTEGRATION_TEST",
+  } });
+  const repository = new BriefRepository(prisma);
+
+  try {
+    const result = await repository.changeStatus(request.id, BriefRequestStatus.IN_REVIEW);
+    assert.deepEqual(result, { status: BriefRequestStatus.IN_REVIEW, changed: true });
+
+    const saved = await prisma.briefRequest.findUniqueOrThrow({ where: { id: request.id } });
+    assert.equal(saved.status, BriefRequestStatus.IN_REVIEW);
+
+    const event = await prisma.auditEvent.findFirstOrThrow({
+      where: { entityType: "BriefRequest", entityId: request.id, eventType: "BRIEF_STATUS_CHANGED" },
+    });
+    assert.deepEqual(event.metadata, {
+      previousStatus: BriefRequestStatus.NEW,
+      newStatus: BriefRequestStatus.IN_REVIEW,
+      actor: "ADMIN",
+    });
+  } finally {
+    await prisma.$transaction([
+      prisma.auditEvent.deleteMany({ where: { entityType: "BriefRequest", entityId: request.id } }),
+      prisma.briefRequest.delete({ where: { id: request.id } }),
+    ]);
+    await prisma.$disconnect();
+  }
+});

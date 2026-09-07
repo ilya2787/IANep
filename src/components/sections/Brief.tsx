@@ -170,7 +170,7 @@ export function Brief() {
           const invalidStep = briefStepFields.findIndex((keys) => keys.some((key) => nextErrors[key]));
           if (invalidStep >= 0) setStep(invalidStep);
         }
-        setErrorMessage(response.status === 422 ? 'Проверьте данные заявки. Ответы сохранены.' : 'Не удалось отправить заявку. Ответы сохранены — попробуйте ещё раз.');
+        setErrorMessage(response.status === 422 ? 'Проверьте данные заявки. Ответы сохранены.' : 'Не удалось отправить заявку. Ответы сохранены, попробуйте ещё раз.');
         setStatus('error');
         return;
       }
@@ -211,7 +211,7 @@ export function Brief() {
       break;
     case 2:
       content = <>{options('features', getFeatureOptions(draft.projectType), true)}
-        <p className={styles.hint}>Не уверены, что выбрать? Отметьте только то, что точно необходимо — остальное обсудим вместе.</p>
+        <p className={styles.hint}>Не уверены, что выбрать? Отметьте только необходимое. Остальное обсудим вместе.</p>
         {field('featureNotes', 'Какие функции вам нужны? (необязательно)', 3000)}
       </>;
       break;
@@ -258,7 +258,7 @@ export function Brief() {
           <div data-reveal className={styles.leftColumn}>
             <header className={styles.intro}>
               <h2 className={styles.title} id="brief-title">Рассчитаем проект<br />под <span>ваши задачи</span></h2>
-              <p className={styles.subtitle}>Ответьте на несколько вопросов — мы подготовим оценку, подход и сроки реализации.</p>
+              <p className={styles.subtitle}>Ответьте на несколько вопросов. Мы подготовим оценку, подход и сроки реализации.</p>
             </header>
             {status === 'success' ? <div className={`${styles.form} ${styles.success}`} ref={feedback} tabIndex={-1} role="status">
               <div className={styles.successStatus}><span className={styles.successCheck} aria-hidden="true" />{replaced ? 'Изменения сохранены' : 'Отправлено успешно'}</div>
@@ -290,7 +290,7 @@ export function Brief() {
             </form>}
           </div>
 
-          <div data-reveal className={styles.mascotScene}>
+          <div data-reveal className={styles.mascotScene} data-success={status === 'success'}>
             <Image
               className={styles.mascot}
               src={status === 'success' ? "/images/brief/mascot-success-v2.png" : "/images/brief/mascot-questionnaire-v2.png"}

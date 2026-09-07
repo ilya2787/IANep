@@ -206,8 +206,14 @@
 }
 
 .onyx .mainScreen {
-  inset: 10% 9.7% 13.2%;
-  border-radius: 2%;
+  inset: 9.96% 9.64% 13.28% 9.86%;
+  border-radius: 1.65% / 2.6%;
+  background: #373231;
+}
+
+.onyx .desktopImage {
+  object-fit: fill;
+  object-position: center;
 }
 
 .phoneScreen {
