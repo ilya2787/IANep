@@ -5,6 +5,7 @@ import type {
 } from "@/generated/prisma/client";
 import { BriefConflict } from "./brief.receipt";
 import { prisma } from "@/server/db/prisma";
+import { getSystemSettings } from "@/server/system/settings";
 
 export class BriefStatusConflict extends Error {}
 
@@ -23,6 +24,7 @@ export class BriefRepository {
   async findManyForAdmin() {
     return this.db.briefRequest.findMany({
       select: {
+        project: { select: { id: true, title: true } },
         id: true,
         number: true,
         name: true,
@@ -38,7 +40,7 @@ export class BriefRepository {
   }
 
   async findByIdForAdmin(id: string) {
-    return this.db.briefRequest.findUnique({ where: { id } });
+    return this.db.briefRequest.findUnique({ where: { id }, include: { project: { select: { id: true, title: true } } } });
   }
 
   async findEventsForAdmin(id: string) {
@@ -50,6 +52,8 @@ export class BriefRepository {
   }
 
   async changeStatus(id: string, newStatus: BriefRequest["status"]) {
+    if (newStatus === "IN_PROGRESS") throw new BriefStatusConflict("Используйте создание проекта из заявки.");
+    const settings = await getSystemSettings();
     return this.db.$transaction(async (transaction) => {
       const current = await transaction.briefRequest.findUnique({ where: { id }, select: { status: true } });
       if (!current) return null;
@@ -57,7 +61,9 @@ export class BriefRepository {
 
       const updated = await transaction.briefRequest.updateMany({
         where: { id, status: current.status },
-        data: { status: newStatus },
+        data: newStatus === "ARCHIVED"
+          ? { status: newStatus, archivedAt: new Date(), deleteAfter: new Date(Date.now() + settings.archivedBriefRetentionDays * 86_400_000) }
+          : { status: newStatus, archivedAt: null, deleteAfter: null },
       });
       if (updated.count !== 1) throw new BriefStatusConflict("STATUS_CHANGED_CONCURRENTLY");
 

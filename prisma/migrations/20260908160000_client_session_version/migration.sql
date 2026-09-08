@@ -1,0 +1,2 @@
+ALTER TABLE "client_users"
+ADD COLUMN "sessionVersion" INTEGER NOT NULL DEFAULT 0;

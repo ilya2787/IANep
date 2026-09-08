@@ -1,0 +1,11 @@
+import Link from "next/link";
+import { requireClient } from "@/server/client/auth";
+import { prisma } from "@/server/db/prisma";
+import { statuses } from "@/server/client/model";
+import s from "@/components/workspace/workspace.module.css";
+export default async function ClientHome() {
+  const client = await requireClient();
+  const projects = await prisma.clientProject.findMany({ where: { clientId: client.id, archivedAt: null }, orderBy: { updatedAt: "desc" }, include: { stages: { where: { archivedAt: null }, orderBy: { position: "asc" } } } });
+  const reviews = projects.flatMap(project => project.stages.filter(stage => stage.status === "IN_REVIEW").map(stage => ({ project, stage })));
+  return <div className={s.stack}><div className={s.intro}><p className={s.muted}>Кабинет клиента</p><h1>Здравствуйте, {client.name}</h1><p className={s.muted}>Текущая работа, ваши решения и следующие шаги.</p></div><section className={s.focus}><h2>Требуется от вас</h2>{reviews.length ? reviews.map(({ project, stage }) => <div key={stage.id} className={s.row}><p>{project.title} · {stage.title}</p><Link href={`/client/projects/${project.id}?tab=approvals&stage=${stage.id}`}>Проверить результат →</Link></div>) : <p>Сейчас нет результатов, ожидающих вашего решения.</p>}</section><h2>Мои проекты</h2>{projects.length === 0 && <div className={s.panel}><h3>Готовим ваше рабочее пространство</h3><p className={s.muted}>После назначения проекта он появится здесь вместе с этапами и планом работы.</p></div>}<div className={s.grid}>{projects.map(project => { const active = project.stages.find(stage => !["COMPLETED", "WARRANTY"].includes(stage.status)); const complete = project.stages.filter(stage => ["COMPLETED", "WARRANTY"].includes(stage.status)).length; return <article key={project.id} className={`${s.panel} ${s.stack}`}><div className={s.row}><h2><Link href={`/client/projects/${project.id}`}>{project.title}</Link></h2><span className={s.badge}>{statuses[project.status]}</span></div><p>{active ? `Сейчас: ${active.title} · ${statuses[active.status]}` : project.stages.length ? "Все этапы завершены" : "Формируем план этапов"}</p><p className={s.muted}>Завершено этапов: {complete} из {project.stages.length}</p><p>Далее: {project.nextAction || "IANep уточнит следующий шаг."}</p></article>; })}</div></div>;
+}

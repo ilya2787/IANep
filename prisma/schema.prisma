@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum BriefRequestStatus {
+  IN_PROGRESS
   NEW
   IN_REVIEW
   CONTACTED
@@ -15,6 +16,7 @@ enum BriefRequestStatus {
 }
 
 model BriefRequest {
+  project     ClientProject?
   id          String             @id @default(uuid()) @db.Uuid
   number      Int                @unique @default(autoincrement()) @map("public_number")
   name        String
@@ -25,8 +27,11 @@ model BriefRequest {
   source      String             @default("PUBLIC_BRIEF")
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
+  archivedAt  DateTime?
+  deleteAfter DateTime?
 
   @@index([status, createdAt])
+  @@index([archivedAt, deleteAfter])
   @@map("brief_requests")
 }
 
@@ -48,8 +53,282 @@ model AdminUser {
   username     String   @unique @db.VarChar(100)
   passwordHash String
   active       Boolean  @default(true)
+  sessionVersion Int    @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  notifications Notification[]
 
   @@map("admin_users")
+}
+
+enum WorkStatus {
+  PREPARATION
+  IN_PROGRESS
+  IN_REVIEW
+  REVISION
+  COMPLETED
+  WARRANTY
+}
+
+enum MaterialKind {
+  IMAGE
+  DOCUMENT
+  FILE
+  LINK
+}
+
+enum DecisionKind {
+  ACCEPTED
+  CHANGES
+}
+
+enum PaymentStatus {
+  PLANNED
+  DUE
+  PAID
+  CANCELLED
+}
+
+model ClientUser {
+  id              String          @id @default(uuid()) @db.Uuid
+  name            String
+  username        String          @unique @db.VarChar(100)
+  passwordHash    String
+  active          Boolean         @default(true)
+  email           String?
+  emailVerifiedAt DateTime?
+  phone           String?
+  phoneVerifiedAt DateTime?
+  sessionVersion  Int             @default(0)
+  emailNotificationsEnabled Boolean @default(false)
+  notificationPreferences Json?
+  createdAt       DateTime        @default(now())
+  projects        ClientProject[]
+  decisions       StageDecision[]
+  notifications   Notification[]
+
+  @@map("client_users")
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+}
+
+enum NotificationAttemptStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  SKIPPED
+}
+
+model Notification {
+  id               String   @id @default(uuid()) @db.Uuid
+  recipientClientId String?  @db.Uuid
+  recipientClient   ClientUser? @relation(fields: [recipientClientId], references: [id], onDelete: Cascade)
+  recipientAdminId  String?  @db.Uuid
+  recipientAdmin    AdminUser? @relation(fields: [recipientAdminId], references: [id], onDelete: Cascade)
+  projectId         String?  @db.Uuid
+  project           ClientProject? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  eventType         String
+  title             String
+  message           String
+  href              String?
+  createdAt         DateTime @default(now())
+  readAt            DateTime?
+  attempts          NotificationAttempt[]
+
+  @@index([recipientClientId, readAt, createdAt])
+  @@index([recipientAdminId, readAt, createdAt])
+  @@map("notifications")
+}
+
+model NotificationAttempt {
+  id             String @id @default(uuid()) @db.Uuid
+  notificationId String @db.Uuid
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  channel        NotificationChannel
+  status         NotificationAttemptStatus @default(PENDING)
+  attemptCount   Int @default(0)
+  nextAttemptAt  DateTime @default(now())
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  lastError      String? @db.VarChar(500)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([notificationId, channel])
+  @@index([status, nextAttemptAt])
+  @@map("notification_attempts")
+}
+
+model ClientProject {
+  briefId      String?           @unique @db.Uuid
+  brief        BriefRequest?     @relation(fields: [briefId], references: [id])
+  id           String            @id @default(uuid()) @db.Uuid
+  clientId     String            @db.Uuid
+  client       ClientUser        @relation(fields: [clientId], references: [id])
+  title        String
+  description  String            @default("")
+  status       WorkStatus        @default(PREPARATION)
+  nextAction   String            @default("")
+  launchedAt   DateTime?         @db.Date
+  warrantyDays Int               @default(30)
+  archivedAt   DateTime?
+  deleteAfter  DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  stages       ProjectStage[]
+  materials    ProjectMaterial[]
+  payments     ProjectPayment[]
+  events       ProjectEvent[]
+  files        StoredFile[]
+  notifications Notification[]
+
+  @@index([clientId, updatedAt])
+  @@index([archivedAt, deleteAfter])
+  @@map("client_projects")
+}
+
+model ProjectStage {
+  id             String            @id @default(uuid()) @db.Uuid
+  projectId      String            @db.Uuid
+  project        ClientProject     @relation(fields: [projectId], references: [id])
+  title          String
+  description    String            @default("")
+  position       Int
+  status         WorkStatus        @default(PREPARATION)
+  includedRounds Int               @default(2)
+  archivedAt     DateTime?
+  versions       StageVersion[]
+  materials      ProjectMaterial[]
+
+  @@index([projectId, position])
+  @@map("project_stages")
+}
+
+model StageVersion {
+  id          String            @id @default(uuid()) @db.Uuid
+  stageId     String            @db.Uuid
+  stage       ProjectStage      @relation(fields: [stageId], references: [id])
+  number      Int
+  comment     String
+  publishedAt DateTime          @default(now())
+  authorId    String            @db.Uuid
+  materials   VersionMaterial[]
+  decision    StageDecision?
+
+  @@unique([stageId, number])
+  @@map("stage_versions")
+}
+
+model VersionMaterial {
+  id        String       @id @default(uuid()) @db.Uuid
+  versionId String       @db.Uuid
+  version   StageVersion @relation(fields: [versionId], references: [id])
+  kind      MaterialKind
+  title     String
+  url       String
+  fileId    String?      @db.Uuid
+  file      StoredFile?  @relation(fields: [fileId], references: [id])
+
+  @@map("version_materials")
+}
+
+model StageDecision {
+  id                String       @id @default(uuid()) @db.Uuid
+  versionId         String       @unique @db.Uuid
+  version           StageVersion @relation(fields: [versionId], references: [id])
+  clientId          String       @db.Uuid
+  client            ClientUser   @relation(fields: [clientId], references: [id])
+  kind              DecisionKind
+  changes           String       @default("")
+  countsTowardLimit Boolean      @default(true)
+  exceptionReason   String?
+  createdAt         DateTime     @default(now())
+
+  @@map("stage_decisions")
+}
+
+model ProjectMaterial {
+  id         String        @id @default(uuid()) @db.Uuid
+  projectId  String        @db.Uuid
+  project    ClientProject @relation(fields: [projectId], references: [id])
+  stageId    String?       @db.Uuid
+  stage      ProjectStage? @relation(fields: [stageId], references: [id])
+  kind       MaterialKind
+  title      String
+  url        String
+  authorId   String        @db.Uuid
+  authorSide String
+  createdAt  DateTime      @default(now())
+  fileId     String?       @db.Uuid
+  file       StoredFile?   @relation(fields: [fileId], references: [id])
+
+  @@index([projectId, createdAt])
+  @@map("project_materials")
+}
+
+model ProjectPayment {
+  id          String        @id @default(uuid()) @db.Uuid
+  projectId   String        @db.Uuid
+  project     ClientProject @relation(fields: [projectId], references: [id])
+  title       String
+  amount      Decimal       @db.Decimal(12, 2)
+  status      PaymentStatus @default(PLANNED)
+  dueAt       DateTime?     @db.Date
+  paidAt      DateTime?     @db.Date
+  documentUrl String?
+
+  @@index([projectId, dueAt])
+  @@map("project_payments")
+}
+
+model ProjectEvent {
+  id             String        @id @default(uuid()) @db.Uuid
+  projectId      String        @db.Uuid
+  project        ClientProject @relation(fields: [projectId], references: [id])
+  type           String
+  message        String
+  actorId        String        @db.Uuid
+  actorSide      String
+  channel        String        @default("IN_APP")
+  deliveryStatus String        @default("RECORDED")
+  createdAt      DateTime      @default(now())
+
+  @@index([projectId, createdAt])
+  @@map("project_events")
+}
+
+model StoredFile {
+  id           String            @id @default(uuid()) @db.Uuid
+  projectId    String            @db.Uuid
+  project      ClientProject     @relation(fields: [projectId], references: [id])
+  originalName String
+  mimeType     String
+  size         Int
+  sha256       String
+  kind         MaterialKind
+  authorId     String            @db.Uuid
+  authorSide   String
+  createdAt    DateTime          @default(now())
+  physicalDeletedAt DateTime?
+  deletionReason String?
+  versions     VersionMaterial[]
+  materials    ProjectMaterial[]
+
+  @@index([projectId, createdAt])
+  @@map("stored_files")
+}
+
+model SystemSetting {
+  id                         String   @id @default("default")
+  archivedProjectRetentionDays Int   @default(365)
+  archivedBriefRetentionDays   Int   @default(365)
+  cleanupWarningDays           Int   @default(30)
+  automaticCleanupEnabled      Boolean @default(false)
+  updatedAt                    DateTime @updatedAt
+
+  @@map("system_settings")
 }

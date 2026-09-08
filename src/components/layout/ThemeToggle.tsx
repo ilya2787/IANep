@@ -86,6 +86,7 @@ export function ThemeToggle() {
 
   return (
     <button
+      data-theme-toggle
       className={`${styles.toggle} ${theme === "light" ? styles.light : styles.dark}`}
       type="button"
       onClick={toggleTheme}

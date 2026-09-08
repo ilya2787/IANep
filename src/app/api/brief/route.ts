@@ -3,15 +3,36 @@ import { NextResponse } from "next/server";
 
 import { submitBriefSchema } from "@/server/brief/brief.schema";
 import { briefService } from "@/server/brief/brief.service";
+import { operationalError, requestId } from "@/server/operations/log";
+import { BodyTooLargeError, readJsonBody } from "@/server/security/body";
+import { clientIp } from "@/server/security/client-ip";
+import { consumeRateLimit } from "@/server/security/rate-limit";
 
 export const runtime = "nodejs";
+const MAX_BRIEF_BODY_BYTES = 64 * 1024;
+const BRIEF_LIMIT = 20;
+const BRIEF_WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(request: Request) {
   let body: unknown;
+  const correlationId = requestId(request.headers);
+  const rateLimit = consumeRateLimit("public-brief", clientIp(request.headers), { limit: BRIEF_LIMIT, windowMs: BRIEF_WINDOW_MS });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Слишком много заявок. Попробуйте позже" } },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds), "X-Request-Id": correlationId, "Cache-Control": "no-store" } },
+    );
+  }
 
   try {
-    body = await request.json();
-  } catch {
+    body = await readJsonBody(request, MAX_BRIEF_BODY_BYTES);
+  } catch (error) {
+    if (error instanceof BodyTooLargeError) {
+      return NextResponse.json(
+        { error: { code: "BODY_TOO_LARGE", message: "Размер заявки превышает допустимый лимит" } },
+        { status: 413, headers: { "X-Request-Id": correlationId, "Cache-Control": "no-store" } },
+      );
+    }
     return NextResponse.json(
       {
         error: {
@@ -19,7 +40,7 @@ export async function POST(request: Request) {
           message: "Отправьте корректный JSON",
         },
       },
-      { status: 400 },
+      { status: 400, headers: { "X-Request-Id": correlationId, "Cache-Control": "no-store" } },
     );
   }
 
@@ -37,14 +58,14 @@ export async function POST(request: Request) {
           })),
         },
       },
-      { status: 422 },
+      { status: 422, headers: { "X-Request-Id": correlationId, "Cache-Control": "no-store" } },
     );
   }
 
   const receipt = request.headers.get('x-brief-receipt') ?? undefined;
   const action = request.headers.get('x-brief-action') ?? undefined;
   if ((receipt && !/^[a-f0-9]{64}$/.test(receipt)) || (action && action !== 'new' && action !== 'replace')) {
-    return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'Некорректный выбор действия' } }, { status: 422 });
+    return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'Некорректный выбор действия' } }, { status: 422, headers: { "X-Request-Id": correlationId, "Cache-Control": "no-store" } });
   }
 
   try {
@@ -62,16 +83,16 @@ export async function POST(request: Request) {
           createdAt: briefRequest.createdAt.toISOString(),
         },
       },
-      { status: result.replaced ? 200 : 201, headers: { "Cache-Control": "no-store" } },
+      { status: result.replaced ? 200 : 201, headers: { "Cache-Control": "no-store", "X-Request-Id": correlationId } },
     );
   } catch (error) {
     if (error instanceof BriefConflict) {
       return NextResponse.json({ error: {
         code: error.code, number: error.number, canReplace: error.canReplace,
         message: error.code === 'DUPLICATE_BRIEF' ? 'Вы уже отправляли заявку с этим контактом' : 'Предыдущую заявку уже нельзя заменить. Можно создать новую.',
-      } }, { status: 409, headers: { 'Cache-Control': 'no-store' } });
+      } }, { status: 409, headers: { 'Cache-Control': 'no-store', "X-Request-Id": correlationId } });
     }
-    console.error("Не удалось сохранить заявку");
+    operationalError("brief.submit.failed", error, { requestId: correlationId });
 
     return NextResponse.json(
       {
@@ -80,7 +101,7 @@ export async function POST(request: Request) {
           message: "Не удалось отправить заявку. Попробуйте ещё раз",
         },
       },
-      { status: 500 },
+      { status: 500, headers: { "X-Request-Id": correlationId, "Cache-Control": "no-store" } },
     );
   }
 }

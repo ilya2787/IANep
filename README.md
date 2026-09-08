@@ -2,6 +2,8 @@
 
 Локальная разработка Public MVP на Next.js, TypeScript, Prisma и PostgreSQL.
 
+Production-развёртывание, переменные окружения, reverse proxy, dispatcher уведомлений, backup/restore и rollback описаны в [docs/deployment.md](docs/deployment.md).
+
 ## Запуск
 
 1. Создайте `.env.local` по примеру `.env.example`.
@@ -30,6 +32,8 @@ npm run dev
 
 ```bash
 npm run lint
+npm run typecheck
+npm test
 npm run build
 npm run test:integration
 ```

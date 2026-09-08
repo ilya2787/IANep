@@ -7,15 +7,19 @@ export class AdminRepository {
   findActiveByUsername(username: string) {
     return this.db.adminUser.findFirst({
       where: { username, active: true },
-      select: { id: true, username: true, passwordHash: true },
+      select: { id: true, username: true, passwordHash: true, sessionVersion: true },
     });
   }
 
   findActiveById(id: string) {
     return this.db.adminUser.findFirst({
       where: { id, active: true },
-      select: { id: true, username: true },
+      select: { id: true, username: true, sessionVersion: true },
     });
+  }
+
+  revokeSessions(id: string) {
+    return this.db.adminUser.updateMany({ where: { id }, data: { sessionVersion: { increment: 1 } } });
   }
 }
 

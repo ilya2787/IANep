@@ -5,6 +5,7 @@ import test from "node:test";
 import { briefService } from "@/server/brief/brief.service";
 import { POST } from "@/app/api/brief/route";
 import { prisma } from "@/server/db/prisma";
+import { resetRateLimitsForTests } from "@/server/security/rate-limit";
 
 test("POST /api/brief отклоняет некорректный JSON", async () => {
   const response = await POST(
@@ -139,7 +140,34 @@ test("POST /api/brief скрывает внутренние ошибки", async
   assert.deepEqual(await response.json(), {
     error: { code: "INTERNAL_ERROR", message: "Не удалось отправить заявку. Попробуйте ещё раз" },
   });
-  assert.deepEqual(log.mock.calls[0].arguments, ["Не удалось сохранить заявку"]);
+  assert.equal(log.mock.calls.length, 1);
+  const logged = JSON.parse(String(log.mock.calls[0].arguments[0]));
+  assert.equal(logged.event, "brief.submit.failed");
+  assert.equal(logged.errorType, "Error");
+  assert.equal(JSON.stringify(logged).includes("INTERNAL_DATABASE_DETAILS"), false);
+});
+
+test("POST /api/brief ограничивает размер тела до разбора JSON", async () => {
+  resetRateLimitsForTests();
+  const response = await POST(new Request("http://localhost/api/brief", {
+    method: "POST",
+    headers: { "content-length": String(65 * 1024) },
+    body: "{}",
+  }));
+  assert.equal(response.status, 413);
+  assert.equal((await response.json()).error.code, "BODY_TOO_LARGE");
+});
+
+test("POST /api/brief применяет server-side rate limit", async () => {
+  resetRateLimitsForTests();
+  let response!: Response;
+  for (let index = 0; index < 21; index += 1) {
+    response = await POST(new Request("http://localhost/api/brief", { method: "POST", body: "{}" }));
+  }
+  assert.equal(response.status, 429);
+  assert.equal((await response.json()).error.code, "RATE_LIMITED");
+  assert.ok(Number(response.headers.get("retry-after")) >= 1);
+  resetRateLimitsForTests();
 });
 
 test('повторный бриф требует выбора, замена сохраняет номер, новая заявка получает другой', async () => {

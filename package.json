@@ -2,15 +2,25 @@
   "name": "ianep",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@11.19.0",
+  "engines": {
+    "node": ">=24.0.0 <25",
+    "npm": ">=11.0.0 <12"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:integration": "node --env-file=.env.local --import tsx --test src/server/auth/admin-auth.integration.test.ts src/server/brief/brief.service.integration.test.ts src/app/api/brief/route.integration.test.ts src/server/brief/brief.schema.test.ts",
+    "typecheck": "tsc --noEmit --incremental false",
+    "test": "node --import tsx --test src/server/auth/login-rate-limit.test.ts src/server/config/env.test.ts src/server/operations/readiness.test.ts src/server/notifications/service.test.ts src/server/security/body.test.ts src/server/security/client-ip.test.ts src/server/security/rate-limit.test.ts",
+    "test:integration": "node --env-file=.env.local --import tsx --test src/server/auth/admin-auth.integration.test.ts src/server/brief/brief.service.integration.test.ts src/app/api/brief/route.integration.test.ts src/server/brief/brief.schema.test.ts src/server/client/client.integration.test.ts src/server/storage/storage.integration.test.ts src/server/brief/brief-project.integration.test.ts",
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",
-    "admin:upsert": "node --env-file=.env.local --import tsx scripts/upsert-admin.ts"
+    "admin:upsert": "node --env-file=.env.local --import tsx scripts/upsert-admin.ts",
+    "notifications:dispatch": "node --env-file=.env.local --import tsx scripts/dispatch-notifications.ts",
+    "storage:cleanup": "node --env-file=.env.local --import tsx scripts/cleanup-storage.ts",
+    "projects:cleanup": "node --env-file=.env.local --import tsx scripts/cleanup-projects.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -18,18 +28,20 @@
     "@prisma/client": "7.10.0",
     "gsap": "^3.15.0",
     "next": "16.3.3",
+    "nodemailer": "^10.0.1",
     "pg": "8.23.0",
-    "prisma": "7.10.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "4.5.4"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
+    "prisma": "7.10.0",
     "tsx": "4.23.13",
     "typescript": "^5"
   }

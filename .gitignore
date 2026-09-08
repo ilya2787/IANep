@@ -48,3 +48,7 @@ next-env.d.ts
 /.playwright-cli/
 /output/
 /work/
+
+# Закрытое хранилище файлов
+/.ianep-storage/
+/work/

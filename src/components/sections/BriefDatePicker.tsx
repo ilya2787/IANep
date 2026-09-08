@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { createPortal } from "react-dom";
 import styles from './Brief.module.css';
 
 const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
@@ -8,7 +9,8 @@ const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const iso = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 const parse = (value: string) => value ? new Date(`${value}T12:00:00`) : new Date();
 
-export function BriefDatePicker({ value, onChange, error }: { value: string; onChange: (value: string) => void; error?: string }) {
+export function BriefDatePicker({ value, onChange, error, name = "launchDate", label = "Желаемая дата запуска", title = "Дата запуска", hint = "Окончательный срок определим после обсуждения проекта." }: { value: string; onChange: (value: string) => void; error?: string; name?: string; label?: string; title?: string; hint?: string }) {
+  const id = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -21,7 +23,7 @@ export function BriefDatePicker({ value, onChange, error }: { value: string; onC
   const days = Array.from({ length: 42 }, (_, index) => new Date(year, month, index - offset + 1, 12));
 
   useEffect(() => {
-    if (open) dialog.current?.showModal();
+    if (open) { const button = trigger.current; dialog.current?.showModal(); return () => { button?.focus({ preventScroll: true }); }; }
     else if (dialog.current?.open) { dialog.current.close(); trigger.current?.focus({ preventScroll: true }); }
   }, [open]);
 
@@ -48,16 +50,16 @@ export function BriefDatePicker({ value, onChange, error }: { value: string; onC
   function select(date: Date) { onChange(iso(date)); setOpen(false); }
 
   return <div className={styles.field}>
-    <span id="brief-date-label">Желаемая дата запуска</span>
-    <button ref={trigger} type="button" role="combobox" aria-controls="brief-date-dialog" className={styles.dateTrigger} aria-labelledby="brief-date-label brief-date-value" aria-haspopup="dialog" aria-expanded={open} aria-invalid={error ? true : undefined} aria-describedby={error ? 'brief-error-launchDate' : undefined}
+    <span id={`${id}-brief-date-label`}>{label}</span>
+    <button ref={trigger} type="button" role="combobox" aria-controls={`${id}-brief-date-dialog`} className={styles.dateTrigger} aria-labelledby={`${id}-brief-date-label ${id}-brief-date-value`} aria-haspopup="dialog" aria-expanded={open} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined}
       onClick={() => { setCursor(iso(parse(value))); setMonthView(false); setOpen(true); }}>
-      <span id="brief-date-value">{value ? parse(value).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Выберите дату'}</span>
+      <span id={`${id}-brief-date-value`}>{value ? parse(value).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Выберите дату'}</span>
       <span className={styles.calendarGlyph} aria-hidden="true"><span /></span>
     </button>
-    <input type="hidden" name="launchDate" value={value} />
-    {error && <span id="brief-error-launchDate" className={styles.fieldError}>{error}</span>}
-    <dialog id="brief-date-dialog" ref={dialog} className={`${styles.dialog} ${styles.calendar}`} aria-labelledby="brief-calendar-title" onCancel={() => setOpen(false)} onClose={() => setOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) { const bounds = event.currentTarget.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) setOpen(false); } }}>
-      <div className={styles.dialogHeading}><h3 id="brief-calendar-title">Дата запуска</h3><button type="button" className={styles.iconButton} aria-label="Закрыть календарь" onClick={() => setOpen(false)}>×</button></div>
+    <input type="hidden" name={name} value={value} />
+    {error && <span id={`${id}-error`} className={styles.fieldError}>{error}</span>}
+    {open && createPortal(<dialog id={`${id}-brief-date-dialog`} ref={dialog} className={`${styles.dialog} ${styles.calendar}`} aria-labelledby={`${id}-brief-calendar-title`} onCancel={() => setOpen(false)} onClose={() => setOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) { const bounds = event.currentTarget.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) setOpen(false); } }}>
+      <div className={styles.dialogHeading}><h3 id={`${id}-brief-calendar-title`}>{title}</h3><button type="button" className={styles.iconButton} aria-label="Закрыть календарь" onClick={() => setOpen(false)}>×</button></div>
       <div className={styles.calendarNav}>
         <button type="button" className={styles.iconButton} aria-label={monthView ? 'Предыдущий год' : 'Предыдущий месяц'} onClick={() => move(-1, monthView)}>‹</button>
         <button type="button" className={styles.monthToggle} aria-expanded={monthView} onClick={() => setMonthView(!monthView)}>{monthView ? year : `${months[month]} ${year}`} <span aria-hidden="true">⌄</span></button>
@@ -71,7 +73,7 @@ export function BriefDatePicker({ value, onChange, error }: { value: string; onC
             return <button type="button" key={key} data-date={key} data-outside={date.getMonth() !== month} data-today={key === iso(new Date())} aria-pressed={key === value} tabIndex={key === cursor ? 0 : -1} aria-label={date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })} onKeyDown={keyboard} onClick={() => select(date)}>{date.getDate()}</button>;
           })}</div></>}
       <div className={styles.calendarFooter}><button type="button" onClick={() => select(new Date())}>Сегодня</button><button type="button" onClick={() => { onChange(''); setOpen(false); }}>Очистить</button></div>
-      <p className={styles.hint}>Окончательный срок определим после обсуждения проекта.</p>
-    </dialog>
+      {hint && <p className={styles.hint}>{hint}</p>}
+    </dialog>, document.body)}
   </div>;
 }

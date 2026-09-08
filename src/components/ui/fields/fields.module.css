@@ -1,0 +1,19 @@
+.select { display:block; position:relative; min-width:0; width:100%; }
+.native { position:absolute!important; width:1px!important; height:1px!important; min-height:0!important; padding:0!important; border:0!important; overflow:hidden; clip-path:inset(50%); }
+.trigger { display:flex; width:100%; min-height:3rem; align-items:center; justify-content:space-between; gap:1rem; padding:.75rem 1rem; border:1px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-background); color:var(--color-text); font:inherit; text-align:left; cursor:pointer; }
+.trigger > span:first-child { overflow-wrap:anywhere; }
+.trigger > span:last-child { color:var(--color-lavender); }
+.dialog { margin:auto; width:min(28rem,calc(100vw - 2rem)); max-height:calc(100dvh - 2rem); padding:1.25rem; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-surface); color:var(--color-text); box-shadow:0 24px 80px #0003; }
+.dialog::backdrop { background:#0a08148f; backdrop-filter:blur(6px); }
+.heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+.heading button { width:44px; min-height:44px; border:1px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-background); color:var(--color-text); font:inherit; font-size:1.4rem; cursor:pointer; }
+.options { display:grid; gap:.35rem; }
+.options button { display:flex; justify-content:space-between; align-items:center; gap:1rem; width:100%; min-height:44px; padding:.8rem 1rem; border:1px solid transparent; border-radius:var(--radius-sm); text-align:left; background:transparent; color:var(--color-text); font:inherit; cursor:pointer; }
+.options button:hover { background:var(--color-surface-raised); }
+.options button[aria-selected="true"] { background:var(--color-lavender-soft); color:var(--color-lavender); }
+.options button:disabled { opacity:.5; cursor:default; }
+.select button:focus-visible { outline:2px solid var(--color-focus); outline-offset:3px; }
+.trigger:disabled { opacity:.6; cursor:wait; }
+@media(prefers-reduced-motion:reduce) { .select * { animation:none; transition:none; } }
+
+.dialog button:focus-visible { outline:2px solid var(--color-focus); outline-offset:2px; }
