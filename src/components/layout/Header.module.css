@@ -222,6 +222,17 @@
 	}
 }
 
+/*
+ * iOS can retain its legacy wide layout viewport during a client-side route
+ * transition. Coarse, non-hover input keeps the phone header compact even
+ * before Safari has reconciled the viewport metadata for the new route.
+ */
+@media (hover: none) and (pointer: coarse) {
+	.cta {
+		display: none;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.header,
 	.navLink,
