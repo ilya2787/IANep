@@ -11,6 +11,7 @@
   padding: 0.2rem;
   color: rgba(255, 255, 255, 0.58);
   background: var(--color-surface-raised);
+  -webkit-tap-highlight-color: transparent;
   cursor: pointer;
   isolation: isolate;
   overflow: hidden;
