@@ -277,7 +277,7 @@
 }
 
 @media (max-width: 48rem) {
-  .hero, .stage { min-height: 100dvh; }
+  .hero, .stage { min-height: 100svh; }
   .stage { display: flex; flex-direction: column; padding-top: 7rem; padding-bottom: 1.5rem; }
   .ambientGlow { top: 24%; width: 92vw; }
   .brandOrbit { top: 7rem; }
@@ -287,8 +287,16 @@
   .titleAccent { margin-left: 14vw; color: var(--hero-accent); font-size: clamp(3.5rem, 16vw, 6rem); }
   .titleEnd { width: auto; margin-top: -0.05em; text-align: right; }
   .mascotStage { position: relative; bottom: auto; left: auto; z-index: 2; width: min(82vw, 28rem); margin: -0.75rem auto -8%; transform: none; }
-  .copy { position: relative; right: auto; bottom: auto; left: auto; z-index: 4; align-items: flex-start; flex-direction: column; gap: 1.25rem; margin-top: auto; }
-  .description { max-width: 22rem; }
+  .copy { position: relative; right: auto; bottom: auto; left: auto; z-index: 4; align-items: flex-start; flex-direction: column; gap: 1.25rem; margin-top: auto; margin-bottom: 0.5rem; }
+  .description {
+    max-width: 22rem;
+    padding: 0.55rem 0.75rem;
+    margin: -0.55rem -0.75rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-background) 68%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
   .actions { flex-wrap: wrap; gap: 0.75rem 1.25rem; }
 }
 

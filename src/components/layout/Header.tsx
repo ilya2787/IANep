@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "@/components/ui";
+import { Link, SectionLink } from "@/components/ui";
 import { Container } from "./Container";
 import { ThemeToggle } from "./ThemeToggle";
 import styles from "./Header.module.css";
@@ -67,9 +67,9 @@ export function Header({ inverse = false }: { inverse?: boolean }) {
           <ul className={styles.navList}>
             {navigation.map((item) => (
               <li key={item.href}>
-                <Link className={styles.navLink} href={item.href} onClick={() => setMenuOpen(false)}>
+                <SectionLink className={styles.navLink} href={item.href} onClick={() => setMenuOpen(false)}>
                   {item.label}
-                </Link>
+                </SectionLink>
               </li>
             ))}
           </ul>
@@ -80,9 +80,9 @@ export function Header({ inverse = false }: { inverse?: boolean }) {
           <button ref={menuButton} className={styles.menuButton} type="button" aria-controls="primary-navigation" aria-expanded={menuOpen} aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"} onClick={() => setMenuOpen((open) => !open)}>
             <span aria-hidden="true">{menuOpen ? "×" : "☰"}</span>
           </button>
-          <Link className={styles.cta} href="#brief" variant="primary">
+          <SectionLink className={styles.cta} href="#brief" variant="primary">
             Рассчитать проект <span aria-hidden="true">→</span>
-          </Link>
+          </SectionLink>
         </div>
       </Container>
     </header>

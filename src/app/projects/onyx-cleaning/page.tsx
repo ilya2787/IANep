@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Container } from "@/components/layout";
-import { Link } from "@/components/ui";
+import { Link, SectionLink } from "@/components/ui";
 import { OnyxCaseMotion } from "./OnyxCaseMotion";
 import styles from "./page.module.css";
 
@@ -22,7 +22,7 @@ export default function OnyxCleaningCase() {
             <Image src="/reference/logo-ia.png" alt="" width={44} height={27} priority />
             <span>Nep</span>
           </Link>
-          <div className={styles.headerActions}><ThemeToggle /><Link className={styles.backLink} href="/#projects">Все проекты <span aria-hidden="true">↗</span></Link></div>
+          <div className={styles.headerActions}><ThemeToggle /><SectionLink className={styles.backLink} href="/#projects">Все проекты <span aria-hidden="true">↗</span></SectionLink></div>
         </Container>
       </header>
 
@@ -151,19 +151,19 @@ export default function OnyxCleaningCase() {
           <Container className={styles.finalInner}>
             <p className={styles.kicker}>06 / Итог проекта</p>
             <h2 id="final-title">Сайт с логикой<br />полноценного сервиса</h2>
-            <p className={styles.resultText}>В проекте реализован путь от знакомства с услугой до расчёта, проверки и передачи заказа команде. Цены, услуги и параметры выезда вынесены в панель управления.</p><p className={styles.resultNote}>Коммерческого запуска не было, поэтому здесь показаны реализованные решения, а не показатели продаж.</p><Link className={styles.homeLink} href="/#brief">Обсудить похожий проект <span aria-hidden="true">↗</span></Link>
+            <p className={styles.resultText}>В проекте реализован путь от знакомства с услугой до расчёта, проверки и передачи заказа команде. Цены, услуги и параметры выезда вынесены в панель управления.</p><p className={styles.resultNote}>Коммерческого запуска не было, поэтому здесь показаны реализованные решения, а не показатели продаж.</p><SectionLink className={styles.homeLink} href="/#brief">Обсудить похожий проект <span aria-hidden="true">↗</span></SectionLink>
             <div className={styles.stack} aria-label="Технологии проекта">
               <span>React 18</span><span>TypeScript</span><span>SCSS</span><span>Mantine</span><span>Framer Motion</span><span>Axios</span><span>React Router</span><span>Node.js</span><span>Express</span><span>MySQL</span>
             </div>
-            <Link className={styles.nextProject} href="/#project-pass-system">
+            <SectionLink className={styles.nextProject} href="/#project-pass-system">
               <span>Следующий проект</span>
               <strong>Система управления пропусками</strong>
               <span aria-hidden="true">→</span>
-            </Link>
-            <Link className={styles.homeLink} href="/#projects">
+            </SectionLink>
+            <SectionLink className={styles.homeLink} href="/#projects">
               <span aria-hidden="true">←</span>
               На главную
-            </Link>
+            </SectionLink>
           </Container>
         </section>
       </OnyxCaseMotion>

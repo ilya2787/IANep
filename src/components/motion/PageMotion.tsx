@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { cleanHomeUrl, navigateToSection } from "@/lib/section-navigation";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -21,11 +22,8 @@ export function PageMotion({ children }: { children: ReactNode }) {
         const target = document.getElementById(id);
         if (!target) return;
 
-        const documentElement = document.documentElement;
-        const previousScrollBehavior = documentElement.style.scrollBehavior;
-        documentElement.style.scrollBehavior = "auto";
-        target.scrollIntoView({ block: "start" });
-        documentElement.style.scrollBehavior = previousScrollBehavior;
+        navigateToSection(id, { behavior: "auto" });
+        window.history.replaceState(window.history.state, "", cleanHomeUrl(window.location));
       });
     });
 
@@ -62,10 +60,7 @@ export function PageMotion({ children }: { children: ReactNode }) {
       const heroObserver = new IntersectionObserver((entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
           intro.play();
-        } else {
-          // Anchor restoration may move past the hero just after hydration.
-          // Keep the intro ready instead of letting it finish off screen.
-          intro.pause(0);
+          heroObserver.disconnect();
         }
       }, { threshold: 0.15 });
 

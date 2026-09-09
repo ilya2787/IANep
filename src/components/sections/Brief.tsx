@@ -57,6 +57,15 @@ export function Brief() {
     else if (duplicateDialog.current?.open) duplicateDialog.current.close();
   }, [duplicate]);
 
+  useEffect(() => {
+    const handleSectionNavigation = (event: Event) => {
+      if (!(event instanceof CustomEvent) || event.detail?.id !== 'brief' || status !== 'success') return;
+      restart();
+    };
+    window.addEventListener('ianep:section-navigation', handleSectionNavigation);
+    return () => window.removeEventListener('ianep:section-navigation', handleSectionNavigation);
+  }, [status]);
+
   function restart() {
     setDraft(createBriefDraft());
     setErrors({});
@@ -257,7 +266,7 @@ export function Brief() {
         <div className={styles.layout}>
           <div data-reveal className={styles.leftColumn}>
             <header className={styles.intro}>
-              <h2 className={styles.title} id="brief-title">Рассчитаем проект<br />под <span>ваши задачи</span></h2>
+              <h2 className={styles.title} id="brief-title" tabIndex={-1} data-section-focus>Рассчитаем проект<br />под <span>ваши задачи</span></h2>
               <p className={styles.subtitle}>Ответьте на несколько вопросов. Мы подготовим оценку, подход и сроки реализации.</p>
             </header>
             {status === 'success' ? <div className={`${styles.form} ${styles.success}`} ref={feedback} tabIndex={-1} role="status">

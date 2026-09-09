@@ -114,8 +114,11 @@
 }
 
 .toggle:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 4px;
+  outline: none;
+  box-shadow:
+    0 0 0 3px var(--color-background),
+    0 0 0 5px var(--color-focus),
+    inset 0 0 1.2rem rgba(116, 87, 255, 0.11);
 }
 
 @media (hover: hover) and (pointer: fine) {

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Container } from "@/components/layout";
-import { Button, Link } from "@/components/ui";
+import { Button, SectionLink } from "@/components/ui";
 import styles from "./FinalCTA.module.css";
 
 export function FinalCTA() {
@@ -22,9 +22,9 @@ export function FinalCTA() {
             Расскажите о своей задаче. Мы предложим подходящее решение и поможем достичь результата.
           </p>
           <div className={styles.actions}>
-            <Link className={styles.primary} href="#brief" variant="primary">
+            <SectionLink className={styles.primary} href="#brief" variant="primary">
               Рассчитать проект <span aria-hidden="true">→</span>
-            </Link>
+            </SectionLink>
             {/* Прямой контакт пока не утверждён. */}
             <Button className={styles.secondary} variant="ghost" disabled>
               Связаться напрямую ↗

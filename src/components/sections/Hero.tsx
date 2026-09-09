@@ -1,5 +1,5 @@
 import { Container } from '@/components/layout'
-import { Link } from '@/components/ui'
+import { SectionLink } from '@/components/ui'
 import Image from 'next/image'
 import styles from './Hero.module.css'
 
@@ -56,7 +56,7 @@ export function Hero() {
 						расти.
 					</p>
 					<div className={styles.actions}>
-						<Link
+						<SectionLink
 							className={styles.primaryAction}
 							href='#brief'
 							variant='primary'
@@ -69,7 +69,7 @@ export function Hero() {
 							>
 								<path d='M4 10h11m-4.5-4.5L15 10l-4.5 4.5' />
 							</svg>
-						</Link>
+						</SectionLink>
 					</div>
 				</div>
 			</Container>

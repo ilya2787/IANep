@@ -1,4 +1,4 @@
-import { Link } from "@/components/ui";
+import { SectionLink } from "@/components/ui";
 import { services } from "@/components/sections/services.data";
 import { Container } from "./Container";
 import styles from "./Footer.module.css";
@@ -26,7 +26,7 @@ export function Footer() {
             <ul className={styles.list}>
               {services.map((service) => (
                 <li key={service.id}>
-                  <Link className={styles.link} href={`#service-${service.id}`}>{service.title}</Link>
+                  <SectionLink className={styles.link} href={`#service-${service.id}`}>{service.title}</SectionLink>
                 </li>
               ))}
             </ul>
@@ -36,7 +36,7 @@ export function Footer() {
             <ul className={styles.list}>
               {navigation.map((item) => (
                 <li key={item.href}>
-                  <Link className={styles.link} href={item.href}>{item.label}</Link>
+                  <SectionLink className={styles.link} href={item.href}>{item.label}</SectionLink>
                 </li>
               ))}
             </ul>

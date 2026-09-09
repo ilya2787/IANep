@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Container } from "@/components/layout";
-import { Link } from "@/components/ui";
+import { SectionLink } from "@/components/ui";
 import { ProjectCase } from "./ProjectCase";
 import { projects } from "./projects.data";
 import styles from "./Projects.module.css";
@@ -24,9 +24,9 @@ export function Projects() {
             </p>
           </div>
 
-          <Link className={styles.allProjectsLink} href="#all-projects">
+          <SectionLink className={styles.allProjectsLink} href="#all-projects">
             Смотреть все проекты <span aria-hidden="true">→</span>
-          </Link>
+          </SectionLink>
         </div>
 
         <div className={styles.projectList}>
@@ -49,9 +49,9 @@ export function Projects() {
             <h3>Больше кейсов и деталей в полном портфолио</h3>
             <p>Каждый проект показывает решение конкретной задачи.</p>
           </div>
-          <Link className={styles.footerLink} href="#projects">
+          <SectionLink className={styles.footerLink} href="#projects">
             Смотреть все проекты <span aria-hidden="true">→</span>
-          </Link>
+          </SectionLink>
         </div>
       </Container>
     </section>

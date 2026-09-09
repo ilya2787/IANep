@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Container } from "@/components/layout";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { Link } from "@/components/ui";
+import { Link, SectionLink } from "@/components/ui";
 import { PropuscMotion } from "./PropuscMotion";
 import { shots, type ShotName } from "./screenshots";
 import styles from "./page.module.css";
@@ -27,7 +27,7 @@ export default function PropuscCase() {
     <header className={styles.header}>
       <Container className={styles.headerInner}>
         <Link className={styles.brand} href="/" aria-label="IANep, на главную"><Image src="/reference/logo-ia.png" alt="" width={44} height={27} priority /><span>Nep</span></Link>
-        <div className={styles.headerActions}><ThemeToggle /><Link href="/#projects" className={styles.back}>Все проекты <span aria-hidden="true">↗</span></Link></div>
+        <div className={styles.headerActions}><ThemeToggle /><SectionLink href="/#projects" className={styles.back}>Все проекты <span aria-hidden="true">↗</span></SectionLink></div>
       </Container>
     </header>
     <PropuscMotion>
@@ -89,7 +89,7 @@ export default function PropuscCase() {
             <p className={styles.kicker}>Результат</p><h2>От универсального шаблона — до готового листа для печати в одной системе.</h2>
             <ul className={styles.outcomes}><li>Универсальные шаблоны</li><li>Ролевой доступ</li><li>A4 и печать</li><li>Локальная работа</li></ul>
             <details className={styles.stack}><summary>Технологии проекта</summary><p>React 18, TypeScript, Vite, Mantine, React Router, Axios</p><p>Node.js, Express, TypeScript, MySQL</p><p>JWT, bcrypt, cookie auth, Multer, react-to-print</p></details>
-            <div className={styles.finalLinks}><Link href="/#brief" className={styles.cta}>Обсудить похожий проект <span aria-hidden="true">↗</span></Link><Link href="/#projects" className={styles.back}>Все проекты <span aria-hidden="true">↗</span></Link></div>
+            <div className={styles.finalLinks}><SectionLink href="/#brief" className={styles.cta}>Обсудить похожий проект <span aria-hidden="true">↗</span></SectionLink><SectionLink href="/#projects" className={styles.back}>Все проекты <span aria-hidden="true">↗</span></SectionLink></div>
           </div>
         </Container>
       </section>
