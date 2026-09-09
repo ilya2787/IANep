@@ -116,9 +116,25 @@
   object-position: center;
   transition: opacity 200ms var(--ease-out);
 }
-/* Keep the stray lettering at the source image's left edge outside the frame. */
+/* Keep the source's large decorative phrase quiet and outside the visible crop. */
 .card[id="service-multipage-site"] .visualImage {
-  transform: scale(1.12);
+  object-position: 58% center;
+  transform: scale(1.2);
+  filter: saturate(.78) contrast(.88);
+}
+.card[id="service-multipage-site"] .visual::before {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 38%;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-surface) 72%, transparent));
+}
+:global(:root[data-theme="dark"]) .card[id="service-multipage-site"] .visualImage {
+  filter: saturate(.72) brightness(.84) contrast(.84);
 }
 .darkImage { opacity: 0; }
 :global(:root[data-theme="dark"]) .lightImage { opacity: 0; }
@@ -126,6 +142,9 @@
 @media (prefers-color-scheme: dark) {
   :global(:root:not([data-theme="light"])) .lightImage { opacity: 0; }
   :global(:root:not([data-theme="light"])) .darkImage { opacity: 1; }
+  :global(:root:not([data-theme="light"])) .card[id="service-multipage-site"] .visualImage {
+    filter: saturate(.72) brightness(.84) contrast(.84);
+  }
 }
 @media (hover: hover) and (pointer: fine) {
   .cta:hover { color: var(--color-lavender); }

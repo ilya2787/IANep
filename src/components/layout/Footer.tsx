@@ -19,7 +19,7 @@ export function Footer() {
         <div className={styles.columns}>
           <div>
             <p className={styles.brand}><span>IA</span>Nep</p>
-            <p className={styles.tagline}>Сайты и web-решения под задачи бизнеса.</p>
+            <p className={styles.tagline}>Сайты и web-решения <br />под задачи бизнеса.</p>
           </div>
           <nav aria-label="Услуги в подвале">
             <h2 className={styles.heading}>Услуги</h2>

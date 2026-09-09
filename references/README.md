@@ -48,6 +48,7 @@
 
 - `01_Hero_approved.png`;
 - `02_Services_approved.png`;
+- `02_Services_support_approved.png` (утверждённый Light/Dark split-визуал карточки «Поддержка»);
 - `03_Projects_approved.png`;
 - `04_Approach_approved.png`;
 - `05_Brief_approved.png`;

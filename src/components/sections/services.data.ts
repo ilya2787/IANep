@@ -56,7 +56,7 @@ export const services: Service[] = [
     number: "06",
     title: "Поддержка",
     description: "Помощь после запуска и дальнейшее развитие.",
-    image: "/services/support-light-hq.png",
-    imageDark: "/services/support-dark.png",
+    image: "/services/support-light.webp",
+    imageDark: "/services/support-dark.webp",
   },
 ];
