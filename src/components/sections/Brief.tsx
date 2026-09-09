@@ -220,7 +220,7 @@ export function Brief() {
       break;
     case 2:
       content = <>{options('features', getFeatureOptions(draft.projectType), true)}
-        <p className={styles.hint}>Не уверены, что выбрать? Отметьте только необходимое. Остальное обсудим вместе.</p>
+        <p className={styles.hint}>Не уверены, что выбрать? Отметьте или опишите необходимое. Остальное обсудим вместе.</p>
         {field('featureNotes', 'Какие функции вам нужны? (необязательно)', 3000)}
       </>;
       break;
