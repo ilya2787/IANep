@@ -4,6 +4,7 @@ import { prisma } from "@/server/db/prisma";
 import { smtpEnvironment } from "@/server/config/env";
 import { operationalError } from "@/server/operations/log";
 import { notificationRetryDelayMs } from "@/server/notifications/retry";
+import { notificationEmail } from "@/server/notifications/email-template";
 
 export type NotificationRecipient = { clientId: string } | { adminId: string };
 export type NotificationEvent = {
@@ -44,13 +45,6 @@ export async function enqueueForActiveAdmins(tx: Prisma.TransactionClient, input
   await Promise.all(admins.map(admin => enqueueNotification(tx, { ...input, recipient: { adminId: admin.id }, email: false })));
 }
 
-function absoluteLink(href: string | null) {
-  if (!href) return null;
-  const base = process.env.APP_BASE_URL;
-  if (!base) return null;
-  return new URL(href, base).toString();
-}
-
 export async function dispatchPendingNotifications(limit = 20) {
   const smtp = smtpEnvironment();
   if (!smtp) return { disabled: true, processed: 0, sent: 0, failed: 0, skipped: 0 };
@@ -77,10 +71,8 @@ export async function dispatchPendingNotifications(limit = 20) {
       continue;
     }
     try {
-      const link = absoluteLink(attempt.notification.href);
-      const text = `${attempt.notification.title}\n\n${attempt.notification.message}${link ? `\n\nОткрыть в защищённом кабинете: ${link}` : ""}`;
-      const html = `<div style="font-family:Arial,sans-serif;max-width:600px;color:#171717"><p style="font-size:14px;color:#6b6b6b">IANep · кабинет клиента</p><h1 style="font-size:24px">${escapeHtml(attempt.notification.title)}</h1><p>${escapeHtml(attempt.notification.message)}</p>${link ? `<p><a href="${escapeHtml(link)}">Открыть в защищённом кабинете</a></p>` : ""}<p style="font-size:12px;color:#6b6b6b">Конфиденциальные файлы не прикладываются к письму.</p></div>`;
-      await nodemailer.createTransport(smtp.transport).sendMail({ from: smtp.from, replyTo: smtp.replyTo, to: email, subject: `IANep: ${attempt.notification.title}`, text, html });
+      const content = notificationEmail(attempt.notification);
+      await nodemailer.createTransport(smtp.transport).sendMail({ from: smtp.from, replyTo: smtp.replyTo, to: email, ...content });
       await prisma.notificationAttempt.update({ where: { id: attempt.id }, data: { status: "SENT", sentAt: new Date(), attemptCount: { increment: 1 }, lastError: null } });
       result.sent += 1;
     } catch (error) {
@@ -91,10 +83,6 @@ export async function dispatchPendingNotifications(limit = 20) {
     }
   }
   return result;
-}
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]!);
 }
 
 export async function listNotifications(recipient: NotificationRecipient, limit = 50) {
