@@ -8,6 +8,11 @@ const emailAddress = z.string().email();
 
 type Environment = Record<string, string | undefined>;
 
+function booleanEnvironment(value: string | undefined, fallback = false) {
+  if (value === undefined) return fallback;
+  return booleanString.parse(value.trim().toLowerCase()) === "true";
+}
+
 function absoluteUrl(value: string, name: string, https: boolean) {
   let url: URL;
   try { url = new URL(value); } catch { throw new Error(`Production configuration invalid: ${name} must be an absolute URL`); }
@@ -40,30 +45,30 @@ export function validateProductionEnvironment(env: Environment = process.env) {
   const storage = resolve(env.IANEP_STORAGE_DIR!);
   try { accessSync(storage, constants.R_OK | constants.W_OK); } catch { throw new Error("Production configuration invalid: IANEP_STORAGE_DIR must already exist and be readable/writable"); }
 
-  const smtpEnabled = booleanString.safeParse(env.SMTP_ENABLED ?? "false");
-  if (!smtpEnabled.success) throw new Error("Production configuration invalid: SMTP_ENABLED must be true or false");
-  const trustProxy = booleanString.safeParse(env.TRUST_PROXY_HEADERS ?? "false");
-  if (!trustProxy.success) throw new Error("Production configuration invalid: TRUST_PROXY_HEADERS must be true or false");
-  if (trustProxy.data === "true" && !["x-real-ip", "x-forwarded-for"].includes(env.CLIENT_IP_HEADER ?? "")) throw new Error("Production configuration invalid: CLIENT_IP_HEADER must be x-real-ip or x-forwarded-for");
+  let smtpEnabled: boolean;
+  let trustProxy: boolean;
+  try { smtpEnabled = booleanEnvironment(env.SMTP_ENABLED); } catch { throw new Error("Production configuration invalid: SMTP_ENABLED must be true or false"); }
+  try { trustProxy = booleanEnvironment(env.TRUST_PROXY_HEADERS); } catch { throw new Error("Production configuration invalid: TRUST_PROXY_HEADERS must be true or false"); }
+  if (trustProxy && !["x-real-ip", "x-forwarded-for"].includes(env.CLIENT_IP_HEADER ?? "")) throw new Error("Production configuration invalid: CLIENT_IP_HEADER must be x-real-ip or x-forwarded-for");
 
-  if (smtpEnabled.data === "true") {
+  if (smtpEnabled) {
     for (const name of ["SMTP_HOST", "SMTP_PORT", "SMTP_FROM"] as const) if (!env[name]) throw new Error(`Production configuration missing: ${name}`);
     if (!portString.safeParse(env.SMTP_PORT).success) throw new Error("Production configuration invalid: SMTP_PORT");
     if (!emailAddress.safeParse(env.SMTP_FROM).success) throw new Error("Production configuration invalid: SMTP_FROM");
     if (env.SMTP_REPLY_TO && !emailAddress.safeParse(env.SMTP_REPLY_TO).success) throw new Error("Production configuration invalid: SMTP_REPLY_TO");
     if (Boolean(env.SMTP_USER) !== Boolean(env.SMTP_PASS)) throw new Error("Production configuration invalid: SMTP_USER and SMTP_PASS must be configured together");
-    if (!booleanString.safeParse(env.SMTP_SECURE ?? "false").success) throw new Error("Production configuration invalid: SMTP_SECURE must be true or false");
+    try { booleanEnvironment(env.SMTP_SECURE, env.SMTP_PORT === "465"); } catch { throw new Error("Production configuration invalid: SMTP_SECURE must be true or false"); }
   }
 }
 
 export function smtpEnvironment(env: Environment = process.env) {
-  if (env.SMTP_ENABLED !== "true") return null;
+  if (!booleanEnvironment(env.SMTP_ENABLED)) return null;
   const port = portString.parse(env.SMTP_PORT);
   return {
     from: emailAddress.parse(env.SMTP_FROM),
     replyTo: env.SMTP_REPLY_TO ? emailAddress.parse(env.SMTP_REPLY_TO) : undefined,
     transport: {
-      host: z.string().min(1).parse(env.SMTP_HOST), port, secure: env.SMTP_SECURE === "true",
+      host: z.string().min(1).parse(env.SMTP_HOST), port, secure: booleanEnvironment(env.SMTP_SECURE, port === 465),
       ...(env.SMTP_USER && env.SMTP_PASS ? { auth: { user: env.SMTP_USER, pass: env.SMTP_PASS } } : {}),
     },
   };

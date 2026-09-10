@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { validateProductionEnvironment } from "@/server/config/env";
+import { smtpEnvironment, validateProductionEnvironment } from "@/server/config/env";
 
 const valid = {
   NODE_ENV: "production", DATABASE_URL: "postgresql://ianep:secret@db.internal/ianep", ADMIN_SESSION_SECRET: "x".repeat(32),
@@ -16,4 +16,11 @@ test("production environment rejects HTTP and relative storage", () => {
 test("SMTP is validated as one coherent set", () => {
   assert.throws(() => validateProductionEnvironment({ ...valid, SMTP_ENABLED: "true", SMTP_HOST: "smtp.example", SMTP_PORT: "invalid", SMTP_FROM: "mail@example.com" }), /SMTP_PORT/);
   assert.doesNotThrow(() => validateProductionEnvironment({ ...valid, SMTP_ENABLED: "true", SMTP_HOST: "smtp.example", SMTP_PORT: "587", SMTP_FROM: "mail@example.com", SMTP_REPLY_TO: "reply@example.com" }));
+});
+test("SMTP transport parses secure boolean without silently falling back to false", () => {
+  const base = { SMTP_ENABLED: "true", SMTP_HOST: "smtp.beget.com", SMTP_PORT: "465", SMTP_FROM: "mail@example.com" };
+  assert.equal(smtpEnvironment({ ...base, SMTP_SECURE: "true" })?.transport.secure, true);
+  assert.equal(smtpEnvironment({ ...base, SMTP_SECURE: " TRUE\r" })?.transport.secure, true);
+  assert.equal(smtpEnvironment(base)?.transport.secure, true);
+  assert.throws(() => smtpEnvironment({ ...base, SMTP_SECURE: "yes" }));
 });
