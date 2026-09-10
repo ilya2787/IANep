@@ -21,6 +21,7 @@ test("SMTP transport parses secure boolean without silently falling back to fals
   const base = { SMTP_ENABLED: "true", SMTP_HOST: "smtp.beget.com", SMTP_PORT: "465", SMTP_FROM: "mail@example.com" };
   assert.equal(smtpEnvironment({ ...base, SMTP_SECURE: "true" })?.transport.secure, true);
   assert.equal(smtpEnvironment({ ...base, SMTP_SECURE: " TRUE\r" })?.transport.secure, true);
+  assert.equal(smtpEnvironment({ ...base, SMTP_SECURE: "false" })?.transport.secure, true);
   assert.equal(smtpEnvironment(base)?.transport.secure, true);
   assert.throws(() => smtpEnvironment({ ...base, SMTP_SECURE: "yes" }));
 });

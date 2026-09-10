@@ -64,11 +64,12 @@ export function validateProductionEnvironment(env: Environment = process.env) {
 export function smtpEnvironment(env: Environment = process.env) {
   if (!booleanEnvironment(env.SMTP_ENABLED)) return null;
   const port = portString.parse(env.SMTP_PORT);
+  const configuredSecure = booleanEnvironment(env.SMTP_SECURE, port === 465);
   return {
     from: emailAddress.parse(env.SMTP_FROM),
     replyTo: env.SMTP_REPLY_TO ? emailAddress.parse(env.SMTP_REPLY_TO) : undefined,
     transport: {
-      host: z.string().min(1).parse(env.SMTP_HOST), port, secure: booleanEnvironment(env.SMTP_SECURE, port === 465),
+      host: z.string().min(1).parse(env.SMTP_HOST), port, secure: port === 465 || configuredSecure,
       ...(env.SMTP_USER && env.SMTP_PASS ? { auth: { user: env.SMTP_USER, pass: env.SMTP_PASS } } : {}),
     },
   };
