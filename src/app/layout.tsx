@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { CookieNotice } from "@/components/privacy";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body>
         <a className="skip-link" href="#main-content">Перейти к содержимому</a>
         {children}
+        <CookieNotice />
       </body>
     </html>
   );
