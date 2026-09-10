@@ -15,7 +15,7 @@ IANep v1 рассчитан на один Node.js process/server за довер
 
 Для IP rate limit: `TRUST_PROXY_HEADERS=true` разрешается только когда приложение недоступно в обход proxy, а proxy перезаписывает `CLIENT_IP_HEADER`. Допустимые значения заголовка: `x-real-ip` или `x-forwarded-for`. При `TRUST_PROXY_HEADERS=false` forwarded headers игнорируются; это безопасный default, но все прямые запросы разделяют один limiter bucket.
 
-Email включается только явно через `SMTP_ENABLED=true`. Тогда единым набором задаются `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`; `SMTP_USER` и `SMTP_PASS` задаются только вместе. `SMTP_REPLY_TO` необязателен. При `SMTP_ENABLED=false` in-app уведомления работают, email attempts остаются pending и dispatcher ничего не помечает отправленным.
+Email включается только явно через `SMTP_ENABLED=true`. Тогда единым набором задаются `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`; `SMTP_USER` и `SMTP_PASS` задаются только вместе. Необязательный `SMTP_FROM_NAME` задаёт отображаемое имя отправителя и по умолчанию равен `IANep`; `SMTP_FROM` при этом остаётся чистым email-адресом. `SMTP_REPLY_TO` необязателен. При `SMTP_ENABLED=false` in-app уведомления работают, email attempts остаются pending и dispatcher ничего не помечает отправленным.
 
 Значения секретов нельзя помещать в логи, unit-файлы, shell history или Git. Startup validation проверяет схему конфигурации и доступность storage до готовности процесса.
 

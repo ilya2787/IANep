@@ -25,3 +25,12 @@ test("SMTP transport parses secure boolean without silently falling back to fals
   assert.equal(smtpEnvironment(base)?.transport.secure, true);
   assert.throws(() => smtpEnvironment({ ...base, SMTP_SECURE: "yes" }));
 });
+test("SMTP sender name defaults to IANep and is parsed separately from the address", () => {
+  const base = { SMTP_ENABLED: "true", SMTP_HOST: "smtp.beget.com", SMTP_PORT: "465", SMTP_FROM: "noreply@ianep.ru" };
+  assert.deepEqual(
+    { name: smtpEnvironment(base)?.fromName, address: smtpEnvironment(base)?.from },
+    { name: "IANep", address: "noreply@ianep.ru" },
+  );
+  assert.equal(smtpEnvironment({ ...base, SMTP_FROM_NAME: "  IANep Notifications  " })?.fromName, "IANep Notifications");
+  assert.throws(() => smtpEnvironment({ ...base, SMTP_FROM_NAME: "IANep\r\nBcc: attacker@example.com" }));
+});

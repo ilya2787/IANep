@@ -72,7 +72,7 @@ export async function dispatchPendingNotifications(limit = 20) {
     }
     try {
       const content = notificationEmail(attempt.notification);
-      await nodemailer.createTransport(smtp.transport).sendMail({ from: smtp.from, replyTo: smtp.replyTo, to: email, ...content });
+      await nodemailer.createTransport(smtp.transport).sendMail({ from: { name: smtp.fromName, address: smtp.from }, replyTo: smtp.replyTo, to: email, ...content });
       await prisma.notificationAttempt.update({ where: { id: attempt.id }, data: { status: "SENT", sentAt: new Date(), attemptCount: { increment: 1 }, lastError: null } });
       result.sent += 1;
     } catch (error) {

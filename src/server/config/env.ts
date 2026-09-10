@@ -5,6 +5,7 @@ import { z } from "zod";
 const booleanString = z.enum(["true", "false"]);
 const portString = z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(1).max(65535));
 const emailAddress = z.string().email();
+const emailDisplayName = z.string().trim().min(1).max(100).refine(value => !/[\r\n]/.test(value));
 
 type Environment = Record<string, string | undefined>;
 
@@ -55,6 +56,7 @@ export function validateProductionEnvironment(env: Environment = process.env) {
     for (const name of ["SMTP_HOST", "SMTP_PORT", "SMTP_FROM"] as const) if (!env[name]) throw new Error(`Production configuration missing: ${name}`);
     if (!portString.safeParse(env.SMTP_PORT).success) throw new Error("Production configuration invalid: SMTP_PORT");
     if (!emailAddress.safeParse(env.SMTP_FROM).success) throw new Error("Production configuration invalid: SMTP_FROM");
+    if (env.SMTP_FROM_NAME && !emailDisplayName.safeParse(env.SMTP_FROM_NAME).success) throw new Error("Production configuration invalid: SMTP_FROM_NAME");
     if (env.SMTP_REPLY_TO && !emailAddress.safeParse(env.SMTP_REPLY_TO).success) throw new Error("Production configuration invalid: SMTP_REPLY_TO");
     if (Boolean(env.SMTP_USER) !== Boolean(env.SMTP_PASS)) throw new Error("Production configuration invalid: SMTP_USER and SMTP_PASS must be configured together");
     try { booleanEnvironment(env.SMTP_SECURE, env.SMTP_PORT === "465"); } catch { throw new Error("Production configuration invalid: SMTP_SECURE must be true or false"); }
@@ -67,6 +69,7 @@ export function smtpEnvironment(env: Environment = process.env) {
   const configuredSecure = booleanEnvironment(env.SMTP_SECURE, port === 465);
   return {
     from: emailAddress.parse(env.SMTP_FROM),
+    fromName: emailDisplayName.parse(env.SMTP_FROM_NAME || "IANep"),
     replyTo: env.SMTP_REPLY_TO ? emailAddress.parse(env.SMTP_REPLY_TO) : undefined,
     transport: {
       host: z.string().min(1).parse(env.SMTP_HOST), port, secure: port === 465 || configuredSecure,

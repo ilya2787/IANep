@@ -23,6 +23,10 @@ test("notification email escapes dynamic values and keeps a useful text fallback
   assert.match(email.html, /Это автоматическое уведомление\. Отвечать на это письмо не нужно\./);
   assert.match(email.text, /<script>alert\("title"\)<\/script>/);
   assert.match(email.text, /Это автоматическое уведомление\. Отвечать на это письмо не нужно\./);
+  assert.doesNotMatch(email.html, /background:#05050c/);
+  assert.match(email.html, /src="cid:ianep-notification-mascot"/);
+  assert.equal(email.attachments[0].cid, "ianep-notification-mascot");
+  assert.match(email.attachments[0].path, /public\/images\/email\/mascot-notification-v1\.png$/);
 });
 
 test("notification email builds an absolute IANep action link", () => {
