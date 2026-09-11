@@ -143,7 +143,7 @@ function refreshProject(id: string) { revalidatePath("/admin/projects", "layout"
 export async function clientDecision(projectId: string, _state: ActionState, form: FormData): Promise<ActionState> {
   await requireSameOrigin();
   const client = await requireClient();
-  try { await decide(projectId, { id: client.id, side: "CLIENT" }, Object.fromEntries(form)); refreshProject(projectId); return { ok: true, message: "Решение сохранено. IANep увидит его в проекте." }; } catch (error) { return failure(error); }
+  try { await decide(projectId, { id: client.id, side: "CLIENT" }, Object.fromEntries(form)); await dispatchPendingNotifications(); refreshProject(projectId); return { ok: true, message: "Решение сохранено. IANep увидит его в проекте." }; } catch (error) { return failure(error); }
 }
 export async function addMaterial(projectId: string, side: "ADMIN" | "CLIENT", _state: ActionState, form: FormData): Promise<ActionState> {
   await requireSameOrigin();
@@ -156,11 +156,11 @@ export async function addMaterial(projectId: string, side: "ADMIN" | "CLIENT", _
       const material = await resolveAttachment(tx, projectId, actor, data);
       await tx.projectMaterial.create({ data: { ...material, projectId, stageId, authorId: actor.id, authorSide: actor.side } });
       await event(tx, projectId, actor, "MATERIAL_ADDED", `Добавлен материал «${data.title}».`);
-      if (form.get("notify") === "yes") {
-        if (actor.side === "ADMIN") {
+      if (actor.side === "CLIENT") {
+        await enqueueForActiveAdmins(tx, { projectId, eventType: "MATERIAL_ADDED", title: "Клиент добавил материал", message: `Материал «${data.title}» доступен в проекте.`, href: `/admin/projects/${projectId}?tab=materials` });
+      } else if (form.get("notify") === "yes") {
           const project = await tx.clientProject.findUniqueOrThrow({ where: { id: projectId }, select: { clientId: true } });
           await enqueueNotification(tx, { recipient: { clientId: project.clientId }, projectId, eventType: "IMPORTANT_MATERIAL", title: "Добавлен важный материал", message: `Материал «${data.title}» доступен в проекте.`, href: `/client/projects/${projectId}?tab=materials`, email: true });
-        } else await enqueueForActiveAdmins(tx, { projectId, eventType: "IMPORTANT_MATERIAL", title: "Клиент добавил важный материал", message: `Материал «${data.title}» доступен в проекте.`, href: `/admin/projects/${projectId}?tab=materials` });
       }
     }); await dispatchPendingNotifications(); refreshProject(projectId); return { ok: true, message: "Материал добавлен." };
   } catch (error) { return failure(error); }

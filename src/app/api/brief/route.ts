@@ -7,6 +7,7 @@ import { operationalError, requestId } from "@/server/operations/log";
 import { BodyTooLargeError, readJsonBody } from "@/server/security/body";
 import { clientIp } from "@/server/security/client-ip";
 import { consumeRateLimit } from "@/server/security/rate-limit";
+import { dispatchPendingNotifications } from "@/server/notifications/service";
 
 export const runtime = "nodejs";
 const MAX_BRIEF_BODY_BYTES = 64 * 1024;
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
   try {
     const result = await briefService.submitPublic(validation.data, { receipt, action: action as 'new' | 'replace' | undefined });
     const briefRequest = result.request;
+    await dispatchPendingNotifications();
 
     return NextResponse.json(
       {

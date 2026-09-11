@@ -29,6 +29,19 @@ export async function cleanupSelectedProjects(_state: ActionState, form: FormDat
   try { z.literal("yes").parse(form.get("confirm")); const ids = z.array(z.uuid()).min(1).parse(form.getAll("projectId")); const result = await cleanArchivedProjectFiles(ids, admin.adminId); revalidatePath("/admin/system"); return { ok: true, message: `Очищено файлов: ${result.files}. История проектов сохранена.` }; } catch (error) { return failure(error); }
 }
 
+export async function updateAdminNotificationEmail(_state: ActionState, form: FormData): Promise<ActionState> {
+  await requireSameOrigin(); const admin = await requireAdmin();
+  try {
+    const data = z.object({ email: z.union([z.literal(""), z.email().max(320)]) }).parse(Object.fromEntries(form));
+    await prisma.$transaction(async tx => {
+      await tx.systemSetting.upsert({ where: { id: "default" }, update: { adminNotificationEmail: data.email || null }, create: { id: "default", adminNotificationEmail: data.email || null } });
+      await tx.auditEvent.create({ data: { eventType: "ADMIN_NOTIFICATION_EMAIL_UPDATED", entityType: "SYSTEM", entityId: "notifications", metadata: { adminId: admin.adminId, enabled: Boolean(data.email) } } });
+    });
+    revalidatePath("/admin/system");
+    return { ok: true, message: data.email ? "Адрес для уведомлений сохранён." : "Email-уведомления администратора отключены." };
+  } catch (error) { return failure(error); }
+}
+
 export async function cleanupSelectedBriefs(_state: ActionState, form: FormData): Promise<ActionState> {
   await requireSameOrigin(); const admin = await requireAdmin();
   try { z.literal("yes").parse(form.get("confirm")); const ids = z.array(z.uuid()).min(1).parse(form.getAll("briefId")); const result = await deleteArchivedBriefs(ids, admin.adminId); revalidatePath("/admin/system"); revalidatePath("/admin"); return { ok: true, message: `Удалено архивных заявок: ${result.count}.` }; } catch (error) { return failure(error); }

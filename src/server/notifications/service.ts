@@ -18,9 +18,9 @@ export type NotificationEvent = {
 };
 
 export async function enqueueNotification(tx: Prisma.TransactionClient, input: NotificationEvent) {
-  const emailEnabled = input.email && "clientId" in input.recipient
-    ? Boolean((await tx.clientUser.findUnique({ where: { id: input.recipient.clientId }, select: { email: true, emailNotificationsEnabled: true } }))?.emailNotificationsEnabled)
-    : false;
+  const emailEnabled = input.email && ("clientId" in input.recipient
+    ? Boolean((await tx.clientUser.findUnique({ where: { id: input.recipient.clientId }, select: { emailNotificationsEnabled: true } }))?.emailNotificationsEnabled)
+    : true);
   const notification = await tx.notification.create({
     data: {
       ...( "clientId" in input.recipient ? { recipientClientId: input.recipient.clientId } : { recipientAdminId: input.recipient.adminId }),
@@ -41,8 +41,8 @@ export async function enqueueNotification(tx: Prisma.TransactionClient, input: N
 }
 
 export async function enqueueForActiveAdmins(tx: Prisma.TransactionClient, input: Omit<NotificationEvent, "recipient">) {
-  const admins = await tx.adminUser.findMany({ where: { active: true }, select: { id: true } });
-  await Promise.all(admins.map(admin => enqueueNotification(tx, { ...input, recipient: { adminId: admin.id }, email: false })));
+  const admins = await tx.adminUser.findMany({ where: { active: true }, select: { id: true }, orderBy: { createdAt: "asc" } });
+  await Promise.all(admins.map((admin, index) => enqueueNotification(tx, { ...input, recipient: { adminId: admin.id }, email: Boolean(input.email ?? true) && index === 0 })));
 }
 
 export async function dispatchPendingNotifications(limit = 20) {
@@ -51,10 +51,13 @@ export async function dispatchPendingNotifications(limit = 20) {
   const now = new Date();
   const attempts = await prisma.notificationAttempt.findMany({
     where: { channel: "EMAIL", status: { in: ["PENDING", "FAILED"] }, nextAttemptAt: { lte: now }, attemptCount: { lt: 5 } },
-    include: { notification: { include: { recipientClient: { select: { email: true, active: true, emailNotificationsEnabled: true } } } } },
+    include: { notification: { include: { recipientClient: { select: { email: true, active: true, emailNotificationsEnabled: true } }, recipientAdmin: { select: { active: true } } } } },
     orderBy: { createdAt: "asc" },
     take: limit,
   });
+  const adminEmail = attempts.some(attempt => attempt.notification.recipientAdminId)
+    ? (await prisma.systemSetting.findUnique({ where: { id: "default" }, select: { adminNotificationEmail: true } }))?.adminNotificationEmail
+    : null;
   const result = { disabled: false, processed: 0, sent: 0, failed: 0, skipped: 0 };
   for (const attempt of attempts) {
     const claimed = await prisma.notificationAttempt.updateMany({
@@ -64,7 +67,8 @@ export async function dispatchPendingNotifications(limit = 20) {
     if (!claimed.count) continue;
     result.processed += 1;
     const recipient = attempt.notification.recipientClient;
-    const email = recipient?.active && recipient.emailNotificationsEnabled ? recipient.email : null;
+    const adminRecipient = attempt.notification.recipientAdmin;
+    const email = recipient?.active && recipient.emailNotificationsEnabled ? recipient.email : adminRecipient?.active ? adminEmail : null;
     if (!email) {
       await prisma.notificationAttempt.update({ where: { id: attempt.id }, data: { status: "SKIPPED", attemptCount: { increment: 1 }, lastError: recipient && !recipient.emailNotificationsEnabled ? "EMAIL_PREFERENCE_DISABLED" : "RECIPIENT_EMAIL_UNAVAILABLE" } });
       result.skipped += 1;

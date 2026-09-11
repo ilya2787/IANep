@@ -6,6 +6,7 @@ import type {
 import { BriefConflict } from "./brief.receipt";
 import { prisma } from "@/server/db/prisma";
 import { getSystemSettings } from "@/server/system/settings";
+import { enqueueForActiveAdmins } from "@/server/notifications/service";
 
 export class BriefStatusConflict extends Error {}
 
@@ -124,6 +125,13 @@ export class BriefRepository {
             ...(data.receiptHash ? { receiptHash: data.receiptHash } : {}),
           },
         },
+      });
+
+      await enqueueForActiveAdmins(transaction, {
+        eventType: "BRIEF_CREATED",
+        title: "Поступила новая заявка",
+        message: `Заявка № ${briefRequest.number} от ${briefRequest.name}.`,
+        href: `/admin/briefs/${briefRequest.id}`,
       });
 
       return briefRequest;

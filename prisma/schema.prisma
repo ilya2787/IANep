@@ -324,6 +324,7 @@ model StoredFile {
 
 model SystemSetting {
   id                         String   @id @default("default")
+  adminNotificationEmail     String?
   archivedProjectRetentionDays Int   @default(365)
   archivedBriefRetentionDays   Int   @default(365)
   cleanupWarningDays           Int   @default(30)
