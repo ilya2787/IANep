@@ -3,7 +3,7 @@ Description=Run IANep production maintenance daily
 Documentation=file:/opt/ianep/app/docs/deployment.md
 
 [Timer]
-OnCalendar=*-*-* 03:30:00
+OnCalendar=*-*-* 03:30:00 Europe/Berlin
 RandomizedDelaySec=10m
 AccuracySec=1m
 Persistent=true

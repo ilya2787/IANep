@@ -70,11 +70,11 @@ Privacy receipt cleanup является обязательной автомат
 
 Репозиторий содержит `deploy/systemd/ianep-maintenance.service` и `deploy/systemd/ianep-maintenance.timer`. Service имеет тип `oneshot`, работает от runtime-пользователя `ianep` в `/opt/ianep/app` и пишет stdout/stderr только в journald. Systemd не запускает второй экземпляр того же service, пока первый остаётся активным, поэтому отдельный lock-файл не требуется.
 
-Расписание `OnCalendar=*-*-* 03:30:00` использует **локальную timezone сервера** из `timedatectl`; явная timezone в unit не зафиксирована. `RandomizedDelaySec=10m` распределяет фактический старт в интервале 03:30–03:40 по локальному времени. `Persistent=true` запускает пропущенную задачу после следующего старта timer, например после reboot. До установки проверьте ожидаемые timezone и календарь:
+Расписание `OnCalendar=*-*-* 03:30:00 Europe/Berlin` явно задаёт timezone в самом calendar expression, поэтому VPS может оставаться в `Etc/UTC`. Systemd автоматически учитывает CET/CEST, а `RandomizedDelaySec=10m` распределяет фактический старт в интервале 03:30–03:40 по времени Europe/Berlin. `Persistent=true` запускает пропущенную задачу после следующего старта timer, например после reboot. До установки проверьте timezone VPS и нормализованное расписание:
 
 ```bash
 timedatectl
-systemd-analyze calendar '*-*-* 03:30:00'
+systemd-analyze calendar '*-*-* 03:30:00 Europe/Berlin'
 ```
 
 Установка и первый запуск timer:
