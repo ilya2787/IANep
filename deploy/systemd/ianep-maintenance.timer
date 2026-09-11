@@ -1,0 +1,14 @@
+[Unit]
+Description=Run IANep production maintenance daily
+Documentation=file:/opt/ianep/app/docs/deployment.md
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+RandomizedDelaySec=10m
+AccuracySec=1m
+Persistent=true
+Unit=ianep-maintenance.service
+
+[Install]
+WantedBy=timers.target
+

@@ -1,0 +1,19 @@
+[Unit]
+Description=IANep daily production maintenance
+Documentation=file:/opt/ianep/app/docs/deployment.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ianep
+WorkingDirectory=/opt/ianep/app
+Environment=NODE_ENV=production
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/env npm run projects:cleanup
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ianep-maintenance
+TimeoutStartSec=1h
+UMask=0077
+

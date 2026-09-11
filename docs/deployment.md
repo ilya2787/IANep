@@ -66,6 +66,55 @@ Restore drill выполняйте регулярно на отдельной Б
 
 Privacy receipt cleanup является обязательной автоматической retention-операцией и не зависит от флага очистки storage. Команда `npm run projects:cleanup` транзакционно очищает истёкшие privacy-квитанции, затем только показывает кандидатов storage без их удаления. Запускайте её существующим maintenance timer не реже одного раза в сутки. Повторный запуск безопасен. После очистки остаются только технический tombstone записи (внутренний id, публичный номер, статус и дата очистки) и агрегированное системное событие без контакта, HMAC, номера запроса, subject/project/brief/client id.
 
+### Ежедневный maintenance timer
+
+Репозиторий содержит `deploy/systemd/ianep-maintenance.service` и `deploy/systemd/ianep-maintenance.timer`. Service имеет тип `oneshot`, работает от runtime-пользователя `ianep` в `/opt/ianep/app` и пишет stdout/stderr только в journald. Systemd не запускает второй экземпляр того же service, пока первый остаётся активным, поэтому отдельный lock-файл не требуется.
+
+Расписание `OnCalendar=*-*-* 03:30:00` использует **локальную timezone сервера** из `timedatectl`; явная timezone в unit не зафиксирована. `RandomizedDelaySec=10m` распределяет фактический старт в интервале 03:30–03:40 по локальному времени. `Persistent=true` запускает пропущенную задачу после следующего старта timer, например после reboot. До установки проверьте ожидаемые timezone и календарь:
+
+```bash
+timedatectl
+systemd-analyze calendar '*-*-* 03:30:00'
+```
+
+Установка и первый запуск timer:
+
+```bash
+cd /opt/ianep/app
+sudo install -o root -g root -m 0644 deploy/systemd/ianep-maintenance.service /etc/systemd/system/ianep-maintenance.service
+sudo install -o root -g root -m 0644 deploy/systemd/ianep-maintenance.timer /etc/systemd/system/ianep-maintenance.timer
+sudo systemd-analyze verify /etc/systemd/system/ianep-maintenance.service /etc/systemd/system/ianep-maintenance.timer
+sudo systemctl daemon-reload
+sudo systemctl enable --now ianep-maintenance.timer
+```
+
+Проверка timer, следующего запуска и журналов:
+
+```bash
+systemctl status ianep-maintenance.timer --no-pager
+systemctl list-timers ianep-maintenance.timer --all
+journalctl -u ianep-maintenance.service --since today --no-pager
+```
+
+Безопасный ручной smoke-check запускает тот же oneshot service. Если плановый запуск уже выполняется, systemd не создаст параллельный экземпляр:
+
+```bash
+sudo systemctl start ianep-maintenance.service
+systemctl show ianep-maintenance.service -p ActiveState -p SubState -p Result -p ExecMainStatus
+journalctl -u ianep-maintenance.service -n 100 --no-pager
+```
+
+Ожидаемый успешный результат: `Result=success`, `ExecMainStatus=0`, а журнал содержит количество очищенных истёкших privacy-квитанций и количество storage-кандидатов. Наличие storage-кандидатов не означает их автоматическое удаление.
+
+Rollback отключает только maintenance timer и не меняет `ianep.service` или `ianep-notifications.timer`:
+
+```bash
+sudo systemctl disable --now ianep-maintenance.timer
+sudo rm /etc/systemd/system/ianep-maintenance.timer /etc/systemd/system/ianep-maintenance.service
+sudo systemctl daemon-reload
+sudo systemctl reset-failed ianep-maintenance.service
+```
+
 После изменения dependency graph выполните чистый `npm ci --omit=dev`, затем запустите `npm run verify:production-install`. Проверка подтверждает, что lockfile и установленный production dependency graph содержат рабочий TypeScript loader, используемый maintenance entrypoint.
 
 ## Staging validation
