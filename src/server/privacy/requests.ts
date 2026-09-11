@@ -3,8 +3,9 @@ import { rename, unlink } from "node:fs/promises";
 import { prisma } from "@/server/db/prisma";
 import { storagePath } from "@/server/storage/files";
 import { WorkspaceError } from "@/server/client/service";
-import type { PersonalDataRequestKind, PersonalDataRequestScope, Prisma } from "@/generated/prisma/client";
+import type { PersonalDataRequestChannel, PersonalDataRequestKind, PersonalDataRequestScope, Prisma } from "@/generated/prisma/client";
 import { appendAudit } from "@/server/security/audit-journal";
+import { createPrivacyLookupKey, normalizePrivacyEmail } from "@/server/privacy/lookup";
 
 export const privacyCategories = ["ACCOUNT", "BRIEF", "PROJECTS", "FILES", "NOTIFICATIONS", "HISTORY"] as const;
 export type PrivacyCategory = (typeof privacyCategories)[number];
@@ -24,6 +25,10 @@ type Preview = {
   clientId: string | null;
   briefIds: string[];
   projectIds: string[];
+  identity: { name: string; email: string | null; account: string | null };
+  briefs: { id: string; number: number; name: string }[];
+  projects: { id: string; title: string }[];
+  materials: { id: string; title: string; kind: string }[];
   counts: { briefs: number; projects: number; files: number; bytes: number; materials: number; notifications: number; events: number };
 };
 
@@ -46,26 +51,37 @@ export async function previewTarget(scope: PersonalDataRequestScope, targetId: s
 }
 
 function emptyPreview(): Preview {
-  return { targetExists: false, label: "Объект не найден", clientId: null, briefIds: [], projectIds: [], counts: { briefs: 0, projects: 0, files: 0, bytes: 0, materials: 0, notifications: 0, events: 0 } };
+  return { targetExists: false, label: "Объект не найден", clientId: null, briefIds: [], projectIds: [], identity: { name: "", email: null, account: null }, briefs: [], projects: [], materials: [], counts: { briefs: 0, projects: 0, files: 0, bytes: 0, materials: 0, notifications: 0, events: 0 } };
 }
 
 async function aggregatePreview(label: string, clientId: string | null, briefIds: string[], projectIds: string[]): Promise<Preview> {
   const projectFilter = { in: projectIds };
-  const [files, materials, notifications, events] = await Promise.all([
+  const [files, materialRows, notifications, events, client, briefRows, projectRows] = await Promise.all([
     prisma.storedFile.aggregate({ where: { projectId: projectFilter, physicalDeletedAt: null }, _count: true, _sum: { size: true } }),
-    prisma.projectMaterial.count({ where: { projectId: projectFilter } }),
+    prisma.projectMaterial.findMany({ where: { projectId: projectFilter }, select: { id: true, title: true, kind: true }, orderBy: { createdAt: "desc" }, take: 50 }),
     prisma.notification.count({ where: { OR: [{ projectId: projectFilter }, ...(clientId ? [{ recipientClientId: clientId }] : [])] } }),
     prisma.projectEvent.count({ where: { projectId: projectFilter } }),
+    clientId ? prisma.clientUser.findUnique({ where: { id: clientId }, select: { name: true, email: true, username: true } }) : null,
+    prisma.briefRequest.findMany({ where: { id: { in: briefIds } }, select: { id: true, number: true, name: true, contact: true }, orderBy: { createdAt: "desc" } }),
+    prisma.clientProject.findMany({ where: { id: projectFilter }, select: { id: true, title: true }, orderBy: { updatedAt: "desc" } }),
   ]);
-  return { targetExists: true, label, clientId, briefIds, projectIds, counts: { briefs: briefIds.length, projects: projectIds.length, files: files._count, bytes: files._sum.size ?? 0, materials, notifications, events } };
+  const briefEmail = briefRows.map(item => item.contact).find(contact => { try { normalizePrivacyEmail(contact); return true; } catch { return false; } }) ?? null;
+  return {
+    targetExists: true, label, clientId, briefIds, projectIds,
+    identity: { name: client?.name ?? briefRows[0]?.name ?? label, email: client?.email ?? briefEmail, account: client?.username ?? null },
+    briefs: briefRows.map(({ id, number, name }) => ({ id, number, name })), projects: projectRows, materials: materialRows,
+    counts: { briefs: briefRows.length, projects: projectRows.length, files: files._count, bytes: files._sum.size ?? 0, materials: materialRows.length, notifications, events },
+  };
 }
 
-export async function registerPrivacyRequest(input: { kind: PersonalDataRequestKind; scope: PersonalDataRequestScope; targetId: string; receivedAt: Date; dueAt?: Date | null }) {
+export async function registerPrivacyRequest(input: { kind: PersonalDataRequestKind; scope: PersonalDataRequestScope; targetId: string; receivedAt: Date; dueAt?: Date | null; channel: PersonalDataRequestChannel }) {
   const preview = await previewTarget(input.scope, input.targetId);
   if (!preview.targetExists) throw new WorkspaceError("Выбранный объект больше не существует. Обновите страницу.");
+  if (!preview.identity.email) throw new WorkspaceError("У выбранного субъекта нет корректного email. Добавьте email или выберите связанную заявку с email.");
+  const lookupKey = createPrivacyLookupKey(preview.identity.email);
   return prisma.$transaction(async tx => {
-    const request = await tx.personalDataRequest.create({ data: input });
-    await appendAudit(tx, { eventType: "PRIVACY_REQUEST_REGISTERED", entityType: "PERSONAL_DATA_REQUEST", entityId: request.id, metadata: { requestNumber: request.number, kind: request.kind, scope: request.scope } });
+    const request = await tx.personalDataRequest.create({ data: { ...input, lookupKey } });
+    await appendAudit(tx, { eventType: "PRIVACY_REQUEST_REGISTERED", entityType: "PERSONAL_DATA_REQUEST", entityId: request.id, metadata: { requestNumber: request.number, kind: request.kind, scope: request.scope, channel: request.channel } });
     return request;
   });
 }
@@ -141,6 +157,9 @@ export async function executePrivacyRequest(requestId: string, confirmation: str
   validateExclusions(request.scope, [...excluded]);
   const preview = await previewTarget(request.scope, request.targetId);
   if (!preview.targetExists) throw new WorkspaceError("Состав данных изменился: целевой объект не найден.");
+  if (!preview.identity.email) throw new WorkspaceError("Исполнение остановлено: у субъекта больше нет корректного email для контрольного HMAC-идентификатора.");
+  const lookupKey = createPrivacyLookupKey(preview.identity.email);
+  if (request.lookupKey && request.lookupKey !== lookupKey) throw new WorkspaceError("Email субъекта изменился после регистрации. Зарегистрируйте новый запрос после повторной идентификации.");
 
   const deleteProjects = request.scope !== "BRIEF" && !excluded.has("PROJECTS");
   const deleteBriefs = !excluded.has("BRIEF");
@@ -184,7 +203,7 @@ export async function executePrivacyRequest(requestId: string, confirmation: str
         await tx.clientUser.delete({ where: { id: preview.clientId } });
         destroyed.push("ACCOUNT");
       }
-      await tx.personalDataRequest.update({ where: { id: request.id }, data: { targetId: null, exclusionReason: null, status: "COMPLETED", completedAt: new Date(), destroyedCategories: destroyed.map(item => categoryLabels[item]), result: excluded.size ? "PARTIALLY_PRESERVED" : "DESTROYED", storageWarnings: 0 } });
+      await tx.personalDataRequest.update({ where: { id: request.id }, data: { targetId: null, kind: null, exclusionReason: null, lookupKey, status: "COMPLETED", completedAt: new Date(), destroyedCategories: destroyed.map(item => categoryLabels[item]), result: excluded.size ? "PARTIALLY_PRESERVED" : "DESTROYED", storageWarnings: 0 } });
       await appendAudit(tx, { eventType: "PRIVACY_REQUEST_COMPLETED", entityType: "PERSONAL_DATA_REQUEST", entityId: request.id, metadata: { requestNumber: request.number, destroyedCategoryCount: destroyed.length, result: excluded.size ? "PARTIALLY_PRESERVED" : "DESTROYED", storageWarnings: 0 } });
     });
   } catch (error) {

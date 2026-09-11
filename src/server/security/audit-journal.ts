@@ -12,7 +12,7 @@ const metadataAllowlist: Record<string, readonly string[]> = {
   STAGE_CREATED: ["actorSide"], STAGE_UPDATED: ["actorSide"], STAGE_ARCHIVED: ["actorSide"], RESULT_PUBLISHED: ["actorSide", "version"], ACCEPTED: ["actorSide"], CHANGES: ["actorSide"], ROUND_CLASSIFIED: ["actorSide", "countsTowardLimit"],
   PAYMENT_UPDATED: ["actorSide", "status", "hasDueDate", "hasPaidDate", "hasDocument"], MATERIAL_ADDED: ["actorSide", "kind", "physicalFile"],
   NOTIFICATION_ENQUEUED: ["eventType", "channelCount"], NOTIFICATION_DISPATCHED: ["sent", "failed", "skipped"], NOTIFICATION_PREFERENCES_UPDATED: ["importantEmail"],
-  PRIVACY_REQUEST_REGISTERED: ["requestNumber", "kind", "scope"], PRIVACY_REQUEST_PREPARED: ["requestNumber", "excludedCategoryCount"], PRIVACY_REQUEST_COMPLETED: ["requestNumber", "destroyedCategoryCount", "result", "storageWarnings"],
+  PRIVACY_REQUEST_REGISTERED: ["requestNumber", "kind", "scope", "channel"], PRIVACY_REQUEST_PREPARED: ["requestNumber", "excludedCategoryCount"], PRIVACY_REQUEST_COMPLETED: ["requestNumber", "destroyedCategoryCount", "result", "storageWarnings"],
   STORAGE_CLEANUP_COMPLETED: ["files", "bytes", "preservedHistory"], ARCHIVED_BRIEFS_DELETED: ["count"], ORPHAN_STORAGE_CLEANUP_COMPLETED: ["files", "bytes"], RETENTION_SETTINGS_UPDATED: ["projectDays", "briefDays", "warningDays", "automaticCleanupEnabled"], ADMIN_NOTIFICATION_EMAIL_UPDATED: ["enabled"],
 };
 

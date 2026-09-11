@@ -11,7 +11,9 @@ IANep v1 рассчитан на один Node.js process/server за довер
 
 ## Production environment
 
-Обязательные переменные: `NODE_ENV=production`, `DATABASE_URL`, `ADMIN_SESSION_SECRET` (не менее 32 случайных символов), `APP_BASE_URL` (абсолютный HTTPS URL), `CORS_ALLOWED_ORIGINS` (HTTPS origins через запятую, включая origin приложения) и абсолютный `IANEP_STORAGE_DIR`.
+Обязательные переменные: `NODE_ENV=production`, `DATABASE_URL`, `ADMIN_SESSION_SECRET` (не менее 32 случайных символов), `PRIVACY_LOOKUP_SECRET` (отдельный случайный секрет не менее 32 байт), `APP_BASE_URL` (абсолютный HTTPS URL), `CORS_ALLOWED_ORIGINS` (HTTPS origins через запятую, включая origin приложения) и абсолютный `IANEP_STORAGE_DIR`.
+
+`PRIVACY_LOOKUP_SECRET` используется только как ключ HMAC-SHA256 для сопоставления email с ранее исполненными запросами. Он должен отличаться от `ADMIN_SESSION_SECRET`, храниться в секрет-хранилище окружения и быть одинаковым на всех instances. Не меняйте его без плана ротации: старые lookup-ключи перестанут находиться. Приложение не выводит значение секрета в UI или логи и в production прекращает запуск при его отсутствии или небезопасной длине.
 
 Для IP rate limit: `TRUST_PROXY_HEADERS=true` разрешается только когда приложение недоступно в обход proxy, а proxy перезаписывает `CLIENT_IP_HEADER`. Допустимые значения заголовка: `x-real-ip` или `x-forwarded-for`. При `TRUST_PROXY_HEADERS=false` forwarded headers игнорируются; это безопасный default, но все прямые запросы разделяют один limiter bucket.
 

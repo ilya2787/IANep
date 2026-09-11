@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/server/auth/admin-auth";
 import { requireSameOrigin } from "@/server/security/request";
 import { executePrivacyRequest, preparePrivacyRequest, privacyCategories, registerPrivacyRequest } from "@/server/privacy/requests";
+import { findCompletedPrivacyRequests } from "@/server/privacy/lookup";
 import { WorkspaceError } from "@/server/client/service";
 import type { ActionState } from "@/app/client/actions";
 
@@ -18,12 +19,29 @@ export async function registerRequest(_state: ActionState, form: FormData): Prom
   try {
     const data = z.object({
       kind: z.enum(["CONSENT_WITHDRAWAL", "ERASURE", "PROCESSING_TERMINATION", "OTHER"]),
+      channel: z.enum(["EMAIL", "PHONE", "IN_PERSON", "OTHER"]),
       scope: z.enum(["BRIEF", "PROJECT", "CLIENT"]), targetId: z.uuid(),
       receivedAt: z.coerce.date(), dueAt: z.union([z.literal(""), z.coerce.date()]).optional(),
     }).parse(Object.fromEntries(form));
     const request = await registerPrivacyRequest({ ...data, dueAt: data.dueAt || null });
     revalidatePath("/admin/privacy-requests");
     return { ok: true, message: `Запрос ${receipt(request.number)} зарегистрирован. Проверьте состав данных и исключения.` };
+  } catch (error) { return failure(error); }
+}
+
+export type PrivacyLookupState = ActionState & { matches?: Array<{ number: number; receivedAt: string; completedAt: string; scope: string; categories: string[]; result: string; channel: string }> };
+
+export async function lookupCompletedRequests(_state: PrivacyLookupState, form: FormData): Promise<PrivacyLookupState> {
+  await requireSameOrigin();
+  await requireAdmin();
+  try {
+    const email = z.email().max(254).parse(form.get("email"));
+    const matches = await findCompletedPrivacyRequests(email, { side: "ADMIN" });
+    return {
+      ok: true,
+      message: matches.length ? `Найдено исполненных запросов: ${matches.length}.` : "Исполненных запросов для этого email не найдено.",
+      matches: matches.map(item => ({ number: item.number, receivedAt: item.receivedAt.toISOString(), completedAt: item.completedAt!.toISOString(), scope: item.scope, categories: Array.isArray(item.destroyedCategories) ? item.destroyedCategories.filter((value): value is string => typeof value === "string") : [], result: item.result ?? "NOT_DESTROYED", channel: item.channel })),
+    };
   } catch (error) { return failure(error); }
 }
 

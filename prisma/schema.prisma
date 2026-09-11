@@ -42,10 +42,17 @@ enum PersonalDataRequestResult {
   NOT_DESTROYED
 }
 
+enum PersonalDataRequestChannel {
+  EMAIL
+  PHONE
+  IN_PERSON
+  OTHER
+}
+
 model PersonalDataRequest {
   id                  String                    @id @default(uuid()) @db.Uuid
   number              Int                       @unique @default(autoincrement()) @map("public_number")
-  kind                PersonalDataRequestKind
+  kind                PersonalDataRequestKind?
   scope               PersonalDataRequestScope
   status              PersonalDataRequestStatus @default(REGISTERED)
   targetId            String?                   @db.Uuid
@@ -56,12 +63,15 @@ model PersonalDataRequest {
   exclusionReason     String?                   @db.VarChar(1000)
   destroyedCategories Json?
   result              PersonalDataRequestResult?
+  channel             PersonalDataRequestChannel @default(EMAIL)
+  lookupKey           String?                   @db.Char(64)
   storageWarnings     Int                       @default(0)
   createdAt           DateTime                  @default(now())
   updatedAt           DateTime                  @updatedAt
 
   @@index([status, receivedAt])
   @@index([scope, targetId])
+  @@index([lookupKey, completedAt])
   @@map("personal_data_requests")
 }
 

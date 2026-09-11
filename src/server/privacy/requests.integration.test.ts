@@ -7,9 +7,12 @@ import os from "node:os";
 import { prisma } from "@/server/db/prisma";
 import { storagePath } from "@/server/storage/files";
 import { executePrivacyRequest, preparePrivacyRequest, registerPrivacyRequest, validateExclusions } from "./requests";
+import { createPrivacyLookupKey, findCompletedPrivacyRequests } from "./lookup";
 
 test("запрос субъекта: изоляция, двойное подтверждение, каскад, файлы и обезличенный результат", async () => {
   const previousStorage = process.env.IANEP_STORAGE_DIR;
+  const previousLookupSecret = process.env.PRIVACY_LOOKUP_SECRET;
+  process.env.PRIVACY_LOOKUP_SECRET = "integration-privacy-lookup-secret-at-least-32-bytes";
   const testStorage = await mkdtemp(path.join(os.tmpdir(), "ianep-privacy-test-"));
   process.env.IANEP_STORAGE_DIR = testStorage;
   const suffix = randomUUID();
@@ -30,7 +33,7 @@ test("запрос субъекта: изоляция, двойное подтв
   await prisma.auditEvent.create({ data: { eventType: "TEST_PERSONAL", entityType: "CLIENT_USER", entityId: subject.id, metadata: { email: subject.email } } });
   let requestId = "";
   try {
-    const request = await registerPrivacyRequest({ kind: "CONSENT_WITHDRAWAL", scope: "CLIENT", targetId: subject.id, receivedAt: new Date("2026-09-11T00:00:00Z") });
+    const request = await registerPrivacyRequest({ kind: "CONSENT_WITHDRAWAL", scope: "CLIENT", targetId: subject.id, receivedAt: new Date("2026-09-11T00:00:00Z"), channel: "EMAIL" });
     requestId = request.id;
     await preparePrivacyRequest(request.id, [], null);
     await assert.rejects(executePrivacyRequest(request.id, "УДАЛИТЬ НЕ ТО"));
@@ -48,12 +51,18 @@ test("запрос субъекта: изоляция, двойное подтв
     const receipt = await prisma.personalDataRequest.findUniqueOrThrow({ where: { id: request.id } });
     assert.equal(receipt.targetId, null);
     assert.equal(receipt.status, "COMPLETED");
+    assert.equal(receipt.kind, null);
+    assert.equal(receipt.lookupKey, createPrivacyLookupKey(subject.email!));
     assert.equal(JSON.stringify(receipt).includes(subject.name), false);
     assert.equal(JSON.stringify(receipt).includes(subject.email!), false);
     assert.equal(await prisma.auditEvent.count({ where: { eventType: "TEST_PERSONAL" } }), 0);
     const legalAudit = await prisma.auditEvent.findMany({ where: { entityType: "PERSONAL_DATA_REQUEST", entityId: request.id } });
     assert.equal(JSON.stringify(legalAudit).includes(subject.name), false);
     assert.equal(JSON.stringify(legalAudit).includes(subject.email!), false);
+    await assert.rejects(findCompletedPrivacyRequests(subject.email!, { side: "CLIENT" }));
+    const matches = await findCompletedPrivacyRequests(subject.email!, { side: "ADMIN" });
+    assert.equal(matches.some(item => item.number === request.number), true);
+    assert.equal(JSON.stringify(matches).includes(subject.email!), false);
   } finally {
     if (requestId) await prisma.auditEvent.deleteMany({ where: { entityType: "PERSONAL_DATA_REQUEST", entityId: requestId } });
     if (requestId) await prisma.personalDataRequest.deleteMany({ where: { id: requestId } });
@@ -63,6 +72,7 @@ test("запрос субъекта: изоляция, двойное подтв
     await prisma.auditEvent.deleteMany({ where: { eventType: "TEST_PERSONAL" } });
     await unlink(storagePath(fileId)).catch(() => undefined); await unlink(storagePath(otherFileId)).catch(() => undefined);
     if (previousStorage === undefined) delete process.env.IANEP_STORAGE_DIR; else process.env.IANEP_STORAGE_DIR = previousStorage;
+    if (previousLookupSecret === undefined) delete process.env.PRIVACY_LOOKUP_SECRET; else process.env.PRIVACY_LOOKUP_SECRET = previousLookupSecret;
     await rm(testStorage, { recursive: true, force: true });
     await prisma.$disconnect();
   }

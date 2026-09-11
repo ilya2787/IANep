@@ -27,7 +27,7 @@ function absoluteUrl(value: string, name: string, https: boolean) {
 export function validateProductionEnvironment(env: Environment = process.env) {
   if (env.NODE_ENV !== "production" || env.NEXT_PHASE === "phase-production-build") return;
 
-  const required = ["DATABASE_URL", "ADMIN_SESSION_SECRET", "APP_BASE_URL", "CORS_ALLOWED_ORIGINS", "IANEP_STORAGE_DIR"] as const;
+  const required = ["DATABASE_URL", "ADMIN_SESSION_SECRET", "PRIVACY_LOOKUP_SECRET", "APP_BASE_URL", "CORS_ALLOWED_ORIGINS", "IANEP_STORAGE_DIR"] as const;
   for (const name of required) {
     if (!env[name] || env[name]!.includes("replace-with")) throw new Error(`Production configuration missing: ${name}`);
   }
@@ -36,6 +36,8 @@ export function validateProductionEnvironment(env: Environment = process.env) {
   try { database = new URL(env.DATABASE_URL!); } catch { throw new Error("Production configuration invalid: DATABASE_URL must be an absolute PostgreSQL URL"); }
   if (!["postgres:", "postgresql:"].includes(database.protocol)) throw new Error("Production configuration invalid: DATABASE_URL must use PostgreSQL");
   if (env.ADMIN_SESSION_SECRET!.length < 32) throw new Error("Production configuration invalid: ADMIN_SESSION_SECRET must contain at least 32 characters");
+  if (Buffer.byteLength(env.PRIVACY_LOOKUP_SECRET!, "utf8") < 32) throw new Error("Production configuration invalid: PRIVACY_LOOKUP_SECRET must contain at least 32 bytes");
+  if (env.PRIVACY_LOOKUP_SECRET === env.ADMIN_SESSION_SECRET) throw new Error("Production configuration invalid: PRIVACY_LOOKUP_SECRET must be separate from ADMIN_SESSION_SECRET");
 
   const appUrl = absoluteUrl(env.APP_BASE_URL!, "APP_BASE_URL", true);
   const origins = env.CORS_ALLOWED_ORIGINS!.split(",").map(value => value.trim()).filter(Boolean).map((value, index) => absoluteUrl(value, `CORS_ALLOWED_ORIGINS[${index}]`, true));
