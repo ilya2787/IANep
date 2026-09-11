@@ -7,6 +7,7 @@ import { BriefConflict } from "./brief.receipt";
 import { prisma } from "@/server/db/prisma";
 import { getSystemSettings } from "@/server/system/settings";
 import { enqueueForActiveAdmins } from "@/server/notifications/service";
+import { appendAudit } from "@/server/security/audit-journal";
 
 export class BriefStatusConflict extends Error {}
 
@@ -68,13 +69,11 @@ export class BriefRepository {
       });
       if (updated.count !== 1) throw new BriefStatusConflict("STATUS_CHANGED_CONCURRENTLY");
 
-      await transaction.auditEvent.create({
-        data: {
+      await appendAudit(transaction, {
           eventType: "BRIEF_STATUS_CHANGED",
           entityType: "BriefRequest",
           entityId: id,
           metadata: { previousStatus: current.status, newStatus, actor: "ADMIN" },
-        },
       });
 
       return { status: newStatus, changed: true };
@@ -95,10 +94,10 @@ export class BriefRepository {
         data: { name: data.name, contact: data.contact, projectType: data.projectType, answers: data.answers },
       });
       if (updated.count !== 1) throw new BriefConflict('REPLACEMENT_UNAVAILABLE');
-      await transaction.auditEvent.create({ data: {
+      await appendAudit(transaction, {
         eventType: 'BRIEF_UPDATED', entityType: 'BriefRequest', entityId: previous.id,
         metadata: { source: 'PUBLIC_BRIEF' },
-      } });
+      });
       return transaction.briefRequest.findUniqueOrThrow({ where: { id: previous.id } });
     });
   }
@@ -115,8 +114,7 @@ export class BriefRepository {
         },
       });
 
-      await transaction.auditEvent.create({
-        data: {
+      await appendAudit(transaction, {
           eventType: "BRIEF_CREATED",
           entityType: "BriefRequest",
           entityId: briefRequest.id,
@@ -124,7 +122,6 @@ export class BriefRepository {
             source: briefRequest.source,
             ...(data.receiptHash ? { receiptHash: data.receiptHash } : {}),
           },
-        },
       });
 
       await enqueueForActiveAdmins(transaction, {

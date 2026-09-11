@@ -3,6 +3,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { z } from "zod";
 import { idSchema, attachmentSchema, textSchema, titleSchema } from "./model";
 import { enqueueForActiveAdmins, enqueueNotification } from "@/server/notifications/service";
+import { appendAudit } from "@/server/security/audit-journal";
 
 export type Actor = { id: string; side: "ADMIN" | "CLIENT" };
 export class WorkspaceError extends Error {}
@@ -21,8 +22,9 @@ export async function withProject<T>(projectId: string, actor: Actor, work: (tx:
     return work(tx);
   });
 }
-export async function event(tx: Prisma.TransactionClient, projectId: string, actor: Actor, type: string, message: string) {
+export async function event(tx: Prisma.TransactionClient, projectId: string, actor: Actor, type: string, message: string, metadata: Record<string, unknown> = {}) {
   await tx.projectEvent.create({ data: { projectId, actorId: actor.id, actorSide: actor.side, type, message } });
+  await appendAudit(tx, { eventType: type, entityType: "PROJECT", entityId: projectId, metadata: { actorSide: actor.side, ...metadata } });
 }
 function admin(actor: Actor) { if (actor.side !== "ADMIN") throw new WorkspaceError("Действие доступно только администратору."); }
 export async function publish(projectId: string, actor: Actor, input: unknown) {

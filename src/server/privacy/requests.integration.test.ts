@@ -1,0 +1,76 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { randomUUID } from "node:crypto";
+import { access, mkdtemp, rm, unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
+import os from "node:os";
+import { prisma } from "@/server/db/prisma";
+import { storagePath } from "@/server/storage/files";
+import { executePrivacyRequest, preparePrivacyRequest, registerPrivacyRequest, validateExclusions } from "./requests";
+
+test("запрос субъекта: изоляция, двойное подтверждение, каскад, файлы и обезличенный результат", async () => {
+  const previousStorage = process.env.IANEP_STORAGE_DIR;
+  const testStorage = await mkdtemp(path.join(os.tmpdir(), "ianep-privacy-test-"));
+  process.env.IANEP_STORAGE_DIR = testStorage;
+  const suffix = randomUUID();
+  const subject = await prisma.clientUser.create({ data: { name: "Субъект удаления", username: `privacy-${suffix}`, email: `subject-${suffix}@example.test`, passwordHash: "unused" } });
+  const stranger = await prisma.clientUser.create({ data: { name: "Другой клиент", username: `other-${suffix}`, passwordHash: "unused" } });
+  const brief = await prisma.briefRequest.create({ data: { name: "Персональная заявка", contact: `subject-${suffix}@example.test`, projectType: "WEB", answers: { details: "Содержание проекта" } } });
+  const project = await prisma.clientProject.create({ data: { title: "Удаляемый проект", description: "Конфиденциальное описание", clientId: subject.id, briefId: brief.id } });
+  const otherProject = await prisma.clientProject.create({ data: { title: "Чужой проект", clientId: stranger.id } });
+  const fileId = randomUUID(); const otherFileId = randomUUID();
+  await writeFile(storagePath(fileId), "personal file"); await writeFile(storagePath(otherFileId), "other file");
+  await prisma.storedFile.createMany({ data: [
+    { id: fileId, projectId: project.id, originalName: "personal.txt", mimeType: "text/plain", size: 13, sha256: "unused", kind: "FILE", authorId: subject.id, authorSide: "CLIENT" },
+    { id: otherFileId, projectId: otherProject.id, originalName: "other.txt", mimeType: "text/plain", size: 10, sha256: "unused", kind: "FILE", authorId: stranger.id, authorSide: "CLIENT" },
+  ] });
+  await prisma.projectStage.create({ data: { projectId: project.id, title: "Этап", position: 1 } });
+  await prisma.notification.create({ data: { recipientClientId: subject.id, projectId: project.id, eventType: "TEST", title: "Личное", message: "Персональное уведомление" } });
+  await prisma.projectEvent.create({ data: { projectId: project.id, type: "TEST", message: "Персональная история", actorId: subject.id, actorSide: "CLIENT" } });
+  await prisma.auditEvent.create({ data: { eventType: "TEST_PERSONAL", entityType: "CLIENT_USER", entityId: subject.id, metadata: { email: subject.email } } });
+  let requestId = "";
+  try {
+    const request = await registerPrivacyRequest({ kind: "CONSENT_WITHDRAWAL", scope: "CLIENT", targetId: subject.id, receivedAt: new Date("2026-09-11T00:00:00Z") });
+    requestId = request.id;
+    await preparePrivacyRequest(request.id, [], null);
+    await assert.rejects(executePrivacyRequest(request.id, "УДАЛИТЬ НЕ ТО"));
+    assert.ok(await prisma.clientUser.findUnique({ where: { id: subject.id } }), "первое/ошибочное подтверждение не удаляет данные");
+
+    await executePrivacyRequest(request.id, `УДАЛИТЬ ${request.number}`);
+    assert.equal(await prisma.clientUser.findUnique({ where: { id: subject.id } }), null);
+    assert.equal(await prisma.clientProject.findUnique({ where: { id: project.id } }), null);
+    assert.equal(await prisma.briefRequest.findUnique({ where: { id: brief.id } }), null);
+    await assert.rejects(access(storagePath(fileId)));
+    assert.ok(await prisma.clientUser.findUnique({ where: { id: stranger.id } }), "чужой аккаунт сохранён");
+    assert.ok(await prisma.clientProject.findUnique({ where: { id: otherProject.id } }), "чужой проект сохранён");
+    await access(storagePath(otherFileId));
+
+    const receipt = await prisma.personalDataRequest.findUniqueOrThrow({ where: { id: request.id } });
+    assert.equal(receipt.targetId, null);
+    assert.equal(receipt.status, "COMPLETED");
+    assert.equal(JSON.stringify(receipt).includes(subject.name), false);
+    assert.equal(JSON.stringify(receipt).includes(subject.email!), false);
+    assert.equal(await prisma.auditEvent.count({ where: { eventType: "TEST_PERSONAL" } }), 0);
+    const legalAudit = await prisma.auditEvent.findMany({ where: { entityType: "PERSONAL_DATA_REQUEST", entityId: request.id } });
+    assert.equal(JSON.stringify(legalAudit).includes(subject.name), false);
+    assert.equal(JSON.stringify(legalAudit).includes(subject.email!), false);
+  } finally {
+    if (requestId) await prisma.auditEvent.deleteMany({ where: { entityType: "PERSONAL_DATA_REQUEST", entityId: requestId } });
+    if (requestId) await prisma.personalDataRequest.deleteMany({ where: { id: requestId } });
+    await prisma.storedFile.deleteMany({ where: { projectId: otherProject.id } });
+    await prisma.clientProject.deleteMany({ where: { id: otherProject.id } });
+    await prisma.clientUser.deleteMany({ where: { id: stranger.id } });
+    await prisma.auditEvent.deleteMany({ where: { eventType: "TEST_PERSONAL" } });
+    await unlink(storagePath(fileId)).catch(() => undefined); await unlink(storagePath(otherFileId)).catch(() => undefined);
+    if (previousStorage === undefined) delete process.env.IANEP_STORAGE_DIR; else process.env.IANEP_STORAGE_DIR = previousStorage;
+    await rm(testStorage, { recursive: true, force: true });
+    await prisma.$disconnect();
+  }
+});
+
+test("исключения не позволяют обойти FK-зависимости", () => {
+  assert.throws(() => validateExclusions("CLIENT", ["PROJECTS"]));
+  assert.throws(() => validateExclusions("PROJECT", ["FILES"]));
+  assert.throws(() => validateExclusions("CLIENT", ["ACCOUNT", "NOTIFICATIONS"]));
+  assert.doesNotThrow(() => validateExclusions("CLIENT", ["ACCOUNT", "PROJECTS", "FILES"]));
+});

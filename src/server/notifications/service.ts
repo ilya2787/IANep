@@ -5,6 +5,7 @@ import { smtpEnvironment } from "@/server/config/env";
 import { operationalError } from "@/server/operations/log";
 import { notificationRetryDelayMs } from "@/server/notifications/retry";
 import { notificationEmail } from "@/server/notifications/email-template";
+import { appendAudit } from "@/server/security/audit-journal";
 
 export type NotificationRecipient = { clientId: string } | { adminId: string };
 export type NotificationEvent = {
@@ -37,6 +38,7 @@ export async function enqueueNotification(tx: Prisma.TransactionClient, input: N
       },
     },
   });
+  await appendAudit(tx, { eventType: "NOTIFICATION_ENQUEUED", entityType: "NOTIFICATION", entityId: notification.id, metadata: { eventType: input.eventType, channelCount: emailEnabled ? 2 : 1 } });
   return notification.id;
 }
 
@@ -86,6 +88,7 @@ export async function dispatchPendingNotifications(limit = 20) {
       result.failed += 1;
     }
   }
+  if (result.processed) await appendAudit(prisma, { eventType: "NOTIFICATION_DISPATCHED", entityType: "SYSTEM", entityId: "notification-dispatch", metadata: { sent: result.sent, failed: result.failed, skipped: result.skipped } });
   return result;
 }
 

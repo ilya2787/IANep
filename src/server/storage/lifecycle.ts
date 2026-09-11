@@ -5,6 +5,7 @@ import { prisma } from "@/server/db/prisma";
 import { storagePath } from "@/server/storage/files";
 import { getSystemSettings } from "@/server/system/settings";
 import { WorkspaceError } from "@/server/client/service";
+import { appendAudit } from "@/server/security/audit-journal";
 
 export type CleanupCandidate = { id: string; title: string; archivedAt: Date; deleteAfter: Date | null; files: number; bytes: number };
 
@@ -78,17 +79,19 @@ export async function cleanArchivedProjectFiles(projectIds: string[], adminId: s
   if (!projectIds.length || projectIds.some(id => !allowed.has(id))) throw new WorkspaceError("Состав кандидатов изменился. Обновите предварительный просмотр.");
   const files = await prisma.storedFile.findMany({ where: { projectId: { in: projectIds }, physicalDeletedAt: null }, select: { id: true, projectId: true, size: true } });
   for (const file of files) await retireFile(file);
-  await prisma.auditEvent.create({ data: { eventType: "STORAGE_CLEANUP_COMPLETED", entityType: "SYSTEM", entityId: "storage", metadata: { adminId, projectIds, files: files.length, bytes: files.reduce((sum, file) => sum + file.size, 0), preservedHistory: true } } });
+  await appendAudit(prisma, { eventType: "STORAGE_CLEANUP_COMPLETED", entityType: "SYSTEM", entityId: "storage", metadata: { files: files.length, bytes: files.reduce((sum, file) => sum + file.size, 0), preservedHistory: true } });
+  void adminId;
   return { files: files.length, bytes: files.reduce((sum, file) => sum + file.size, 0) };
 }
 
 export async function deleteArchivedBriefs(ids: string[], adminId: string) {
+  void adminId;
   const allowed = new Set((await archivedBriefCandidates()).map(brief => brief.id));
   if (!ids.length || ids.some(id => !allowed.has(id))) throw new WorkspaceError("Состав заявок изменился. Обновите предварительный просмотр.");
   return prisma.$transaction(async tx => {
     const linked = await tx.briefRequest.count({ where: { id: { in: ids }, project: { isNot: null } } });
     if (linked) throw new WorkspaceError("Связанную с проектом заявку удалить нельзя.");
-    await tx.auditEvent.create({ data: { eventType: "ARCHIVED_BRIEFS_DELETED", entityType: "SYSTEM", entityId: "brief-retention", metadata: { adminId, ids, count: ids.length } } });
+    await appendAudit(tx, { eventType: "ARCHIVED_BRIEFS_DELETED", entityType: "SYSTEM", entityId: "brief-retention", metadata: { count: ids.length } });
     await tx.auditEvent.deleteMany({ where: { entityType: "BriefRequest", entityId: { in: ids } } });
     return tx.briefRequest.deleteMany({ where: { id: { in: ids }, status: "ARCHIVED", project: null } });
   });
@@ -107,6 +110,7 @@ export async function cleanOrphanFiles(adminId: string) {
     if (!known.has(id) || entry.includes(".deleting-")) candidates.push({ path: path.join(root, entry), size: info.size });
   }
   for (const candidate of candidates) await unlink(candidate.path);
-  await prisma.auditEvent.create({ data: { eventType: "ORPHAN_STORAGE_CLEANUP_COMPLETED", entityType: "SYSTEM", entityId: "storage", metadata: { adminId, files: candidates.length, bytes: candidates.reduce((sum, file) => sum + file.size, 0) } } });
+  await appendAudit(prisma, { eventType: "ORPHAN_STORAGE_CLEANUP_COMPLETED", entityType: "SYSTEM", entityId: "storage", metadata: { files: candidates.length, bytes: candidates.reduce((sum, file) => sum + file.size, 0) } });
+  void adminId;
   return { files: candidates.length, bytes: candidates.reduce((sum, file) => sum + file.size, 0) };
 }

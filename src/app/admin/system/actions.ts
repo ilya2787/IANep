@@ -9,16 +9,17 @@ import { cleanArchivedProjectFiles, cleanOrphanFiles, deleteArchivedBriefs } fro
 import { deleteUnusedClient, setClientActive } from "@/server/client/users";
 import { WorkspaceError } from "@/server/client/service";
 import type { ActionState } from "@/app/client/actions";
+import { appendAudit } from "@/server/security/audit-journal";
 
 function failure(error: unknown): ActionState { return { ok: false, message: error instanceof WorkspaceError ? error.message : error instanceof z.ZodError ? "Проверьте выбранные данные." : "Операция не выполнена. Обновите страницу и попробуйте снова." }; }
 
 export async function updateRetentionSettings(_state: ActionState, form: FormData): Promise<ActionState> {
-  await requireSameOrigin(); const admin = await requireAdmin();
+  await requireSameOrigin(); await requireAdmin();
   try {
     const data = z.object({ projectDays: z.coerce.number().int().min(30).max(3650), briefDays: z.coerce.number().int().min(30).max(3650), warningDays: z.coerce.number().int().min(1).max(365), autoCleanup: z.string().optional() }).parse(Object.fromEntries(form));
     await prisma.$transaction(async tx => {
       await tx.systemSetting.upsert({ where: { id: "default" }, update: { archivedProjectRetentionDays: data.projectDays, archivedBriefRetentionDays: data.briefDays, cleanupWarningDays: data.warningDays, automaticCleanupEnabled: false }, create: { id: "default", archivedProjectRetentionDays: data.projectDays, archivedBriefRetentionDays: data.briefDays, cleanupWarningDays: data.warningDays, automaticCleanupEnabled: false } });
-      await tx.auditEvent.create({ data: { eventType: "RETENTION_SETTINGS_UPDATED", entityType: "SYSTEM", entityId: "retention", metadata: { adminId: admin.adminId, projectDays: data.projectDays, briefDays: data.briefDays, warningDays: data.warningDays, automaticCleanupEnabled: false } } });
+      await appendAudit(tx, { eventType: "RETENTION_SETTINGS_UPDATED", entityType: "SYSTEM", entityId: "retention", metadata: { projectDays: data.projectDays, briefDays: data.briefDays, warningDays: data.warningDays, automaticCleanupEnabled: false } });
     });
     revalidatePath("/admin/system"); return { ok: true, message: "Настройки хранения сохранены. Автоматическая очистка остаётся выключенной." };
   } catch (error) { return failure(error); }
@@ -30,12 +31,12 @@ export async function cleanupSelectedProjects(_state: ActionState, form: FormDat
 }
 
 export async function updateAdminNotificationEmail(_state: ActionState, form: FormData): Promise<ActionState> {
-  await requireSameOrigin(); const admin = await requireAdmin();
+  await requireSameOrigin(); await requireAdmin();
   try {
     const data = z.object({ email: z.union([z.literal(""), z.email().max(320)]) }).parse(Object.fromEntries(form));
     await prisma.$transaction(async tx => {
       await tx.systemSetting.upsert({ where: { id: "default" }, update: { adminNotificationEmail: data.email || null }, create: { id: "default", adminNotificationEmail: data.email || null } });
-      await tx.auditEvent.create({ data: { eventType: "ADMIN_NOTIFICATION_EMAIL_UPDATED", entityType: "SYSTEM", entityId: "notifications", metadata: { adminId: admin.adminId, enabled: Boolean(data.email) } } });
+      await appendAudit(tx, { eventType: "ADMIN_NOTIFICATION_EMAIL_UPDATED", entityType: "SYSTEM", entityId: "notifications", metadata: { enabled: Boolean(data.email) } });
     });
     revalidatePath("/admin/system");
     return { ok: true, message: data.email ? "Адрес для уведомлений сохранён." : "Email-уведомления администратора отключены." };

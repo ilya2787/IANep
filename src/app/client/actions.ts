@@ -14,6 +14,7 @@ import { headers } from "next/headers";
 import { requireSameOrigin } from "@/server/security/request";
 import { dispatchPendingNotifications, enqueueForActiveAdmins, enqueueNotification, markNotificationRead } from "@/server/notifications/service";
 import { securityAudit } from "@/server/security/audit";
+import { appendAudit } from "@/server/security/audit-journal";
 import { clientIp } from "@/server/security/client-ip";
 
 export type ActionState = { ok: boolean; message: string };
@@ -48,7 +49,7 @@ export async function createClient(_state: ActionState, form: FormData): Promise
   await requireAdmin();
   try {
     const data = z.object({ name: titleSchema, username: z.string().trim().toLowerCase().regex(/^[a-z0-9._@+-]{3,100}$/), password: z.string().min(12).max(200), email: z.union([z.literal(""), z.email().max(320)]) }).parse(Object.fromEntries(form));
-    await prisma.clientUser.create({ data: { name: data.name, username: data.username, passwordHash: hashAdminPassword(data.password), email: data.email || null } });
+    await prisma.$transaction(async tx => { const client = await tx.clientUser.create({ data: { name: data.name, username: data.username, passwordHash: hashAdminPassword(data.password), email: data.email || null } }); await appendAudit(tx, { eventType: "CLIENT_CREATED", entityType: "CLIENT_USER", entityId: client.id, metadata: { actorSide: "ADMIN" } }); });
     revalidatePath("/admin/projects"); return { ok: true, message: "Аккаунт создан. Передайте клиенту логин и пароль безопасным способом. Сообщение не отправлялось." };
   } catch (error) { return failure(error); }
 }
@@ -61,6 +62,7 @@ export async function createProject(_state: ActionState, form: FormData): Promis
     if (!client) throw new WorkspaceError("Выберите действующего клиента.");
     const project = await prisma.$transaction(async tx => {
       const created = await tx.clientProject.create({ data: { ...data, events: { create: { type: "PROJECT_CREATED", message: "Проект создан. Готовим план работы.", actorId: admin.adminId, actorSide: "ADMIN" } } } });
+      await appendAudit(tx, { eventType: "PROJECT_CREATED", entityType: "PROJECT", entityId: created.id, metadata: { actorSide: "ADMIN" } });
       await enqueueNotification(tx, { recipient: { clientId: data.clientId }, projectId: created.id, eventType: "PROJECT_ASSIGNED", title: "Вам назначен проект", message: `Проект «${data.title}» доступен в кабинете.`, href: `/client/projects/${created.id}`, email: true });
       return created;
     }); id = project.id;
@@ -131,7 +133,7 @@ export async function adminProjectAction(projectId: string, command: string, _st
           const result = await tx.projectPayment.updateMany({ where: { id: String(paymentId), projectId }, data: { ...data, documentUrl: data.documentUrl || null, paidAt: data.status === "PAID" ? data.paidAt : null } });
           if (!result.count) throw new WorkspaceError("Платёж не найден.");
         } else await tx.projectPayment.create({ data: { ...data, projectId, documentUrl: data.documentUrl || null, paidAt: data.status === "PAID" ? data.paidAt : null } });
-        await event(tx, projectId, actor, "PAYMENT_UPDATED", `Обновлён платёж «${data.title}».`);
+        await event(tx, projectId, actor, "PAYMENT_UPDATED", `Обновлён платёж «${data.title}».`, { status: data.status, hasDueDate: Boolean(data.dueAt), hasPaidDate: Boolean(data.paidAt), hasDocument: Boolean(data.documentUrl) });
         const project = await tx.clientProject.findUniqueOrThrow({ where: { id: projectId }, select: { clientId: true } });
         await enqueueNotification(tx, { recipient: { clientId: project.clientId }, projectId, eventType: "PAYMENT_UPDATED", title: "Изменился платёж", message: `Обновлена информация по платежу «${data.title}».`, href: `/client/projects/${projectId}?tab=payments`, email: true });
       } else throw new WorkspaceError("Неизвестное действие.");
@@ -155,7 +157,7 @@ export async function addMaterial(projectId: string, side: "ADMIN" | "CLIENT", _
       if (stageId && !await tx.projectStage.findFirst({ where: { id: stageId, projectId, archivedAt: null } })) throw new WorkspaceError("Этап недоступен.");
       const material = await resolveAttachment(tx, projectId, actor, data);
       await tx.projectMaterial.create({ data: { ...material, projectId, stageId, authorId: actor.id, authorSide: actor.side } });
-      await event(tx, projectId, actor, "MATERIAL_ADDED", `Добавлен материал «${data.title}».`);
+      await event(tx, projectId, actor, "MATERIAL_ADDED", `Добавлен материал «${data.title}».`, { kind: material.kind, physicalFile: Boolean("fileId" in material && material.fileId) });
       if (actor.side === "CLIENT") {
         await enqueueForActiveAdmins(tx, { projectId, eventType: "MATERIAL_ADDED", title: "Клиент добавил материал", message: `Материал «${data.title}» доступен в проекте.`, href: `/admin/projects/${projectId}?tab=materials` });
       } else if (form.get("notify") === "yes") {
