@@ -4,7 +4,7 @@ IANep v1 рассчитан на один Node.js process/server за довер
 
 ## Требования
 
-- Node.js 24 LTS (см. `.node-version`) и npm 11; `npm ci` является стандартным способом установки.
+- Node.js 24 LTS (см. `.node-version`) и npm 11; `npm ci` является стандартным способом установки. При production-only установке допустим `npm ci --omit=dev`: runtime-зависимости maintenance-команд сохраняются.
 - Persistent PostgreSQL с отдельным production database/user.
 - Абсолютный persistent `IANEP_STORAGE_DIR`, не внутри `public/`, с правами read/write только для пользователя приложения. Каталог необходимо создать до запуска.
 - Reverse proxy завершает TLS, ограничивает body, задаёт timeouts и **перезаписывает**, а не дополняет, выбранный client-IP header.
@@ -65,6 +65,8 @@ Restore drill выполняйте регулярно на отдельной Б
 Автоматическая cleanup storage в первом релизе остаётся `OFF`. Preview и ручная контролируемая очистка выполняются существующими lifecycle-инструментами после отдельной проверки кандидатов.
 
 Privacy receipt cleanup является обязательной автоматической retention-операцией и не зависит от флага очистки storage. Команда `npm run projects:cleanup` транзакционно очищает истёкшие privacy-квитанции, затем только показывает кандидатов storage без их удаления. Запускайте её существующим maintenance timer не реже одного раза в сутки. Повторный запуск безопасен. После очистки остаются только технический tombstone записи (внутренний id, публичный номер, статус и дата очистки) и агрегированное системное событие без контакта, HMAC, номера запроса, subject/project/brief/client id.
+
+После изменения dependency graph выполните чистый `npm ci --omit=dev`, затем запустите `npm run verify:production-install`. Проверка подтверждает, что lockfile и установленный production dependency graph содержат рабочий TypeScript loader, используемый maintenance entrypoint.
 
 ## Staging validation
 
