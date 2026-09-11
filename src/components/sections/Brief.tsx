@@ -12,6 +12,7 @@ import {
 import { briefStepFields, createBriefDraft, submitBriefSchema, type BriefAnswers } from "@/server/brief/brief.schema";
 import { BriefDatePicker } from "./BriefDatePicker";
 import { BriefIcon } from "./BriefIcon";
+import { maskRussianPhone } from "@/server/contact/normalization";
 import styles from "./Brief.module.css";
 
 type Errors = Record<string, string>;
@@ -102,8 +103,8 @@ export function Brief() {
     return { 'aria-invalid': errors[key] ? true : undefined, 'aria-describedby': errors[key] ? `brief-error-${key}` : undefined };
   }
 
-  function options(key: keyof BriefAnswers, values: readonly string[], multiple = false) {
-    return <><div className={styles.answerOptions}>
+  function options(key: keyof BriefAnswers, values: readonly string[], multiple = false, compact = false) {
+    return <><div className={`${styles.answerOptions} ${compact ? styles.contactSwitch : ""}`}>
       {values.map((value) => <label className={styles.answerOption} key={value}>
         <input type={multiple ? 'checkbox' : 'radio'} name={key} value={value}
           checked={multiple ? (a[key] as string[]).includes(value) : a[key] === value}
@@ -250,9 +251,9 @@ export function Brief() {
       content = <>
         <p className={styles.hint}>Оставьте контакты, чтобы мы могли обсудить проект.</p>
         <label className={styles.field}><span>Имя</span><input name="name" autoComplete="name" value={draft.name} maxLength={100} {...accessibility('name')} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />{errorFor('name')}</label>
-        <fieldset className={styles.subFieldset}><legend>Как удобнее связаться?</legend>{options('contactMethod', contactMethods)}</fieldset>
+        <fieldset className={styles.subFieldset}><legend>Как удобнее связаться?</legend>{options('contactMethod', contactMethods, false, true)}</fieldset>
         {a.contactMethod && <label className={styles.field}><span>{a.contactMethod}</span>
-          <input name="contact" type={a.contactMethod === 'Email' ? 'email' : a.contactMethod === 'Телефон' ? 'tel' : 'text'} autoComplete={a.contactMethod === 'Email' ? 'email' : a.contactMethod === 'Телефон' ? 'tel' : 'off'} autoCapitalize="none" spellCheck={false} placeholder={a.contactMethod === 'Telegram' ? '@username' : undefined} value={draft.contact} maxLength={200} {...accessibility('contact')} onChange={(event) => setDraft({ ...draft, contact: event.target.value })} />{errorFor('contact')}
+          <input name="contact" type={a.contactMethod === 'Email' ? 'email' : a.contactMethod === 'Телефон' ? 'tel' : 'text'} inputMode={a.contactMethod === 'Телефон' ? 'tel' : a.contactMethod === 'Email' ? 'email' : 'text'} autoComplete={a.contactMethod === 'Email' ? 'email' : a.contactMethod === 'Телефон' ? 'tel' : 'off'} autoCapitalize="none" spellCheck={false} placeholder={a.contactMethod === 'Telegram' ? '@username' : a.contactMethod === 'Телефон' ? '+7 (___) ___-__-__' : 'name@example.ru'} value={draft.contact} maxLength={200} {...accessibility('contact')} onChange={(event) => setDraft({ ...draft, contact: a.contactMethod === 'Телефон' ? maskRussianPhone(event.target.value) : event.target.value })} />{errorFor('contact')}
         </label>}
         {field('comment', 'Комментарий (необязательно)', 2000)}
         <label className={styles.consent}><input name="consent" type="checkbox" checked={a.consent} {...accessibility('consent')} onChange={(event) => answer('consent', event.target.checked)} /><span>Согласен на обработку персональных данных для обсуждения проекта</span></label>

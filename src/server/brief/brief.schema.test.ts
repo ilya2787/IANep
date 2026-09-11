@@ -27,10 +27,27 @@ test('схема проверяет все способы связи', () => {
     const input = validBriefPayload();
     input.answers.contactMethod = method;
     input.contact = valid;
-    assert.ok(submitBriefSchema.safeParse(input).success);
+    const result = submitBriefSchema.safeParse(input);
+    assert.ok(result.success);
+    if (result.success && method === 'Телефон') assert.equal(result.data.contact, '+79001234567');
     input.contact = invalid;
     assert.equal(submitBriefSchema.safeParse(input).success, false);
   }
+});
+
+test('email нормализуется, а телефон проверяется сервером независимо от маски', () => {
+  const email = validBriefPayload();
+  email.contact = '  USER@Example.RU ';
+  assert.equal(submitBriefSchema.parse(email).contact, 'user@example.ru');
+
+  const phone = validBriefPayload();
+  phone.answers.contactMethod = 'Телефон';
+  phone.contact = '8 999 123 45 67';
+  assert.equal(submitBriefSchema.parse(phone).contact, '+79991234567');
+  phone.contact = '9991234567';
+  assert.equal(submitBriefSchema.safeParse(phone).success, false);
+  phone.contact = '+1 (415) 555-0100';
+  assert.equal(submitBriefSchema.safeParse(phone).success, false);
 });
 
 test('схема отклоняет несовместимые и неполные ответы', () => {

@@ -3,12 +3,20 @@ import { rename, unlink } from "node:fs/promises";
 import { prisma } from "@/server/db/prisma";
 import { storagePath } from "@/server/storage/files";
 import { WorkspaceError } from "@/server/client/service";
-import type { PersonalDataRequestChannel, PersonalDataRequestKind, PersonalDataRequestScope, Prisma } from "@/generated/prisma/client";
+import { Prisma, type PersonalDataRequestChannel, type PersonalDataRequestKind, type PersonalDataRequestScope } from "@/generated/prisma/client";
 import { appendAudit } from "@/server/security/audit-journal";
-import { createPrivacyLookupKey, normalizePrivacyEmail } from "@/server/privacy/lookup";
+import { createPrivacyLookupHash, normalizePrivacyEmail, normalizePrivacyPhone, type PrivacyLookupType } from "@/server/privacy/lookup";
 
 export const privacyCategories = ["ACCOUNT", "BRIEF", "PROJECTS", "FILES", "NOTIFICATIONS", "HISTORY"] as const;
 export type PrivacyCategory = (typeof privacyCategories)[number];
+
+export function addPrivacyReceiptRetention(executedAt: Date) {
+  const expiresAt = new Date(executedAt);
+  const month = expiresAt.getUTCMonth();
+  expiresAt.setUTCFullYear(expiresAt.getUTCFullYear() + 3);
+  if (expiresAt.getUTCMonth() !== month) expiresAt.setUTCDate(0);
+  return expiresAt;
+}
 
 const categoryLabels: Record<PrivacyCategory, string> = {
   ACCOUNT: "аккаунт и контактные данные",
@@ -25,7 +33,7 @@ type Preview = {
   clientId: string | null;
   briefIds: string[];
   projectIds: string[];
-  identity: { name: string; email: string | null; account: string | null };
+  identity: { name: string; email: string | null; phone: string | null; account: string | null };
   briefs: { id: string; number: number; name: string }[];
   projects: { id: string; title: string }[];
   materials: { id: string; title: string; kind: string }[];
@@ -51,7 +59,7 @@ export async function previewTarget(scope: PersonalDataRequestScope, targetId: s
 }
 
 function emptyPreview(): Preview {
-  return { targetExists: false, label: "Объект не найден", clientId: null, briefIds: [], projectIds: [], identity: { name: "", email: null, account: null }, briefs: [], projects: [], materials: [], counts: { briefs: 0, projects: 0, files: 0, bytes: 0, materials: 0, notifications: 0, events: 0 } };
+  return { targetExists: false, label: "Объект не найден", clientId: null, briefIds: [], projectIds: [], identity: { name: "", email: null, phone: null, account: null }, briefs: [], projects: [], materials: [], counts: { briefs: 0, projects: 0, files: 0, bytes: 0, materials: 0, notifications: 0, events: 0 } };
 }
 
 async function aggregatePreview(label: string, clientId: string | null, briefIds: string[], projectIds: string[]): Promise<Preview> {
@@ -61,26 +69,35 @@ async function aggregatePreview(label: string, clientId: string | null, briefIds
     prisma.projectMaterial.findMany({ where: { projectId: projectFilter }, select: { id: true, title: true, kind: true }, orderBy: { createdAt: "desc" }, take: 50 }),
     prisma.notification.count({ where: { OR: [{ projectId: projectFilter }, ...(clientId ? [{ recipientClientId: clientId }] : [])] } }),
     prisma.projectEvent.count({ where: { projectId: projectFilter } }),
-    clientId ? prisma.clientUser.findUnique({ where: { id: clientId }, select: { name: true, email: true, username: true } }) : null,
-    prisma.briefRequest.findMany({ where: { id: { in: briefIds } }, select: { id: true, number: true, name: true, contact: true }, orderBy: { createdAt: "desc" } }),
+    clientId ? prisma.clientUser.findUnique({ where: { id: clientId }, select: { name: true, email: true, phone: true, username: true } }) : null,
+    prisma.briefRequest.findMany({ where: { id: { in: briefIds } }, select: { id: true, number: true, name: true, contact: true, contactType: true }, orderBy: { createdAt: "desc" } }),
     prisma.clientProject.findMany({ where: { id: projectFilter }, select: { id: true, title: true }, orderBy: { updatedAt: "desc" } }),
   ]);
-  const briefEmail = briefRows.map(item => item.contact).find(contact => { try { normalizePrivacyEmail(contact); return true; } catch { return false; } }) ?? null;
+  const briefEmail = briefRows.find(item => item.contactType === "EMAIL")?.contact
+    ?? briefRows.map(item => item.contact).find(contact => { try { normalizePrivacyEmail(contact); return true; } catch { return false; } }) ?? null;
+  const briefPhone = briefRows.find(item => item.contactType === "PHONE")?.contact
+    ?? briefRows.map(item => item.contact).find(contact => { try { normalizePrivacyPhone(contact); return true; } catch { return false; } }) ?? null;
   return {
     targetExists: true, label, clientId, briefIds, projectIds,
-    identity: { name: client?.name ?? briefRows[0]?.name ?? label, email: client?.email ?? briefEmail, account: client?.username ?? null },
+    identity: { name: client?.name ?? briefRows[0]?.name ?? label, email: client?.email ?? briefEmail, phone: client?.phone ?? briefPhone, account: client?.username ?? null },
     briefs: briefRows.map(({ id, number, name }) => ({ id, number, name })), projects: projectRows, materials: materialRows,
     counts: { briefs: briefRows.length, projects: projectRows.length, files: files._count, bytes: files._sum.size ?? 0, materials: materialRows.length, notifications, events },
   };
 }
 
-export async function registerPrivacyRequest(input: { kind: PersonalDataRequestKind; scope: PersonalDataRequestScope; targetId: string; receivedAt: Date; dueAt?: Date | null; channel: PersonalDataRequestChannel }) {
+export async function registerPrivacyRequest(input: { kind: PersonalDataRequestKind; scope: PersonalDataRequestScope; targetId: string; receivedAt: Date; dueAt?: Date | null; channel: PersonalDataRequestChannel; lookupValue?: string | null }) {
   const preview = await previewTarget(input.scope, input.targetId);
   if (!preview.targetExists) throw new WorkspaceError("Выбранный объект больше не существует. Обновите страницу.");
-  if (!preview.identity.email) throw new WorkspaceError("У выбранного субъекта нет корректного email. Добавьте email или выберите связанную заявку с email.");
-  const lookupKey = createPrivacyLookupKey(preview.identity.email);
+  let lookupType: PrivacyLookupType = "NONE";
+  let lookupHash: string | null = null;
+  if (input.channel === "EMAIL" || input.channel === "PHONE") {
+    if (!input.lookupValue?.trim()) throw new WorkspaceError(input.channel === "EMAIL" ? "Укажите email, с которого поступил запрос." : "Укажите телефон, с которого поступил запрос.");
+    lookupType = input.channel;
+    try { lookupHash = createPrivacyLookupHash(lookupType, input.lookupValue); }
+    catch (error) { throw new WorkspaceError(error instanceof Error ? error.message : "Проверьте контакт для сопоставления."); }
+  }
   return prisma.$transaction(async tx => {
-    const request = await tx.personalDataRequest.create({ data: { ...input, lookupKey } });
+    const request = await tx.personalDataRequest.create({ data: { kind: input.kind, scope: input.scope, targetId: input.targetId, receivedAt: input.receivedAt, dueAt: input.dueAt, channel: input.channel, lookupType, lookupHash } });
     await appendAudit(tx, { eventType: "PRIVACY_REQUEST_REGISTERED", entityType: "PERSONAL_DATA_REQUEST", entityId: request.id, metadata: { requestNumber: request.number, kind: request.kind, scope: request.scope, channel: request.channel } });
     return request;
   });
@@ -102,6 +119,7 @@ export function validateExclusions(scope: PersonalDataRequestScope, excluded: Pr
 export async function preparePrivacyRequest(requestId: string, excluded: PrivacyCategory[], reason: string | null) {
   const request = await prisma.personalDataRequest.findUnique({ where: { id: requestId } });
   if (!request?.targetId || request.status !== "REGISTERED") throw new WorkspaceError("Запрос уже изменён. Обновите страницу.");
+  if (!request.scope) throw new WorkspaceError("Запрос уже очищен по сроку хранения.");
   validateExclusions(request.scope, excluded);
   if (excluded.length && (!reason || reason.trim().length < 10)) throw new WorkspaceError("Для сохранения категории укажите иное законное основание или исключение.");
   const preview = await previewTarget(request.scope, request.targetId);
@@ -153,13 +171,13 @@ export async function executePrivacyRequest(requestId: string, confirmation: str
   const request = await prisma.personalDataRequest.findUnique({ where: { id: requestId } });
   if (!request?.targetId || request.status !== "READY") throw new WorkspaceError("Запрос не готов к исполнению. Обновите страницу.");
   if (confirmation.trim() !== `УДАЛИТЬ ${request.number}`) throw new WorkspaceError(`Введите точную фразу «УДАЛИТЬ ${request.number}».`);
+  if (!request.scope) throw new WorkspaceError("Запрос уже очищен по сроку хранения.");
   const excluded = new Set((Array.isArray(request.excludedCategories) ? request.excludedCategories : []) as PrivacyCategory[]);
   validateExclusions(request.scope, [...excluded]);
   const preview = await previewTarget(request.scope, request.targetId);
   if (!preview.targetExists) throw new WorkspaceError("Состав данных изменился: целевой объект не найден.");
-  if (!preview.identity.email) throw new WorkspaceError("Исполнение остановлено: у субъекта больше нет корректного email для контрольного HMAC-идентификатора.");
-  const lookupKey = createPrivacyLookupKey(preview.identity.email);
-  if (request.lookupKey && request.lookupKey !== lookupKey) throw new WorkspaceError("Email субъекта изменился после регистрации. Зарегистрируйте новый запрос после повторной идентификации.");
+  if ((request.lookupType === "EMAIL" || request.lookupType === "PHONE") && !request.lookupHash) throw new WorkspaceError("Исполнение остановлено: у запроса отсутствует защищённый идентификатор.");
+  if (request.lookupType === "NONE" && request.lookupHash) throw new WorkspaceError("Исполнение остановлено: квитанция содержит несовместимый тип идентификатора.");
 
   const deleteProjects = request.scope !== "BRIEF" && !excluded.has("PROJECTS");
   const deleteBriefs = !excluded.has("BRIEF");
@@ -203,7 +221,8 @@ export async function executePrivacyRequest(requestId: string, confirmation: str
         await tx.clientUser.delete({ where: { id: preview.clientId } });
         destroyed.push("ACCOUNT");
       }
-      await tx.personalDataRequest.update({ where: { id: request.id }, data: { targetId: null, kind: null, exclusionReason: null, lookupKey, status: "COMPLETED", completedAt: new Date(), destroyedCategories: destroyed.map(item => categoryLabels[item]), result: excluded.size ? "PARTIALLY_PRESERVED" : "DESTROYED", storageWarnings: 0 } });
+      const completedAt = new Date();
+      await tx.personalDataRequest.update({ where: { id: request.id }, data: { targetId: null, kind: null, exclusionReason: null, status: "COMPLETED", completedAt, receiptExpiresAt: addPrivacyReceiptRetention(completedAt), destroyedCategories: destroyed.map(item => categoryLabels[item]), result: excluded.size ? "PARTIALLY_PRESERVED" : "DESTROYED", storageWarnings: 0 } });
       await appendAudit(tx, { eventType: "PRIVACY_REQUEST_COMPLETED", entityType: "PERSONAL_DATA_REQUEST", entityId: request.id, metadata: { requestNumber: request.number, destroyedCategoryCount: destroyed.length, result: excluded.size ? "PARTIALLY_PRESERVED" : "DESTROYED", storageWarnings: 0 } });
     });
   } catch (error) {
@@ -214,4 +233,27 @@ export async function executePrivacyRequest(requestId: string, confirmation: str
   for (const file of quarantined) if (file.quarantine) try { await unlink(file.quarantine); } catch { warnings++; }
   if (warnings) await prisma.personalDataRequest.update({ where: { id: request.id }, data: { status: "COMPLETED_WITH_WARNINGS", storageWarnings: warnings } });
   return { number: request.number, warnings };
+}
+
+export async function cleanupExpiredPrivacyReceipts(now = new Date()) {
+  return prisma.$transaction(async tx => {
+    const expired = await tx.personalDataRequest.findMany({
+      where: { receiptPurgedAt: null, receiptExpiresAt: { lte: now } },
+      select: { id: true },
+    });
+    if (!expired.length) return { receipts: 0 };
+    const ids = expired.map(item => item.id);
+    await tx.auditEvent.deleteMany({ where: { entityType: "PERSONAL_DATA_REQUEST", entityId: { in: ids } } });
+    const result = await tx.personalDataRequest.updateMany({
+      where: { id: { in: ids }, receiptPurgedAt: null, receiptExpiresAt: { lte: now } },
+      data: {
+        kind: null, scope: null, targetId: null, receivedAt: null, dueAt: null, completedAt: null,
+        receiptExpiresAt: null, receiptPurgedAt: now, excludedCategories: Prisma.DbNull,
+        exclusionReason: null, destroyedCategories: Prisma.DbNull, result: null, channel: null,
+        lookupType: "NONE", lookupHash: null, storageWarnings: 0, createdAt: null,
+      },
+    });
+    if (result.count) await appendAudit(tx, { eventType: "PRIVACY_RECEIPTS_PURGED", entityType: "SYSTEM", entityId: "privacy-receipt-retention", metadata: { count: result.count } });
+    return { receipts: result.count };
+  });
 }

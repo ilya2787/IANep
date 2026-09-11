@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BriefAnswersView } from "@/app/admin/brief-answers";
-import { auditEventLabel, formatAdminDate, projectTypeLabel, sourceLabel, statusLabels } from "@/app/admin/brief-presenter";
+import { auditEventLabel, formatAdminDate, formatBriefContact, projectTypeLabel, sourceLabel, statusLabels } from "@/app/admin/brief-presenter";
 import styles from "@/app/admin/admin.module.css";
 import { briefService } from "@/server/brief/brief.service";
 import { prisma } from "@/server/db/prisma";
@@ -25,7 +25,7 @@ export default async function BriefPage({ params }: BriefPageProps) {
       </div>
 
       <section className={styles.summary} aria-label="Основные данные заявки">
-        <div><span>Контакт</span><strong>{brief.contact}</strong></div>
+        <div><span>Контакт</span><strong>{formatBriefContact(brief.contact, brief.contactType)}</strong></div>
         <div><span>Тип проекта</span><strong>{projectTypeLabel(brief.projectType)}</strong></div>
         <div><span>Источник</span><strong>{sourceLabel(brief.source)}</strong></div>
         <div><span>Получена</span><strong><time dateTime={brief.createdAt.toISOString()}>{formatAdminDate(brief.createdAt)}</time></strong></div>

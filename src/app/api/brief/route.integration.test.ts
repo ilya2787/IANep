@@ -81,6 +81,7 @@ test("POST /api/brief создаёт заявку и событие аудита
 
     assert.equal(briefRequest.name, "Тест API");
     assert.equal(briefRequest.contact, "api@example.com");
+    assert.equal(briefRequest.contactType, "EMAIL");
     assert.equal(briefRequest.projectType, "landing-page");
     assert.equal(briefRequest.source, "PUBLIC_BRIEF");
     assert.deepEqual(briefRequest.answers, validBriefPayload().answers);
@@ -111,6 +112,28 @@ test("POST /api/brief создаёт заявку и событие аудита
       ]);
     }
 
+    await prisma.$disconnect();
+  }
+});
+
+test("POST /api/brief канонизирует телефон без доверия к клиентской маске", async () => {
+  let briefRequestId: string | undefined;
+  try {
+    const payload = validBriefPayload();
+    payload.answers.contactMethod = "Телефон";
+    payload.contact = "8 999 123 45 67";
+    const response = await POST(new Request("http://localhost/api/brief", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) }));
+    const body = await response.json();
+    assert.equal(response.status, 201);
+    briefRequestId = body.data.id;
+    const saved = await prisma.briefRequest.findUniqueOrThrow({ where: { id: briefRequestId } });
+    assert.equal(saved.contact, "+79991234567");
+    assert.equal(saved.contactType, "PHONE");
+  } finally {
+    if (briefRequestId) await prisma.$transaction([
+      prisma.auditEvent.deleteMany({ where: { entityType: "BriefRequest", entityId: briefRequestId } }),
+      prisma.briefRequest.delete({ where: { id: briefRequestId } }),
+    ]);
     await prisma.$disconnect();
   }
 });

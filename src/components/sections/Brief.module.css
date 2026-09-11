@@ -47,6 +47,10 @@
 
 .submissionWarning { margin-top: var(--space-5); color: var(--color-muted); font-size: var(--text-sm); }
 .answerOptions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+.contactSwitch { grid-template-columns: repeat(3, minmax(0, 1fr)); width: fit-content; padding: .25rem; gap: .25rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-background); }
+.contactSwitch .answerOption { min-width: 7rem; min-height: 2.8rem; padding: .6rem 1rem; justify-content: center; border-color: transparent; background: transparent; text-align: center; }
+.contactSwitch .answerOption:has(input:checked) { border-color: transparent; background: var(--color-lavender-soft); }
+.contactSwitch .choiceMark { display: none; }
 .answerOption { display: flex; align-items: center; gap: .65rem; min-height: 3rem; padding: .8rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: var(--text-sm); cursor: pointer; }
 .answerOption:has(input:checked) { background: var(--color-lavender-soft); border-color: var(--color-lavender); }
 .answerOption input, .consent input { flex-shrink: 0; width: 1.1rem; height: 1.1rem; accent-color: var(--color-action); }
@@ -66,7 +70,7 @@
 .formFooter > :only-child { margin-left: auto; }
 .requestId { margin-top: 1rem; overflow-wrap: anywhere; font-size: var(--text-sm); color: var(--color-muted); }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-@media (max-width: 36rem) { .answerOptions { grid-template-columns: minmax(0, 1fr); } .formFooter { flex-wrap: wrap; } }
+@media (max-width: 36rem) { .answerOptions { grid-template-columns: minmax(0, 1fr); } .contactSwitch { grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; } .contactSwitch .answerOption { min-width: 0; padding-inline: .45rem; } .formFooter { flex-wrap: wrap; } }
 
 .answerOption { position: relative; min-height: 4.1rem; padding: 1rem 3rem 1rem 1.05rem; background: var(--color-background); transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease; }
 .answerOption > input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }

@@ -1,5 +1,6 @@
 import type { BriefRequestStatus } from "@/generated/prisma/client";
 import { briefProjectTypes } from "@/components/sections/brief.data";
+import { formatRussianPhone } from "@/server/contact/normalization";
 
 export const statusLabels: Record<BriefRequestStatus, string> = {
   NEW: "Новая",
@@ -15,6 +16,10 @@ export function projectTypeLabel(projectType: string) {
 
 export function sourceLabel(source: string) {
   return source === "PUBLIC_BRIEF" ? "Публичный бриф" : source;
+}
+
+export function formatBriefContact(contact: string, contactType?: string | null) {
+  return contactType === "PHONE" ? formatRussianPhone(contact) : contact;
 }
 
 export function formatAdminDate(date: Date) {

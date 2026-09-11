@@ -8,6 +8,16 @@ import { prisma } from "@/server/db/prisma";
 import { getSystemSettings } from "@/server/system/settings";
 import { enqueueForActiveAdmins } from "@/server/notifications/service";
 import { appendAudit } from "@/server/security/audit-journal";
+import { normalizeBriefContact } from "./brief.receipt";
+
+const contactTypes = { Email: "EMAIL", "Телефон": "PHONE", Telegram: "TELEGRAM" } as const;
+
+function normalizedBriefData(data: CreateBriefRequestData) {
+  const answers = data.answers as { contactMethod?: string };
+  const method = answers.contactMethod ?? "";
+  const contactType = contactTypes[method as keyof typeof contactTypes] ?? null;
+  return { contact: normalizeBriefContact(data.contact, method), contactType };
+}
 
 export class BriefStatusConflict extends Error {}
 
@@ -31,6 +41,7 @@ export class BriefRepository {
         number: true,
         name: true,
         contact: true,
+        contactType: true,
         projectType: true,
         source: true,
         status: true,
@@ -91,7 +102,7 @@ export class BriefRepository {
     return this.db.$transaction(async (transaction) => {
       const updated = await transaction.briefRequest.updateMany({
         where: { id: previous.id, status: 'NEW', source: 'PUBLIC_BRIEF', updatedAt: previous.updatedAt },
-        data: { name: data.name, contact: data.contact, projectType: data.projectType, answers: data.answers },
+        data: { name: data.name, ...normalizedBriefData(data), projectType: data.projectType, answers: data.answers },
       });
       if (updated.count !== 1) throw new BriefConflict('REPLACEMENT_UNAVAILABLE');
       await appendAudit(transaction, {
@@ -107,7 +118,7 @@ export class BriefRepository {
       const briefRequest = await transaction.briefRequest.create({
         data: {
           name: data.name,
-          contact: data.contact,
+          ...normalizedBriefData(data),
           projectType: data.projectType,
           answers: data.answers,
           source: data.source,

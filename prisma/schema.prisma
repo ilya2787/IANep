@@ -45,33 +45,51 @@ enum PersonalDataRequestResult {
 enum PersonalDataRequestChannel {
   EMAIL
   PHONE
+  FORM
+  WRITTEN
   IN_PERSON
   OTHER
+}
+
+enum PrivacyLookupType {
+  EMAIL
+  PHONE
+  NONE
+}
+
+enum BriefContactType {
+  EMAIL
+  PHONE
+  TELEGRAM
 }
 
 model PersonalDataRequest {
   id                  String                    @id @default(uuid()) @db.Uuid
   number              Int                       @unique @default(autoincrement()) @map("public_number")
   kind                PersonalDataRequestKind?
-  scope               PersonalDataRequestScope
+  scope               PersonalDataRequestScope?
   status              PersonalDataRequestStatus @default(REGISTERED)
   targetId            String?                   @db.Uuid
-  receivedAt          DateTime
+  receivedAt          DateTime?
   dueAt               DateTime?
   completedAt         DateTime?
+  receiptExpiresAt    DateTime?
+  receiptPurgedAt     DateTime?
   excludedCategories  Json?
   exclusionReason     String?                   @db.VarChar(1000)
   destroyedCategories Json?
   result              PersonalDataRequestResult?
-  channel             PersonalDataRequestChannel @default(EMAIL)
-  lookupKey           String?                   @db.Char(64)
+  channel             PersonalDataRequestChannel?
+  lookupType          PrivacyLookupType         @default(NONE)
+  lookupHash          String?                   @db.Char(64)
   storageWarnings     Int                       @default(0)
-  createdAt           DateTime                  @default(now())
+  createdAt           DateTime?                 @default(now())
   updatedAt           DateTime                  @updatedAt
 
   @@index([status, receivedAt])
   @@index([scope, targetId])
-  @@index([lookupKey, completedAt])
+  @@index([lookupType, lookupHash, completedAt])
+  @@index([receiptExpiresAt, receiptPurgedAt])
   @@map("personal_data_requests")
 }
 
@@ -81,6 +99,7 @@ model BriefRequest {
   number      Int                @unique @default(autoincrement()) @map("public_number")
   name        String
   contact     String
+  contactType BriefContactType?
   projectType String
   answers     Json
   status      BriefRequestStatus @default(NEW)

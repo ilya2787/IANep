@@ -2,7 +2,7 @@
 import { Select } from "@/components/ui/fields/Select";
 import Link from "next/link";
 import styles from "@/app/admin/admin.module.css";
-import { formatAdminDate, projectTypeLabel, sourceLabel, statusLabels } from "@/app/admin/brief-presenter";
+import { formatAdminDate, formatBriefContact, projectTypeLabel, sourceLabel, statusLabels } from "@/app/admin/brief-presenter";
 import { briefService } from "@/server/brief/brief.service";
 
 export const metadata = { title: "Заявки" };
@@ -47,7 +47,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               {visibleBriefs.map((brief) => (
                 <tr key={brief.id}>
                   <td data-label="Заявка"><Link className={styles.briefLink} href={`/admin/briefs/${brief.id}`}>№ {brief.number}</Link><span className={styles.cellMeta}>{sourceLabel(brief.source)}</span></td>
-                  <td data-label="Клиент"><span className={styles.primaryCell}>{brief.name}</span><span className={styles.cellMeta}>{brief.contact}</span></td>
+                  <td data-label="Клиент"><span className={styles.primaryCell}>{brief.name}</span><span className={styles.cellMeta}>{formatBriefContact(brief.contact, brief.contactType)}</span></td>
                   <td data-label="Проект">{brief.project ? <Link className={styles.briefLink} href={`/admin/projects/${brief.project.id}`}>{brief.project.title} →</Link> : projectTypeLabel(brief.projectType)}</td>
                   <td data-label="Статус"><span className={`${styles.status} ${styles[`status_${brief.status}`]}`}>{statusLabels[brief.status]}</span></td>
                   <td data-label="Получена"><time dateTime={brief.createdAt.toISOString()}>{formatAdminDate(brief.createdAt)}</time></td>

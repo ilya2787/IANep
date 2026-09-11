@@ -110,7 +110,7 @@
 .pageButtonDisabled { opacity:.45; pointer-events:none; }
 .emptyState { display:grid; gap:.45rem; justify-items:start; padding:1.5rem; border:1px dashed var(--color-border); border-radius:var(--radius-md); background:var(--color-background); }
 .emptyState p { color:var(--color-muted); font-size:.9rem; }
-.identityCard { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); overflow:hidden; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-background); }
+.identityCard { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); overflow:hidden; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-background); }
 .identityCard > div { display:grid; gap:.35rem; padding:1rem; min-width:0; }
 .identityCard > div + div { border-inline-start:1px solid var(--color-border); }
 .identityCard span { color:var(--color-muted); font-size:.75rem; }
@@ -119,6 +119,14 @@
 .relationGrid > div { display:grid; align-content:start; gap:.45rem; padding:1rem; background:var(--color-background); }
 .relationGrid p { font-size:.84rem; }
 .lookupBlock, .lookupResults { display:grid; gap:1rem; }
+.segmentedField { gap:.55rem!important; }
+.segmentedField legend { margin-bottom:.55rem; font-size:.88rem; font-weight:500; }
+.segmented { display:inline-grid; grid-template-columns:repeat(2,minmax(7rem,1fr)); width:fit-content; padding:.25rem; border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-background); }
+.segmented label { position:relative; display:block; }
+.segmented input { position:absolute; width:1px!important; height:1px; min-height:0!important; opacity:0; }
+.segmented span { display:grid; place-items:center; min-height:44px; padding:.55rem 1rem; border-radius:calc(var(--radius-md) - .25rem); color:var(--color-muted); cursor:pointer; transition:background var(--duration-fast) var(--ease-out),color var(--duration-fast) var(--ease-out); }
+.segmented input:checked + span { background:var(--color-lavender-soft); color:var(--color-text); }
+.segmented input:focus-visible + span { outline:2px solid var(--color-focus); outline-offset:3px; }
 .lookupResults { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .lookupResults article { display:grid; gap:.35rem; padding:1rem; border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-background); }
 .lookupResults p, .lookupResults small { color:var(--color-muted); font-size:.84rem; }

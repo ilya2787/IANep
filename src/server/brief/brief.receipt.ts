@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
+import { normalizeEmail, normalizeRussianPhone } from '@/server/contact/normalization';
 
 export function createBriefReceipt() {
   return randomBytes(32).toString('hex');
@@ -9,7 +10,9 @@ export function hashBriefReceipt(receipt: string) {
 }
 
 export function normalizeBriefContact(contact: string, method: string) {
-  return method === 'Телефон' ? contact.replace(/\D/g, '') : contact.trim().toLowerCase();
+  if (method === 'Телефон') return normalizeRussianPhone(contact);
+  if (method === 'Email') return normalizeEmail(contact);
+  return contact.normalize('NFKC').trim().toLowerCase();
 }
 
 export function briefNumber(number: number) {

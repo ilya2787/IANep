@@ -3,6 +3,7 @@ import {
   briefProjectTypes, budgetOptions, contactMethods, designStyles, getFeatureOptions,
   getGoalOptions, materialOptions, readinessOptions, timeframeOptions,
 } from "@/components/sections/brief.data";
+import { normalizeBriefContact } from "@/server/brief/brief.receipt";
 
 const text = (max: number) => z.string({ error: "Введите текст" }).trim().max(max, `Не более ${max} символов`);
 const choice = (options: readonly string[]) => text(200).refine((value) => options.includes(value), "Выберите один из предложенных вариантов");
@@ -60,13 +61,15 @@ export const submitBriefSchema = z.object({
   } else if (a.launchDate) issue('launchDate', 'Дата указывается только при выборе конкретного срока');
   if (data.projectType !== 'online-store' && a.productCount) issue('productCount', 'Количество товаров указывается для интернет-магазина');
   if (!['site-improvements', 'support'].includes(data.projectType) && a.website) issue('website', 'Адрес существующего сайта указывается для доработки или поддержки');
-  const contactValid = a.contactMethod === 'Email'
-    ? z.email().safeParse(data.contact).success
-    : a.contactMethod === 'Телефон'
-      ? /^\+?[\d\s()\-]+$/.test(data.contact) && data.contact.replace(/\D/g, '').length >= 10 && data.contact.replace(/\D/g, '').length <= 15
-      : /^@[a-zA-Z0-9_]{5,32}$/.test(data.contact);
-  if (!contactValid) ctx.addIssue({ code: 'custom', path: ['contact'], message: a.contactMethod === 'Email' ? 'Укажите корректный email' : a.contactMethod === 'Телефон' ? 'Укажите телефон: от 10 до 15 цифр' : 'Укажите Telegram в формате @username (5-32 символа)' });
-});
+  let contactError = '';
+  if (a.contactMethod === 'Telegram') {
+    if (!/^@[a-zA-Z0-9_]{5,32}$/.test(data.contact.trim())) contactError = 'Укажите Telegram в формате @username (5–32 символа)';
+  } else {
+    try { normalizeBriefContact(data.contact, a.contactMethod); }
+    catch (error) { contactError = error instanceof Error ? error.message : 'Проверьте контакт'; }
+  }
+  if (contactError) ctx.addIssue({ code: 'custom', path: ['contact'], message: contactError });
+}).transform((data) => ({ ...data, contact: normalizeBriefContact(data.contact, data.answers.contactMethod) }));
 
 export type SubmitBriefPayload = z.infer<typeof submitBriefSchema>;
 export type BriefAnswers = SubmitBriefPayload['answers'];
