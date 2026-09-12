@@ -1,6 +1,6 @@
-import Image from "next/image";
 import { Container } from "@/components/layout";
-import { Button, SectionLink } from "@/components/ui";
+import { ProgressiveImage, SectionLink } from "@/components/ui";
+import { ContactDialog } from "./ContactDialog";
 import styles from "./FinalCTA.module.css";
 
 export function FinalCTA() {
@@ -25,15 +25,12 @@ export function FinalCTA() {
             <SectionLink className={styles.primary} href="#brief" variant="primary">
               Рассчитать проект <span aria-hidden="true">→</span>
             </SectionLink>
-            {/* Прямой контакт пока не утверждён. */}
-            <Button className={styles.secondary} variant="ghost" disabled>
-              Связаться напрямую ↗
-            </Button>
+            <ContactDialog />
           </div>
         </div>
         <div data-reveal className={styles.visual}>
           <div data-parallax="-28" className={styles.brand} data-motion-anchor="final-cta-ian" aria-hidden="true">
-            <Image
+            <ProgressiveImage
               className={styles.image}
               src="/reference/brand-symbol.png"
               alt=""
@@ -43,7 +40,7 @@ export function FinalCTA() {
             />
           </div>
           <div className={styles.mascot}>
-            <Image
+            <ProgressiveImage
               className={styles.image}
               src="/images/final-cta/mascot-inviting-v3.png"
               alt="Персонаж IANep приглашает обсудить проект, протягивая открытую ладонь"

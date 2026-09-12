@@ -45,56 +45,10 @@ export function PageMotion({ children }: { children: ReactNode }) {
     }, (context) => {
       if (context.conditions?.reduced) return;
       const desktop = context.conditions?.desktop;
-      const select = gsap.utils.selector(element);
       const entrances = new Map<Element, gsap.core.Animation>();
-      const heroCopy = element.querySelector<HTMLElement>("[data-hero-copy]");
       const hero = element.querySelector<HTMLElement>("[data-hero]");
       const heroMascot = element.querySelector<HTMLElement>("[data-hero-mascot-motion]");
       const heroEyes = element.querySelector<HTMLElement>("[data-hero-eyes]");
-      // Start when the hero is visible, including after returning from an anchor.
-      // A URL hash or restored scroll position must not permanently skip the intro.
-      const intro = gsap.timeline({
-        paused: true,
-        defaults: { duration: 0.9, ease: "power3.out" },
-      });
-      const heroObserver = new IntersectionObserver((entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          intro.play();
-          heroObserver.disconnect();
-        }
-      }, { threshold: 0.15 });
-
-      if (heroCopy) {
-        intro
-          .from(select("[data-hero-title-line]"), {
-            yPercent: 115,
-            rotation: desktop ? 2 : 0,
-            transformOrigin: "left bottom",
-            duration: 1.15,
-            stagger: 0.18,
-            ease: "power4.out",
-            clearProps: "transform,transformOrigin",
-          }, 0.1)
-          .from(select("[data-hero-copy] > p"), {
-            y: 20, opacity: 0, duration: 0.85,
-            clearProps: "transform,opacity",
-          }, 0.5)
-          .from(select("[data-hero-copy] > div > a"), {
-            y: 16, opacity: 0, duration: 0.7, stagger: 0.1,
-            clearProps: "transform,opacity",
-          }, 0.7)
-          .from(select("[data-hero-mascot]"), {
-            y: 42, scale: 0.96, opacity: 0, duration: 1.2,
-            clearProps: "transform,opacity",
-          }, 0.12)
-          .from(select("[data-hero-brand]"), {
-            scale: 0.9, opacity: 0, duration: 1.4,
-            clearProps: "transform,opacity",
-          }, 0.2);
-      }
-
-      if (heroCopy) heroObserver.observe(heroCopy);
-
       let removeHeroPointerMotion = () => {};
       if (desktop && hero && heroMascot && heroEyes) {
         const moveEyesX = gsap.quickTo(heroEyes, "x", { duration: 0.28, ease: "power3.out" });
@@ -150,6 +104,8 @@ export function PageMotion({ children }: { children: ReactNode }) {
       }, { threshold: 0, rootMargin: "0px 0px -5% 0px" });
 
       element.querySelectorAll<HTMLElement>("[data-reveal]").forEach((target) => {
+        // Never hide content that was already in or near the viewport when JS became ready.
+        if (target.getBoundingClientRect().top <= window.innerHeight * 0.92) return;
         const tween = gsap.fromTo(target, {
           y: desktop ? 36 : 20,
           opacity: 0,
@@ -192,7 +148,6 @@ export function PageMotion({ children }: { children: ReactNode }) {
         if (!(event.target instanceof Node)) return;
         // Next.js can focus <main> during navigation; that is not user focus
         // inside the animated copy and must not cancel the entrance.
-        if (event.target instanceof Element && event.target.closest("[data-hero-copy] a, [data-hero-copy] button")) intro.progress(1);
         for (const [target, animation] of entrances) {
           if (target.contains(event.target)) animation.progress(1);
         }
@@ -214,7 +169,6 @@ export function PageMotion({ children }: { children: ReactNode }) {
       return () => {
         active = false;
         observer.disconnect();
-        heroObserver.disconnect();
         revealObserver.disconnect();
         clearTimeout(refreshTimer);
         removeHeroPointerMotion();

@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Container } from "@/components/layout";
-import { Button } from "@/components/ui";
+import { Button, ProgressiveImage } from "@/components/ui";
 import {
   briefProjectTypes, briefSteps, briefSubmissionWarning, briefDeadlineWarning,
   getGoalOptions, getGoalQuestion, getFeatureOptions, designStyles, materialOptions,
@@ -14,6 +13,9 @@ import { BriefDatePicker } from "./BriefDatePicker";
 import { BriefIcon } from "./BriefIcon";
 import { maskRussianPhone } from "@/server/contact/normalization";
 import styles from "./Brief.module.css";
+import Link from "next/link";
+import { LEGAL_ROUTES } from "@/config/legal";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 type Errors = Record<string, string>;
 
@@ -26,6 +28,7 @@ export function Brief() {
   const [requestNumber, setRequestNumber] = useState('');
   const [replaced, setReplaced] = useState(false);
   const [duplicate, setDuplicate] = useState<{ number?: string; canReplace: boolean } | null>(null);
+  useBodyScrollLock(Boolean(duplicate));
   const duplicateDialog = useRef<HTMLDialogElement>(null);
   const receipt = useRef('');
   const pending = useRef(false);
@@ -256,7 +259,7 @@ export function Brief() {
           <input name="contact" type={a.contactMethod === 'Email' ? 'email' : a.contactMethod === 'Телефон' ? 'tel' : 'text'} inputMode={a.contactMethod === 'Телефон' ? 'tel' : a.contactMethod === 'Email' ? 'email' : 'text'} autoComplete={a.contactMethod === 'Email' ? 'email' : a.contactMethod === 'Телефон' ? 'tel' : 'off'} autoCapitalize="none" spellCheck={false} placeholder={a.contactMethod === 'Telegram' ? '@username' : a.contactMethod === 'Телефон' ? '+7 (___) ___-__-__' : 'name@example.ru'} value={draft.contact} maxLength={200} {...accessibility('contact')} onChange={(event) => setDraft({ ...draft, contact: a.contactMethod === 'Телефон' ? maskRussianPhone(event.target.value) : event.target.value })} />{errorFor('contact')}
         </label>}
         {field('comment', 'Комментарий (необязательно)', 2000)}
-        <label className={styles.consent}><input name="consent" type="checkbox" checked={a.consent} {...accessibility('consent')} onChange={(event) => answer('consent', event.target.checked)} /><span>Согласен на обработку персональных данных для обсуждения проекта</span></label>
+        <label className={styles.consent}><input name="consent" type="checkbox" checked={a.consent} {...accessibility('consent')} onChange={(event) => answer('consent', event.target.checked)} /><span>Я даю <Link href={LEGAL_ROUTES.briefConsent} target="_blank">согласие на обработку персональных данных для заявки</Link> и ознакомлен с <Link href={LEGAL_ROUTES.privacy} target="_blank">политикой обработки персональных данных</Link>.</span></label>
         {errorFor('consent')}
       </>;
   }
@@ -274,16 +277,16 @@ export function Brief() {
               <div className={styles.successStatus}><span className={styles.successCheck} aria-hidden="true" />{replaced ? 'Изменения сохранены' : 'Отправлено успешно'}</div>
               <h3>{replaced ? 'Заявка обновлена' : 'Заявка отправлена'}</h3>
               <p className={styles.successLead}>Спасибо! {replaced ? 'Новые ответы заменили предыдущую версию заявки.' : 'Информация о вашем проекте уже у нас.'} Изучим её и свяжемся для уточнения деталей.</p>
-              <Image className={styles.successMobileMascot} src="/images/brief/mascot-success-v2.png" alt="Персонаж IANep показывает большой палец вверх и анкету с галочкой" width={520} height={1100} sizes="180px" />
+              <ProgressiveImage className={styles.successMobileMascot} src="/images/brief/mascot-success-v2.png" alt="Персонаж IANep показывает большой палец вверх и анкету с галочкой" width={520} height={1100} sizes="180px" />
               <div className={styles.successReceipt}>
                 <div><span>Номер заявки</span><strong>{requestNumber}</strong></div>
                 <div><span>Ваш проект</span><strong>{briefProjectTypes.find((item) => item.id === draft.projectType)?.label}</strong></div>
               </div>
               <p className={styles.submissionWarning}>{briefSubmissionWarning}</p>
-              <div className={styles.successActions}><Button type="button" onClick={restart}>Заполнить ещё один бриф <span aria-hidden="true">↗</span></Button></div>
+              <div className={styles.successActions}><Button type="button" onClick={restart}>Заполнить ещё одну анкету <span aria-hidden="true">↗</span></Button></div>
             </div> : <form ref={form} className={styles.form} onSubmit={submit} noValidate aria-busy={status === 'pending'}>
               <div className={styles.progressHeading}><span>{briefSteps[step].group}</span><span>Шаг {step + 1} из {briefSteps.length}</span></div>
-              <ol className={styles.progress} aria-label="Шаги брифа" style={{ gridTemplateColumns: `repeat(${briefSteps.length}, minmax(0, 1fr))` }}>
+              <ol className={styles.progress} aria-label="Шаги анкеты проекта" style={{ gridTemplateColumns: `repeat(${briefSteps.length}, minmax(0, 1fr))` }}>
                 {briefSteps.map((item, index) => <li className={styles.progressItem} data-active={index <= step} aria-current={index === step ? 'step' : undefined} key={item.id}><span>{index + 1}. {item.group}</span></li>)}
               </ol>
               <fieldset className={styles.fieldset} disabled={status === 'pending'} key={step}>
@@ -301,7 +304,7 @@ export function Brief() {
           </div>
 
           <div data-reveal className={styles.mascotScene} data-success={status === 'success'}>
-            <Image
+            <ProgressiveImage
               className={styles.mascot}
               src={status === 'success' ? "/images/brief/mascot-success-v2.png" : "/images/brief/mascot-questionnaire-v2.png"}
               alt={status === 'success' ? "Персонаж IANep показывает класс: заявка отправлена" : "Персонаж IANep в полный рост держит большую анкету проекта"}
@@ -314,12 +317,12 @@ export function Brief() {
       </Container>
       <dialog className={styles.dialog} ref={duplicateDialog} aria-labelledby="brief-duplicate-title" aria-describedby="brief-duplicate-description" onCancel={() => setDuplicate(null)} onClose={() => setDuplicate(null)}>
         <div className={styles.dialogHeading}><span className={styles.dialogLabel}>Повторная заявка</span><button type="button" className={styles.iconButton} aria-label="Закрыть окно" onClick={() => setDuplicate(null)}>×</button></div>
-        <h3 id="brief-duplicate-title">{duplicate?.canReplace ? 'Как сохранить новый бриф?' : 'Создать ещё одну заявку?'}</h3>
+        <h3 id="brief-duplicate-title">{duplicate?.canReplace ? 'Как сохранить новую анкету?' : 'Создать ещё одну заявку?'}</h3>
         <p id="brief-duplicate-description" className={styles.hint}>{duplicate?.canReplace ? `С этим контактом вы уже отправили заявку ${duplicate.number ?? ''}. Можно заменить её ответы или сохранить ещё одну заявку.` : 'Предыдущая заявка уже рассматривается или недоступна для изменения. Новую можно отправить отдельно.'}</p>
         <div className={styles.duplicateActions}>
           {duplicate?.canReplace && <Button type="button" onClick={() => void submit(undefined, 'replace')}>Заменить предыдущую</Button>}
           <Button type="button" variant={duplicate?.canReplace ? 'secondary' : 'primary'} onClick={() => void submit(undefined, 'new')}>Создать новую</Button>
-          <Button type="button" variant="ghost" onClick={() => setDuplicate(null)}>Вернуться к брифу</Button>
+          <Button type="button" variant="ghost" onClick={() => setDuplicate(null)}>Вернуться к анкете</Button>
         </div>
       </dialog>
     </section>

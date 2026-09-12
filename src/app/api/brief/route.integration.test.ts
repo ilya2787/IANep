@@ -6,6 +6,7 @@ import { briefService } from "@/server/brief/brief.service";
 import { POST } from "@/app/api/brief/route";
 import { prisma } from "@/server/db/prisma";
 import { resetRateLimitsForTests } from "@/server/security/rate-limit";
+import { LEGAL_VERSIONS } from "@/config/legal";
 
 test("POST /api/brief отклоняет некорректный JSON", async () => {
   const response = await POST(
@@ -50,6 +51,16 @@ test("POST /api/brief отклоняет некорректные поля", asy
   assert.ok(body.error.issues.length >= 4);
 });
 
+test("POST /api/brief отклоняет заявку без согласия", async () => {
+  const payload = validBriefPayload();
+  payload.answers.consent = false;
+  const response = await POST(new Request("http://localhost/api/brief", { method: "POST", body: JSON.stringify(payload) }));
+  assert.equal(response.status, 422);
+  const body = await response.json();
+  assert.equal(body.error.code, "VALIDATION_ERROR");
+  assert.ok(body.error.issues.some((issue: { path: string[] }) => issue.path.at(-1) === "consent"));
+});
+
 test("POST /api/brief создаёт заявку и событие аудита", async () => {
   let briefRequestId: string | undefined;
 
@@ -84,6 +95,9 @@ test("POST /api/brief создаёт заявку и событие аудита
     assert.equal(briefRequest.contactType, "EMAIL");
     assert.equal(briefRequest.projectType, "landing-page");
     assert.equal(briefRequest.source, "PUBLIC_BRIEF");
+    assert.ok(briefRequest.consentAcceptedAt instanceof Date);
+    assert.ok(briefRequest.consentAcceptedAt.getTime() >= new Date(body.data.createdAt).getTime() - 1_000);
+    assert.equal(briefRequest.consentVersion, LEGAL_VERSIONS.briefConsent);
     assert.deepEqual(briefRequest.answers, validBriefPayload().answers);
 
     const auditEvent = await prisma.auditEvent.findFirst({
@@ -140,7 +154,7 @@ test("POST /api/brief канонизирует телефон без довер�
 
 
 test("POST /api/brief отклоняет поля, назначаемые сервером", async () => {
-  for (const field of ["status", "source", "eventType"]) {
+  for (const field of ["status", "source", "eventType", "consentVersion", "consentAcceptedAt"]) {
     const response = await POST(new Request("http://localhost/api/brief", {
       method: "POST",
       body: JSON.stringify({ ...validBriefPayload(), [field]: "OVERRIDE" }),
@@ -224,6 +238,8 @@ test('повторный бриф требует выбора, замена со
     const record = await prisma.briefRequest.findUniqueOrThrow({ where: { id: first.id } });
     assert.equal((record.answers as { description: string }).description, 'Обновлённая заявка');
     assert.equal(record.status, 'NEW');
+    assert.ok(record.consentAcceptedAt instanceof Date);
+    assert.equal(record.consentVersion, LEGAL_VERSIONS.briefConsent);
     const audits = await prisma.auditEvent.findMany({ where: { entityId: first.id }, orderBy: { createdAt: 'asc' } });
     assert.deepEqual(audits.map((event) => event.eventType), ['BRIEF_CREATED', 'BRIEF_UPDATED']);
     assert.ok(!JSON.stringify(audits).includes(first.receipt));

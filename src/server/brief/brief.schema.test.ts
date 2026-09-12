@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFile } from 'node:fs/promises';
 import { submitBriefSchema } from './brief.schema';
 import { validBriefPayload } from './brief.test-fixture';
 import { briefProjectTypes, getGoalOptions } from '@/components/sections/brief.data';
+
+test('миграция не приписывает старым Brief доказательство согласия', async () => {
+  const sql = await readFile('prisma/migrations/20260911230000_brief_consent_evidence/migration.sql', 'utf8');
+  assert.match(sql, /ADD COLUMN "consent_accepted_at" TIMESTAMP\(3\)/);
+  assert.match(sql, /ADD COLUMN "consent_version" VARCHAR\(50\)/);
+  assert.doesNotMatch(sql, /UPDATE\s+"brief_requests"/i);
+});
 
 test('схема принимает все типы проекта и нормализует текст', () => {
   for (const project of briefProjectTypes) {

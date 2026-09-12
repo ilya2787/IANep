@@ -1,8 +1,9 @@
 "use client";
 
 import { Select } from "@/components/ui/fields/Select";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
-import { useActionState, useRef, useState, useId, createContext, useContext } from "react";
+import { useActionState, useEffect, useRef, useState, useId, createContext, useContext } from "react";
 import type { ActionState } from "@/app/client/actions";
 import { kinds } from "@/server/client/model";
 import s from "./workspace.module.css";
@@ -55,11 +56,17 @@ export function MaterialFields({ multiple = false, projectId, side }: { multiple
 export function ImagePreview({ url, title }: { url: string; title: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [failed, setFailed] = useState(false);
-  return <div><button type="button" className={s.previewButton} onClick={() => dialog.current?.showModal()} aria-label={`Увеличить: ${title}`}>
+  const [open, setOpen] = useState(false);
+  useBodyScrollLock(open);
+  useEffect(() => {
+    if (open && !dialog.current?.open) dialog.current?.showModal();
+    else if (dialog.current?.open) dialog.current.close();
+  }, [open]);
+  return <div><button type="button" className={s.previewButton} onClick={() => setOpen(true)} aria-label={`Увеличить: ${title}`}>
     {/* Внешние материалы не проксируются через сервер. */}
     {/* eslint-disable-next-line @next/next/no-img-element */}
     {!failed ? <img src={url} alt={title} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} /> : <span>Превью недоступно. Открыть просмотр</span>}
-  </button><dialog ref={dialog} className={s.lightbox} aria-label={title}><button type="button" onClick={() => dialog.current?.close()} autoFocus>Закрыть просмотр</button><p>{title}</p>
+  </button><dialog ref={dialog} className={s.lightbox} aria-label={title} onCancel={() => setOpen(false)} onClose={() => setOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) setOpen(false); }}><button type="button" onClick={() => setOpen(false)} autoFocus>Закрыть просмотр</button><p>{title}</p>
     {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={url} alt={title} referrerPolicy="no-referrer" /><a href={url} target="_blank" rel="noopener noreferrer">Открыть оригинал ↗</a></dialog></div>;
 }

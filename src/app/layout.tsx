@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="ru" data-scroll-behavior="smooth" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var t;try{t=localStorage.getItem('ianep-theme')}catch(e){}document.documentElement.dataset.theme=t==='light'||t==='dark'?t:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'})()` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){document.documentElement.classList.add('js');var t;try{t=localStorage.getItem('ianep-theme')}catch(e){}document.documentElement.dataset.theme=t==='light'||t==='dark'?t:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'})()` }} />
       </head>
       <body>
         <a className="skip-link" href="#main-content">Перейти к содержимому</a>

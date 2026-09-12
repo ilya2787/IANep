@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ProgressiveImage } from "@/components/ui";
 import type { Service } from "./services.data";
 import styles from "./Services.module.css";
 
@@ -21,7 +21,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
           <p className={styles.cardDescription}>{service.description}</p>
         </div>
         <div className={styles.visual} aria-hidden="true">
-          <Image
+          <ProgressiveImage
             className={`${styles.visualImage} ${styles.lightImage}`}
             src={service.image}
             alt=""
@@ -29,7 +29,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
             quality={90}
             sizes="(max-width: 768px) 90vw, (max-width: 1200px) 46vw, 55vw"
           />
-          <Image
+          <ProgressiveImage
             className={`${styles.visualImage} ${styles.darkImage}`}
             src={service.imageDark}
             alt=""

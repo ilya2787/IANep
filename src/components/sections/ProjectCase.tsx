@@ -1,5 +1,4 @@
-import Image from "next/image";
-import { Link } from "@/components/ui";
+import { Link, ProgressiveImage } from "@/components/ui";
 import type { Project } from "./projects.data";
 import styles from "./Projects.module.css";
 
@@ -47,7 +46,7 @@ export function ProjectCase({ project }: ProjectCaseProps) {
       <div data-reveal className={styles.scene} aria-label={`Интерфейс проекта «${project.title}»`}>
         <div className={styles.deviceCanvas}>
           <div className={styles.mainDevice}>
-            <Image
+            <ProgressiveImage
               className={styles.deviceImage}
               src={project.deviceImage}
               alt={project.deviceAlt}
@@ -55,7 +54,7 @@ export function ProjectCase({ project }: ProjectCaseProps) {
               sizes="(max-width: 48rem) 92vw, (max-width: 80rem) 62vw, 58vw"
             />
             <div className={styles.mainScreen}>
-              <Image
+              <ProgressiveImage
                 className={styles.desktopImage}
                 src={project.desktopImage}
                 alt={project.desktopAlt}
@@ -65,7 +64,7 @@ export function ProjectCase({ project }: ProjectCaseProps) {
             </div>
           </div>
           <div data-parallax="-36" className={styles.phoneDevice}>
-            <Image
+            <ProgressiveImage
               className={styles.phoneImage}
               src="/images/projects/devices/separate/phone.png"
               alt="Фотореалистичный смартфон"
@@ -73,7 +72,7 @@ export function ProjectCase({ project }: ProjectCaseProps) {
               sizes="(max-width: 48rem) 24vw, 14vw"
             />
             <div className={styles.phoneScreen}>
-              <Image
+              <ProgressiveImage
                 className={styles.mobileImage}
                 src={project.mobileImage}
                 alt={project.mobileAlt}

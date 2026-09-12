@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from "react-dom";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import styles from './Brief.module.css';
 
 const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
@@ -16,6 +17,7 @@ export function BriefDatePicker({ value, onChange, error, name = "launchDate", l
   const [open, setOpen] = useState(false);
   const [cursor, setCursor] = useState(() => iso(parse(value)));
   const [monthView, setMonthView] = useState(false);
+  useBodyScrollLock(open);
   const current = parse(cursor);
   const year = current.getFullYear();
   const month = current.getMonth();
@@ -23,7 +25,7 @@ export function BriefDatePicker({ value, onChange, error, name = "launchDate", l
   const days = Array.from({ length: 42 }, (_, index) => new Date(year, month, index - offset + 1, 12));
 
   useEffect(() => {
-    if (open) { const button = trigger.current; dialog.current?.showModal(); return () => { button?.focus({ preventScroll: true }); }; }
+    if (open) { const button = trigger.current; if (!dialog.current?.open) dialog.current?.showModal(); return () => { button?.focus({ preventScroll: true }); }; }
     else if (dialog.current?.open) { dialog.current.close(); trigger.current?.focus({ preventScroll: true }); }
   }, [open]);
 

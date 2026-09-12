@@ -15,7 +15,7 @@ export function projectTypeLabel(projectType: string) {
 }
 
 export function sourceLabel(source: string) {
-  return source === "PUBLIC_BRIEF" ? "Публичный бриф" : source;
+  return source === "PUBLIC_BRIEF" ? "Заявка с сайта" : source;
 }
 
 export function formatBriefContact(contact: string, contactType?: string | null) {
@@ -28,6 +28,10 @@ export function formatAdminDate(date: Date) {
     timeStyle: "short",
     timeZone: "Europe/Kaliningrad",
   }).format(date);
+}
+
+export function briefConsentEvidenceLabel(consentAcceptedAt: Date | null, consentVersion: string | null) {
+  return consentAcceptedAt && consentVersion ? `Версия ${consentVersion}` : "Нет подтверждающих сведений";
 }
 
 export function auditEventLabel(eventType: string) {

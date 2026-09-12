@@ -58,7 +58,6 @@ export function Header({ inverse = false }: { inverse?: boolean }) {
             alt=""
             width={44}
             height={27}
-            priority
           />
           <span className={styles.logoText}>Nep</span>
         </Link>

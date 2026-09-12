@@ -1,6 +1,5 @@
-import Image from "next/image";
 import { Container } from "@/components/layout";
-import { SectionLink } from "@/components/ui";
+import { ProgressiveImage, SectionLink } from "@/components/ui";
 import { ProjectCase } from "./ProjectCase";
 import { projects } from "./projects.data";
 import styles from "./Projects.module.css";
@@ -37,7 +36,7 @@ export function Projects() {
 
         <div className={styles.portfolioFooter} id="all-projects">
           <div className={styles.portfolioMascot} aria-hidden="true">
-            <Image
+            <ProgressiveImage
               className={styles.portfolioMascotImage}
               src="/images/projects/portfolio-mascot-seated-v2.png"
               alt=""

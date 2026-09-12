@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Container } from "@/components/layout";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { Link, SectionLink } from "@/components/ui";
+import { Link, ProgressiveImage, SectionLink } from "@/components/ui";
 import { PropuscMotion } from "./PropuscMotion";
 import { shots, type ShotName } from "./screenshots";
 import styles from "./page.module.css";
@@ -16,7 +16,7 @@ function Screenshot({ name, caption, priority = false, className = "" }: { name:
   const shot = shots[name];
   return <figure className={`${styles.shot} ${className}`}>
     <a href={shot.src} target="_blank" rel="noreferrer" aria-label={`${caption}. Открыть скриншот в полном размере`}>
-      <Image src={shot.src} width={shot.width} height={shot.height} alt={shot.alt} priority={priority} sizes={name === "phone" ? "(max-width: 768px) 70vw, 240px" : "(max-width: 768px) 92vw, (max-width: 1024px) 90vw, 1200px"} />
+      <ProgressiveImage src={shot.src} width={shot.width} height={shot.height} alt={shot.alt} priority={priority} fetchPriority={priority ? "high" : "auto"} sizes={name === "phone" ? "(max-width: 768px) 70vw, 240px" : "(max-width: 768px) 92vw, (max-width: 1024px) 90vw, 1200px"} />
     </a>
     <figcaption>{caption}<span aria-hidden="true">↗</span></figcaption>
   </figure>;
@@ -26,7 +26,7 @@ export default function PropuscCase() {
   return <main id="main-content" tabIndex={-1} className={styles.page}>
     <header className={styles.header}>
       <Container className={styles.headerInner}>
-        <Link className={styles.brand} href="/" aria-label="IANep, на главную"><Image src="/reference/logo-ia.png" alt="" width={44} height={27} priority /><span>Nep</span></Link>
+        <Link className={styles.brand} href="/" aria-label="IANep, на главную"><Image src="/reference/logo-ia.png" alt="" width={44} height={27} /><span>Nep</span></Link>
         <div className={styles.headerActions}><ThemeToggle /><SectionLink href="/#projects" className={styles.back}>Все проекты <span aria-hidden="true">↗</span></SectionLink></div>
       </Container>
     </header>

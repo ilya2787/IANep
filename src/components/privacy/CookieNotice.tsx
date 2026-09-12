@@ -3,6 +3,8 @@
 import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/Button";
 import styles from "./CookieNotice.module.css";
+import Link from "next/link";
+import { LEGAL_ROUTES } from "@/config/legal";
 
 const consentStorageKey = "ianep-cookie-notice-acknowledged";
 const consentEventName = "ianep-cookie-notice-change";
@@ -39,11 +41,11 @@ export function CookieNotice() {
   if (!isVisible) return null;
 
   return (
-    <aside className={styles.notice} aria-label="Уведомление об использовании cookies">
+    <aside className={styles.notice} aria-label="Уведомление об использовании файлов cookie">
       <div className={styles.content}>
-        <h2 className={styles.title}>Мы используем cookies</h2>
+        <h2 className={styles.title}>Мы используем файлы cookie</h2>
         <p className={styles.description}>
-          IANep использует только необходимые технические cookies для авторизации и корректной работы сайта.
+          IANep использует только необходимые файлы cookie и хранилище браузера. <Link href={LEGAL_ROUTES.cookies}>Подробнее о файлах cookie</Link>
         </p>
       </div>
       <Button className={styles.action} onClick={acknowledge}>

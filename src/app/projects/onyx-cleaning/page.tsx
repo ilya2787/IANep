@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Container } from "@/components/layout";
-import { Link, SectionLink } from "@/components/ui";
+import { Link, ProgressiveImage, SectionLink } from "@/components/ui";
 import { OnyxCaseMotion } from "./OnyxCaseMotion";
 import styles from "./page.module.css";
 
@@ -19,7 +19,7 @@ export default function OnyxCleaningCase() {
       <header className={styles.header}>
         <Container className={styles.headerInner}>
           <Link className={styles.brand} href="/" aria-label="IANep, на главную">
-            <Image src="/reference/logo-ia.png" alt="" width={44} height={27} priority />
+            <Image src="/reference/logo-ia.png" alt="" width={44} height={27} />
             <span>Nep</span>
           </Link>
           <div className={styles.headerActions}><ThemeToggle /><SectionLink className={styles.backLink} href="/#projects">Все проекты <span aria-hidden="true">↗</span></SectionLink></div>
@@ -36,10 +36,10 @@ export default function OnyxCleaningCase() {
               <p className={styles.status}>Проект для ИП. Коммерческого запуска не было.</p>
             </div>
             <div className={styles.heroFrame} data-hero-frame>
-              <Image
+              <ProgressiveImage
                 src="/images/projects/onyx-case/hero-desktop.png"
                 alt="Главная страница ONYX CLEANING на настольном экране"
-                fill priority sizes="(max-width: 768px) 100vw, 78vw"
+                fill priority fetchPriority="high" quality={90} sizes="(max-width: 768px) 100vw, 78vw"
               />
             </div>
           </Container>
@@ -80,13 +80,13 @@ export default function OnyxCleaningCase() {
             </div>
             <div className={styles.calculatorStage} data-calculator-stage>
               <figure className={`${styles.interfaceFrame} ${styles.serviceFrame}`} data-service-screen>
-                <Image src="/images/projects/onyx-case/order.png" alt="Страница услуги ONYX CLEANING с описанием уборки и кнопкой заказа" fill loading="eager" sizes="(max-width: 768px) 90vw, 44vw" />
+                <ProgressiveImage src="/images/projects/onyx-case/order.png" alt="Страница услуги ONYX CLEANING с описанием уборки и кнопкой заказа" fill sizes="(max-width: 768px) 90vw, 44vw" />
               </figure>
               <figure className={`${styles.interfaceFrame} ${styles.orderFrame}`} data-order-screen>
-                <Image src="/images/projects/onyx-case/calculation.png" alt="Оформление заказа ONYX CLEANING с контактами, адресом, датой и итоговой стоимостью" fill loading="eager" sizes="(max-width: 768px) 90vw, 44vw" />
+                <ProgressiveImage src="/images/projects/onyx-case/calculation.png" alt="Оформление заказа ONYX CLEANING с контактами, адресом, датой и итоговой стоимостью" fill sizes="(max-width: 768px) 90vw, 44vw" />
               </figure>
               <figure className={`${styles.interfaceFrame} ${styles.reviewFrame}`} data-review-screen>
-                <Image src="/images/projects/onyx-case/order-summary.png" alt="Финальная проверка состава и стоимости заказа перед отправкой" fill loading="eager" sizes="(max-width: 768px) 90vw, 44vw" />
+                <ProgressiveImage src="/images/projects/onyx-case/order-summary.png" alt="Финальная проверка состава и стоимости заказа перед отправкой" fill sizes="(max-width: 768px) 90vw, 44vw" />
               </figure>
             </div>
             <div className={styles.mobileShowcase}>
@@ -97,13 +97,13 @@ export default function OnyxCleaningCase() {
               <div className={styles.mobileScreens}>
                 <figure className={styles.mobileShot} data-mobile-form>
                   <div className={styles.phoneFrame}>
-                    <Image src="/images/projects/onyx-case/order-mobile.png" alt="Мобильная форма оформления заказа ONYX CLEANING" fill sizes="(max-width: 768px) 42vw, 22vw" />
+                    <ProgressiveImage src="/images/projects/onyx-case/order-mobile.png" alt="Мобильная форма оформления заказа ONYX CLEANING" fill sizes="(max-width: 768px) 42vw, 22vw" />
                   </div>
                   <figcaption>Форма заказа</figcaption>
                 </figure>
                 <figure className={styles.mobileShot} data-mobile-confirmation>
                   <div className={styles.phoneFrame}>
-                    <Image src="/images/projects/onyx-case/order-confirmation-mobile.png" alt="Проверка состава и стоимости заказа на мобильном экране" fill sizes="(max-width: 768px) 42vw, 22vw" />
+                    <ProgressiveImage src="/images/projects/onyx-case/order-confirmation-mobile.png" alt="Проверка состава и стоимости заказа на мобильном экране" fill sizes="(max-width: 768px) 42vw, 22vw" />
                   </div>
                   <figcaption>Проверка перед отправкой</figcaption>
                 </figure>
@@ -120,7 +120,7 @@ export default function OnyxCleaningCase() {
               <p>После подтверждения заказ отправлялся в Telegram. Команда получала контакты, адрес, состав услуг, стоимость и время работы в одном сообщении.</p>
             </div>
             <div className={styles.telegramFrame} data-telegram-frame>
-              <Image src="/images/projects/onyx-case/telegram.png" alt="Заказ ONYX CLEANING в Telegram" fill sizes="(max-width: 768px) 90vw, 36vw" />
+              <ProgressiveImage src="/images/projects/onyx-case/telegram.png" alt="Заказ ONYX CLEANING в Telegram" fill sizes="(max-width: 768px) 90vw, 36vw" />
             </div>
             <div className={styles.deliveryLine} aria-hidden="true" data-delivery-line />
           </Container>
@@ -134,10 +134,10 @@ export default function OnyxCleaningCase() {
             </div>
             <div className={styles.adminLayout}>
               <figure className={`${styles.interfaceFrame} ${styles.adminMain}`} data-admin-main>
-                <Image src="/images/projects/onyx-case/admin-parameters.png" alt="Панель управления ценами, параметрами расчёта и городами выезда" fill sizes="(max-width: 768px) 90vw, 55vw" />
+                <ProgressiveImage src="/images/projects/onyx-case/admin-parameters.png" alt="Панель управления ценами, параметрами расчёта и городами выезда" fill sizes="(max-width: 768px) 90vw, 55vw" />
               </figure>
               <figure className={`${styles.interfaceFrame} ${styles.adminDetail}`} data-admin-detail>
-                <Image src="/images/projects/onyx-case/admin-edit.png" alt="Редактирование дополнительных услуг в панели ONYX CLEANING" fill sizes="(max-width: 768px) 90vw, 36vw" />
+                <ProgressiveImage src="/images/projects/onyx-case/admin-edit.png" alt="Редактирование дополнительных услуг в панели ONYX CLEANING" fill sizes="(max-width: 768px) 90vw, 36vw" />
               </figure>
               <ul className={styles.adminList} data-case-reveal>
                 <li>Услуги и цены</li><li>Параметры расчёта</li><li>Города и стоимость выезда</li><li>Контакты и отзывы</li><li>Повторные обращения по телефону</li>

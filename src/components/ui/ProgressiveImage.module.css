@@ -1,0 +1,77 @@
+.image {
+  z-index: 1;
+}
+
+.placeholder {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: none;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 72% 24%, color-mix(in srgb, var(--color-lavender) 18%, transparent), transparent 42%),
+    linear-gradient(135deg, var(--color-surface-raised), var(--color-surface));
+  pointer-events: none;
+}
+
+.placeholder::after {
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(105deg, transparent 38%, color-mix(in srgb, var(--color-lavender-soft) 45%, transparent) 50%, transparent 62%);
+  content: "";
+  transform: translateX(-42%);
+  animation: imageFrameShimmer 1.8s ease-in-out infinite;
+}
+
+:global(.js) .placeholder {
+  display: block;
+  transition: opacity 260ms var(--ease-out);
+}
+
+:global(.js) .imageLoading {
+  opacity: 0;
+}
+
+:global(.js) .imageLoaded {
+  opacity: 1;
+  transition: opacity 280ms var(--ease-out);
+}
+
+:global(.js) .placeholderLoaded {
+  opacity: 0;
+}
+
+:global(.js) .imageError {
+  opacity: 0;
+}
+
+.readyOverlay {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+}
+
+:global(.js) .readyOverlay {
+  opacity: 0;
+}
+
+:global(.js) .readyOverlayLoaded {
+  opacity: 1;
+  transition: opacity 280ms var(--ease-out);
+}
+
+:global(.js) .readyOverlayError {
+  opacity: 0;
+}
+
+@keyframes imageFrameShimmer {
+  to { transform: translateX(42%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .placeholder::after { animation: none; }
+  :global(.js) .imageLoaded,
+  :global(.js) .placeholder,
+  :global(.js) .readyOverlayLoaded { transition: none; }
+}

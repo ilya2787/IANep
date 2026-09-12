@@ -2,6 +2,7 @@
 
 import { Children, isValidElement, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import s from "./fields.module.css";
 
 type Option = { value: string; label: string; disabled?: boolean };
@@ -13,6 +14,7 @@ export function Select({ name, defaultValue, value: controlled, onChange, disabl
   const id = useId();
   const [invalid, setInvalid] = useState(false);
   const [open, setOpen] = useState(false);
+  useBodyScrollLock(open);
   const options = Children.toArray(children).flatMap(child => {
     if (!isValidElement<{ value?: string; children?: ReactNode; disabled?: boolean }>(child)) return [];
     return [{ value: String(child.props.value ?? ""), label: Children.toArray(child.props.children).join(""), disabled: child.props.disabled }];
@@ -21,9 +23,9 @@ export function Select({ name, defaultValue, value: controlled, onChange, disabl
   const names: Record<string, string> = { status: "Статус", kind: "Тип материала", clientId: "Клиент", stageId: "Относится к", counts: "Учёт в лимите", operation: "Действие" };
   const title = label || names[name || ""] || "Выберите значение";
   useEffect(() => {
-    if (open) { dialog.current?.showModal(); const buttons = dialog.current?.querySelectorAll<HTMLButtonElement>('[role="option"]:not(:disabled)'); const selectedButton = dialog.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]:not(:disabled)'); (selectedButton || buttons?.[0])?.focus(); }
+    if (open) { if (!dialog.current?.open) dialog.current?.showModal(); const buttons = dialog.current?.querySelectorAll<HTMLButtonElement>('[role="option"]:not(:disabled)'); const selectedButton = dialog.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]:not(:disabled)'); (selectedButton || buttons?.[0])?.focus(); }
   }, [open]);
-  function close() { dialog.current?.close(); setOpen(false); trigger.current?.focus(); }
+  function close() { dialog.current?.close(); setOpen(false); trigger.current?.focus({ preventScroll: true }); }
   function choose(option: Option) { if (option.disabled) return; setInvalid(false); setValue(option.value); onChange?.({ target: { value: option.value } }); close(); }
   return <span className={s.select}>
     <select ref={native} name={name} value={selected} onChange={event => { setValue(event.target.value); onChange?.(event); }} disabled={disabled} required={required} className={s.native} tabIndex={-1} aria-hidden="true" onInvalid={event => { event.preventDefault(); setInvalid(true); trigger.current?.focus(); }}>
@@ -34,7 +36,7 @@ export function Select({ name, defaultValue, value: controlled, onChange, disabl
     {createPortalIfOpen()}
   </span>;
 
-  function createPortalIfOpen() { return open ? createPortal(<dialog ref={dialog} className={s.dialog} aria-label={title} onCancel={() => { setOpen(false); trigger.current?.focus(); }} onClose={() => setOpen(false)}>
+  function createPortalIfOpen() { return open ? createPortal(<dialog ref={dialog} className={s.dialog} aria-label={title} onCancel={() => { setOpen(false); trigger.current?.focus({ preventScroll: true }); }} onClose={() => setOpen(false)}>
       <div className={s.heading}><strong>{title}</strong><button type="button" aria-label="Закрыть список" onClick={close}>×</button></div>
       <div id={id} role="listbox" aria-label={title} className={s.options} onKeyDown={event => {
         const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));

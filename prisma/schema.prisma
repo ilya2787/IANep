@@ -108,6 +108,8 @@ model BriefRequest {
   updatedAt   DateTime           @updatedAt
   archivedAt  DateTime?
   deleteAfter DateTime?
+  consentAcceptedAt DateTime? @map("consent_accepted_at")
+  consentVersion    String?   @db.VarChar(50) @map("consent_version")
 
   @@index([status, createdAt])
   @@index([archivedAt, deleteAfter])

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BriefAnswersView } from "@/app/admin/brief-answers";
-import { auditEventLabel, formatAdminDate, formatBriefContact, projectTypeLabel, sourceLabel, statusLabels } from "@/app/admin/brief-presenter";
+import { auditEventLabel, briefConsentEvidenceLabel, formatAdminDate, formatBriefContact, projectTypeLabel, sourceLabel, statusLabels } from "@/app/admin/brief-presenter";
 import styles from "@/app/admin/admin.module.css";
 import { briefService } from "@/server/brief/brief.service";
 import { prisma } from "@/server/db/prisma";
@@ -29,6 +29,7 @@ export default async function BriefPage({ params }: BriefPageProps) {
         <div><span>Тип проекта</span><strong>{projectTypeLabel(brief.projectType)}</strong></div>
         <div><span>Источник</span><strong>{sourceLabel(brief.source)}</strong></div>
         <div><span>Получена</span><strong><time dateTime={brief.createdAt.toISOString()}>{formatAdminDate(brief.createdAt)}</time></strong></div>
+        <div><span>Согласие на обработку данных</span><strong>{brief.consentAcceptedAt && brief.consentVersion ? <><time dateTime={brief.consentAcceptedAt.toISOString()}>{formatAdminDate(brief.consentAcceptedAt)}</time><span className={styles.consentVersion}>{briefConsentEvidenceLabel(brief.consentAcceptedAt, brief.consentVersion)}</span><Link className={styles.consentLink} href={`/admin/briefs/${brief.id}/consent`}>Посмотреть редакцию согласия →</Link></> : briefConsentEvidenceLabel(brief.consentAcceptedAt, brief.consentVersion)}</strong></div>
       </section>
 
       {brief.project && <section className={styles.linkedProject}><div><strong>Проект по этой заявке</strong><p>{brief.project.title}</p></div><Link className={styles.briefLink} href={`/admin/projects/${brief.project.id}`}>Открыть проект →</Link></section>}

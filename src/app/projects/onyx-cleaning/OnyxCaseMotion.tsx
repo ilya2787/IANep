@@ -22,11 +22,8 @@ export function OnyxCaseMotion({ children }: { children: ReactNode }) {
       if (context.conditions?.reduced) return;
       const desktop = context.conditions?.desktop;
 
-      const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
-      intro.from("[data-case-hero-copy] > *", { y: 28, autoAlpha: 0, duration: 0.8, stagger: 0.1 })
-        .from("[data-hero-frame]", { y: 54, scale: 0.975, autoAlpha: 0, duration: 1.05 }, 0.12);
-
       gsap.utils.toArray<HTMLElement>("[data-case-reveal]").forEach((target) => {
+        if (target.getBoundingClientRect().top <= window.innerHeight * 0.92) return;
         gsap.from(target, {
           y: desktop ? 44 : 22,
           autoAlpha: 0,

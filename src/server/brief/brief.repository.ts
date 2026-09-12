@@ -28,6 +28,8 @@ export type CreateBriefRequestData = {
   answers: Prisma.InputJsonValue;
   source?: string;
   receiptHash?: string;
+  consentAcceptedAt?: Date;
+  consentVersion?: string;
 };
 
 export class BriefRepository {
@@ -102,7 +104,7 @@ export class BriefRepository {
     return this.db.$transaction(async (transaction) => {
       const updated = await transaction.briefRequest.updateMany({
         where: { id: previous.id, status: 'NEW', source: 'PUBLIC_BRIEF', updatedAt: previous.updatedAt },
-        data: { name: data.name, ...normalizedBriefData(data), projectType: data.projectType, answers: data.answers },
+        data: { name: data.name, ...normalizedBriefData(data), projectType: data.projectType, answers: data.answers, consentAcceptedAt: data.consentAcceptedAt, consentVersion: data.consentVersion },
       });
       if (updated.count !== 1) throw new BriefConflict('REPLACEMENT_UNAVAILABLE');
       await appendAudit(transaction, {
@@ -122,6 +124,8 @@ export class BriefRepository {
           projectType: data.projectType,
           answers: data.answers,
           source: data.source,
+          consentAcceptedAt: data.consentAcceptedAt,
+          consentVersion: data.consentVersion,
         },
       });
 

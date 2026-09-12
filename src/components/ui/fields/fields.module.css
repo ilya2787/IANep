@@ -3,7 +3,7 @@
 .trigger { display:flex; width:100%; min-height:3rem; align-items:center; justify-content:space-between; gap:1rem; padding:.75rem 1rem; border:1px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-background); color:var(--color-text); font:inherit; text-align:left; cursor:pointer; }
 .trigger > span:first-child { overflow-wrap:anywhere; }
 .trigger > span:last-child { color:var(--color-lavender); }
-.dialog { margin:auto; width:min(28rem,calc(100vw - 2rem)); max-height:calc(100dvh - 2rem); padding:1.25rem; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-surface); color:var(--color-text); box-shadow:0 24px 80px #0003; }
+.dialog { margin:auto; width:min(28rem,calc(100vw - 2rem)); max-height:calc(var(--modal-viewport-height,100dvh) - 2rem); overflow:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:1.25rem; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-surface); color:var(--color-text); box-shadow:0 24px 80px #0003; }
 .dialog::backdrop { background:#0a08148f; backdrop-filter:blur(6px); }
 .heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
 .heading button { width:44px; min-height:44px; border:1px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-background); color:var(--color-text); font:inherit; font-size:1.4rem; cursor:pointer; }

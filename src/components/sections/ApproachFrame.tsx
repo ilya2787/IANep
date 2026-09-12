@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ProgressiveImage } from "@/components/ui";
 import type { ApproachStep } from "./approach.data";
 import styles from "./Approach.module.css";
 
@@ -30,20 +30,20 @@ export function ApproachFrame({ step, isLast }: ApproachFrameProps) {
 
         <p className={styles.description}>{step.description}</p>
         <div className={styles.visual}>
-          <Image
+          <ProgressiveImage
             className={`${styles.visualImage} ${styles.lightImage}`}
             src={step.imageLight}
             alt=""
             fill
-            quality={82}
+            quality={75}
             sizes="(max-width: 48rem) 86vw, (max-width: 64rem) 44vw, 28vw"
           />
-          <Image
+          <ProgressiveImage
             className={`${styles.visualImage} ${styles.darkImage}`}
             src={step.imageDark}
             alt=""
             fill
-            quality={82}
+            quality={75}
             sizes="(max-width: 48rem) 86vw, (max-width: 64rem) 44vw, 28vw"
           />
         </div>

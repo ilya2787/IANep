@@ -1,6 +1,5 @@
 import { Container } from '@/components/layout'
-import { SectionLink } from '@/components/ui'
-import Image from 'next/image'
+import { ProgressiveImage, SectionLink } from '@/components/ui'
 import styles from './Hero.module.css'
 
 export function Hero() {
@@ -12,49 +11,45 @@ export function Hero() {
 				<h1 className={styles.title} id='hero-title'>
 					<span
 						data-hero-title-line
-						className={`${styles.titlePiece} ${styles.titleStart}`}
+						className={styles.titleLead}
 					>
-						Разрабатываем
+						РАЗРАБАТЫВАЕМ
 					</span>
-					<span
-						data-hero-title-line
-						className={`${styles.titlePiece} ${styles.titleAccent}`}
-					>
-						сайты
-					</span>
-					<span
-						data-hero-title-line
-						className={`${styles.titlePiece} ${styles.titleEnd}`}
-					>
-						под ваш бизнес
+					<span className={styles.titleCounterpoint}>
+						<span data-hero-title-line className={styles.titleSites}>
+							САЙТЫ
+						</span>
+						<span data-hero-title-line className={styles.titleForBusiness}>
+							<span>под ваш</span>
+							<span>БИЗНЕС</span>
+						</span>
 					</span>
 				</h1>
 
 				<div data-hero-mascot className={styles.mascotStage}>
 					<div data-hero-mascot-motion className={styles.mascot}>
-						<Image
+						<ProgressiveImage
 							className={styles.mascotImage}
 							src='/images/hero-mascot-front-no-eyes-v3.png'
 							alt='Фирменный цифровой помощник IANep'
 							fill
 							priority
-							unoptimized
+							fetchPriority='high'
+							quality={90}
 							sizes='(max-width: 768px) 88vw, 42vw'
+							readyOverlay={
+								<div className={styles.visor} aria-hidden='true'>
+									<div data-hero-eyes className={styles.eyes}>
+										<span className={`${styles.eye} ${styles.eyeLeft}`} />
+										<span className={`${styles.eye} ${styles.eyeRight}`} />
+									</div>
+								</div>
+							}
 						/>
-						<div className={styles.visor} aria-hidden='true'>
-							<div data-hero-eyes className={styles.eyes}>
-								<span className={`${styles.eye} ${styles.eyeLeft}`} />
-								<span className={`${styles.eye} ${styles.eyeRight}`} />
-							</div>
-						</div>
 					</div>
 				</div>
 
 				<div data-hero-copy className={styles.copy}>
-					<p className={styles.description}>
-						Продумываем функционал и создаём решения, которые помогают бизнесу
-						расти.
-					</p>
 					<div className={styles.actions}>
 						<SectionLink
 							className={styles.primaryAction}

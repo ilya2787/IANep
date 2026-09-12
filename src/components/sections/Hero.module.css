@@ -1,6 +1,7 @@
 .hero {
-  --hero-ink: #17122c;
-  --hero-muted: rgba(23, 18, 44, 0.72);
+  --hero-display: color-mix(in srgb, var(--color-text) 91%, var(--color-lavender) 9%);
+  --hero-business-kicker: color-mix(in srgb, var(--color-muted) 84%, var(--color-lavender) 16%);
+  --hero-business: color-mix(in srgb, var(--color-text) 94%, var(--color-lavender) 6%);
   --hero-grid: rgba(64, 42, 143, 0.09);
   --hero-ring: rgba(75, 48, 172, 0.2);
   --hero-orbit: rgba(42, 27, 99, 0.5);
@@ -14,7 +15,7 @@
   isolation: isolate;
   min-height: min(56rem, 100dvh);
   overflow: hidden;
-  color: var(--hero-ink);
+  color: var(--hero-display);
   background:
     radial-gradient(circle at 50% 43%, color-mix(in srgb, var(--color-lavender-soft) 88%, transparent) 0, color-mix(in srgb, var(--color-sky) 20%, transparent) 30%, transparent 58%),
     radial-gradient(ellipse at 50% 104%, color-mix(in srgb, var(--color-peach) 14%, transparent) 0, transparent 42%),
@@ -69,32 +70,68 @@
 .title {
   position: absolute;
   z-index: 1;
-  inset: 0;
+  top: clamp(9rem, 17vh, 11rem);
+  right: var(--container-gutter);
+  left: var(--container-gutter);
   pointer-events: none;
 }
 
-.titlePiece {
-  position: absolute;
+.titleLead {
   display: block;
-  font-size: clamp(3.25rem, 5.6vw, 6.4rem);
-  font-weight: 720;
-  line-height: 0.9;
-  letter-spacing: -0.065em;
+  width: 100%;
+  color: var(--hero-display);
+  font-size: clamp(5rem, 8.45vw, 7.7rem);
+  font-weight: 735;
+  line-height: 0.82;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 
-.titleStart { top: 29%; left: var(--container-gutter); }
-.titleAccent {
-  top: 43%;
-  left: calc(var(--container-gutter) + 4.5vw);
-  color: var(--hero-accent);
-  font-size: clamp(4.5rem, 8.3vw, 9rem);
-  font-weight: 760;
+.titleCounterpoint {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-top: clamp(1.65rem, 3.8vh, 2.75rem);
 }
-.titleEnd {
-  top: 37%;
-  right: var(--container-gutter);
-  width: min(32vw, 28rem);
-  text-align: right;
+
+.titleSites {
+  position: relative;
+  z-index: 1;
+  display: block;
+  color: var(--hero-display);
+  font-size: clamp(5.35rem, 9.1vw, 8.2rem);
+  font-weight: 720;
+  line-height: 0.8;
+  letter-spacing: -0.03em;
+}
+
+.titleForBusiness {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: max-content;
+  margin-top: clamp(4.6rem, 10vh, 6.75rem);
+  margin-right: clamp(0.5rem, 1.5vw, 1.25rem);
+  line-height: 0.9;
+}
+
+.titleForBusiness span:first-child {
+  color: var(--hero-business-kicker);
+  font-size: clamp(0.86rem, 1vw, 1.02rem);
+  font-weight: 560;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.titleForBusiness span:last-child {
+  margin-top: 0.24em;
+  color: var(--hero-business);
+  font-size: clamp(3.25rem, 4vw, 4rem);
+  font-weight: 690;
+  letter-spacing: -0.025em;
 }
 
 .mascotStage {
@@ -165,18 +202,9 @@
   z-index: 3;
   right: var(--container-gutter);
   bottom: clamp(2rem, 5vh, 4rem);
-  left: var(--container-gutter);
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
-  gap: 2rem;
-}
-
-.description {
-  max-width: 25rem;
-  color: var(--hero-muted);
-  font-size: clamp(0.95rem, 1.2vw, 1.075rem);
-  line-height: 1.55;
+  justify-content: flex-end;
 }
 
 .actions { display: flex; align-items: center; gap: 1.25rem; }
@@ -240,8 +268,9 @@
 }
 
 :global(:root[data-theme="dark"]) .hero {
-  --hero-ink: #ffffff;
-  --hero-muted: rgba(255, 255, 255, 0.78);
+  --hero-display: color-mix(in srgb, var(--color-text) 94%, var(--color-lavender) 6%);
+  --hero-business-kicker: color-mix(in srgb, var(--color-muted) 82%, var(--color-lavender) 18%);
+  --hero-business: color-mix(in srgb, var(--color-text) 86%, var(--color-lavender) 14%);
   --hero-grid: rgba(255, 255, 255, 0.055);
   --hero-ring: rgba(255, 255, 255, 0.16);
   --hero-orbit: rgba(255, 255, 255, 0.55);
@@ -255,8 +284,9 @@
 
 @media (prefers-color-scheme: dark) {
   :global(:root:not([data-theme="light"])) .hero {
-    --hero-ink: #ffffff;
-    --hero-muted: rgba(255, 255, 255, 0.78);
+    --hero-display: color-mix(in srgb, var(--color-text) 94%, var(--color-lavender) 6%);
+    --hero-business-kicker: color-mix(in srgb, var(--color-muted) 82%, var(--color-lavender) 18%);
+    --hero-business: color-mix(in srgb, var(--color-text) 86%, var(--color-lavender) 14%);
     --hero-grid: rgba(255, 255, 255, 0.055);
     --hero-ring: rgba(255, 255, 255, 0.16);
     --hero-orbit: rgba(255, 255, 255, 0.55);
@@ -270,44 +300,45 @@
 }
 
 @media (max-width: 71.999rem) and (min-width: 48.001rem) {
-  .titlePiece { font-size: clamp(2.8rem, 5.6vw, 4.5rem); }
-  .titleAccent { font-size: clamp(4rem, 8vw, 6.5rem); }
-  .titleEnd { width: 30vw; }
+  .title { top: clamp(8.75rem, 17vh, 10.5rem); }
+  .titleLead { font-size: clamp(4rem, 8.25vw, 5.95rem); }
+  .titleSites { font-size: clamp(4.85rem, 10.2vw, 7.2rem); }
+  .titleForBusiness { width: max-content; margin-top: clamp(3.7rem, 9vh, 5.4rem); margin-right: clamp(0.25rem, 1vw, 0.75rem); }
+  .titleForBusiness span:first-child { font-size: clamp(0.74rem, 1.15vw, 0.9rem); }
+  .titleForBusiness span:last-child { font-size: clamp(2.6rem, 4.7vw, 3.4rem); }
   .mascotStage { width: min(54vw, 39rem); }
 }
 
 @media (max-width: 48rem) {
   .hero, .stage { min-height: 100svh; }
-  .stage { display: flex; flex-direction: column; padding-top: 7rem; padding-bottom: 1.5rem; }
+  .stage { display: flex; flex-direction: column; padding-top: 6.8rem; padding-bottom: 1.5rem; }
   .ambientGlow { top: 24%; width: 92vw; }
   .brandOrbit { top: 7rem; }
-  .title { position: relative; inset: auto; z-index: 3; display: block; }
-  .titlePiece { position: static; font-size: clamp(2.5rem, 10vw, 4rem); line-height: 0.95; }
-  .titleStart { text-align: left; }
-  .titleAccent { margin-left: 14vw; color: var(--hero-accent); font-size: clamp(3.5rem, 16vw, 6rem); }
-  .titleEnd { width: auto; margin-top: -0.05em; text-align: right; }
-  .mascotStage { position: relative; bottom: auto; left: auto; z-index: 2; width: min(82vw, 28rem); margin: -0.75rem auto -8%; transform: none; }
-  .copy { position: relative; right: auto; bottom: auto; left: auto; z-index: 4; align-items: flex-start; flex-direction: column; gap: 1.25rem; margin-top: auto; margin-bottom: 0.5rem; }
-  .description {
-    max-width: 22rem;
-    padding: 0.55rem 0.75rem;
-    margin: -0.55rem -0.75rem;
-    border-radius: var(--radius-sm);
-    background: color-mix(in srgb, var(--color-background) 68%, transparent);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
+  .title { position: relative; inset: auto; z-index: 3; }
+  .titleLead { font-size: clamp(2.05rem, 10.65vw, 4.75rem); line-height: 0.88; }
+  .titleCounterpoint { align-items: flex-start; margin-top: clamp(1rem, 2.8vh, 1.4rem); }
+  .titleSites { font-size: clamp(3.9rem, 18.8vw, 7.2rem); line-height: 0.8; }
+  .titleForBusiness { width: auto; margin: clamp(2.65rem, 7.5vh, 3.5rem) 0 0 0.45rem; }
+  .titleForBusiness span:first-child { font-size: clamp(0.68rem, 2.85vw, 0.84rem); letter-spacing: 0.14em; }
+  .titleForBusiness span:last-child { margin-top: 0.3em; font-size: clamp(1.75rem, 7.8vw, 2.5rem); }
+  .mascotStage { position: relative; bottom: auto; left: auto; z-index: 2; width: min(82vw, 28rem); margin: -0.65rem auto -4%; transform: none; }
+  .mascot {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 84%, rgba(0, 0, 0, 0.82) 90%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 84%, rgba(0, 0, 0, 0.82) 90%, transparent 100%);
   }
-  .actions { flex-wrap: wrap; gap: 0.75rem 1.25rem; }
+  .copy { position: relative; right: auto; bottom: auto; z-index: 4; margin-top: auto; margin-bottom: 0.5rem; }
+  .actions { flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem 1.25rem; width: 100%; }
 }
 
 @media (max-width: 36rem) {
   .stage { padding-top: 6.5rem; }
   .brandOrbit { display: none; }
-  .titlePiece { font-size: clamp(2.25rem, 10vw, 3.25rem); }
-  .titleAccent { font-size: clamp(3.4rem, 17vw, 5.2rem); }
-  .mascotStage { width: min(88vw, 24rem); margin-top: -0.5rem; }
-  .description { font-size: 0.925rem; }
-  .actions { align-items: flex-start; flex-direction: column; gap: 0.4rem; }
+  .titleLead { font-size: clamp(1.86rem, 10.45vw, 3.75rem); }
+  .titleSites { font-size: clamp(3.35rem, 17vw, 6.5rem); }
+  .titleForBusiness { margin-top: clamp(2.25rem, 7vh, 3rem); margin-left: 0.25rem; }
+  .titleForBusiness span:first-child { font-size: clamp(0.63rem, 2.7vw, 0.77rem); }
+  .titleForBusiness span:last-child { font-size: clamp(1.55rem, 7.35vw, 2.1rem); }
+  .mascotStage { width: min(88vw, 24rem); margin-top: -0.15rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

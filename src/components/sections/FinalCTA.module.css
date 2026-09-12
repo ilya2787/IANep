@@ -46,7 +46,6 @@
 
 .primary { min-height: 3.5rem; padding-inline: var(--space-6); }
 .primary:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 4px; }
-.secondary:disabled { color: var(--color-muted); opacity: 1; padding-inline: 0; }
 .image { width: 100%; height: auto; object-fit: contain; }
 
 @media (max-width: 48rem) {
@@ -57,7 +56,6 @@
 
 @media (max-width: 30rem) {
   .actions { align-items: stretch; flex-direction: column; }
-  .secondary { align-self: center; }
 }
 
 .visual {
