@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { ResponsiveWorkspaceHeader } from "@/components/workspace/ResponsiveWorkspaceHeader";
 import { logoutAdmin } from "@/app/admin/actions";
 import styles from "@/app/admin/admin.module.css";
 import { requireAdmin } from "@/server/auth/admin-auth";
@@ -10,10 +10,23 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const unread = await unreadCount({ adminId: admin.adminId });
   return (
     <div className={styles.adminRoot}>
-      <header className={styles.shellHeader}>
-        <div className={styles.brand}><Link href="/admin" className={styles.brandName}>IANep</Link><span className={styles.brandArea}>/ Администратор</span></div>
-        <div className={styles.headerActions}><Link href="/admin">Заявки</Link><Link href="/admin/projects">Проекты</Link><Link href="/admin/users">Пользователи</Link><Link href="/admin/privacy-requests">Персональные данные</Link><Link href="/admin/events">Журнал</Link><Link href="/admin/system">Система</Link><Link href="/admin/notifications" className={styles.notificationLink}>Уведомления{unread > 0 && <span aria-label={`Непрочитанных: ${unread}`}>{unread > 99 ? "99+" : unread}</span>}</Link><ThemeToggle /><form action={logoutAdmin}><button className={styles.logoutButton} type="submit">Выйти</button></form></div>
-      </header>
+      <ResponsiveWorkspaceHeader
+        brandHref="/admin"
+        contextLabel="Администратор"
+        navigationLabel="Навигация администратора"
+        unreadCount={unread}
+        items={[
+          { href: "/admin", label: "Заявки", matchPrefixes: ["/admin", "/admin/briefs"] },
+          { href: "/admin/projects", label: "Проекты" },
+          { href: "/admin/users", label: "Пользователи" },
+          { href: "/admin/privacy-requests", label: "Персональные данные" },
+          { href: "/admin/events", label: "Журнал" },
+          { href: "/admin/system", label: "Система" },
+          { href: "/admin/notifications", label: "Уведомления" },
+        ]}
+        themeControl={<ThemeToggle />}
+        logoutControl={<form action={logoutAdmin}><button type="submit">Выйти</button></form>}
+      />
       <main id="main-content" className={styles.shellMain}>{children}</main>
     </div>
   );

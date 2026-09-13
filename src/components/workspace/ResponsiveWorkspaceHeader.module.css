@@ -1,0 +1,74 @@
+.header {
+  display: flex;
+  min-height: 5rem;
+  align-items: center;
+  gap: clamp(1rem, 2vw, 2rem);
+  padding: 1rem var(--container-gutter);
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+}
+
+.identity { display: flex; flex: 0 0 auto; align-items: baseline; gap: .75rem; }
+.brand { color: var(--color-text); font-size: 1.65rem; font-weight: 750; letter-spacing: -.075em; text-decoration: none; }
+.context { color: var(--color-muted); font-size: .8rem; white-space: nowrap; }
+.desktopNavigation { display: flex; min-width: 0; flex: 1; align-items: center; justify-content: flex-end; gap: clamp(.55rem, 1.15vw, 1.3rem); }
+.desktopNavigation a { position: relative; display: inline-flex; min-height: 2.75rem; align-items: center; gap: .4rem; border-radius: var(--radius-sm); color: var(--color-muted); font-size: clamp(.75rem, .83vw, .86rem); text-decoration: none; white-space: nowrap; transition: color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); }
+.desktopNavigation a::after { position: absolute; right: 0; bottom: .15rem; left: 0; height: 1px; background: var(--color-lavender); content: ""; opacity: 0; transform: scaleX(.4); transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }
+.desktopNavigation .activeLink { color: var(--color-text); }
+.desktopNavigation .activeLink::after { opacity: 1; transform: scaleX(1); }
+.desktopControls { display: flex; flex: 0 0 auto; align-items: center; gap: .75rem; }
+.desktopControls form, .sheetFooter form { margin: 0; }
+.desktopControls button:not([data-theme-toggle]), .sheetFooter button { min-height: 2.75rem; padding: .625rem .875rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text); background: var(--color-surface); cursor: pointer; font: inherit; }
+.compactControls { display: none; min-width: 0; align-items: center; gap: .625rem; }
+.currentSection { max-width: min(28vw, 14rem); overflow: hidden; color: var(--color-muted); font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+.menuTrigger, .closeButton { position: relative; display: grid; width: 2.75rem; height: 2.75rem; flex: 0 0 auto; place-items: center; padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text); background: var(--color-surface); cursor: pointer; }
+.menuTrigger span, .menuTrigger span::before, .menuTrigger span::after { display: block; width: 1.05rem; height: 1px; background: currentColor; content: ""; }
+.menuTrigger span::before { transform: translateY(-.34rem); }
+.menuTrigger span::after { transform: translateY(.28rem); }
+.badge { display: grid; min-width: 1.45rem; height: 1.45rem; place-items: center; padding-inline: .35rem; border-radius: var(--radius-pill); color: var(--color-on-accent); background: var(--color-action); font-size: .7rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+
+.dialog { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; color: var(--color-text); background: transparent; overflow: hidden; }
+.dialog::backdrop { background: rgb(10 8 20 / .56); backdrop-filter: blur(6px); }
+.sheet { position: absolute; top: .75rem; right: .75rem; display: grid; width: min(25rem, calc(100vw - 1.5rem)); max-height: calc(var(--modal-viewport-height, 100dvh) - 1.5rem); grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: 0 1.5rem 5rem rgb(10 8 20 / .24); animation: sheet-in 220ms var(--ease-out) both; }
+.sheetHeader { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem; border-bottom: 1px solid var(--color-border); }
+.sheetHeader h2 { margin: .2rem 0 0; font-size: 1.3rem; font-weight: 600; letter-spacing: -.03em; }
+.sheetContext { color: var(--color-muted); font-size: .75rem; }
+.closeButton span, .closeButton span::after { display: block; width: 1rem; height: 1px; background: currentColor; content: ""; transform: rotate(45deg); }
+.closeButton span::after { transform: rotate(90deg); }
+.sheetNavigation { display: grid; gap: .25rem; overflow-y: auto; padding: .75rem; overscroll-behavior: contain; }
+.sheetNavigation a { display: flex; min-height: 3rem; align-items: center; justify-content: space-between; gap: 1rem; padding: .7rem .85rem; border-radius: var(--radius-sm); color: var(--color-muted); text-decoration: none; transition: color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }
+.sheetNavigation .activeLink { color: var(--color-text); background: var(--color-lavender-soft); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-lavender) 28%, transparent); }
+.sheetFooter { padding: .75rem; border-top: 1px solid var(--color-border); }
+.sheetFooter button { width: 100%; }
+
+@media (hover: hover) and (pointer: fine) {
+  .desktopNavigation a:hover, .sheetNavigation a:hover { color: var(--color-text); }
+  .desktopNavigation a:hover::after { opacity: .65; transform: scaleX(1); }
+  .sheetNavigation a:hover { background: var(--color-surface-raised); }
+  .menuTrigger:hover, .closeButton:hover, .desktopControls button:not([data-theme-toggle]):hover, .sheetFooter button:hover { border-color: color-mix(in srgb, var(--color-lavender) 50%, var(--color-border)); background: var(--color-surface-raised); }
+}
+
+.header :is(a, button):focus-visible, .dialog :is(a, button):focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+.menuTrigger:active, .closeButton:active, .sheetNavigation a:active { transform: translateY(1px); }
+
+@media (max-width: 74.999rem) {
+  .header { min-height: 4.5rem; padding-block: .75rem; }
+  .desktopNavigation, .desktopControls { display: none; }
+  .compactControls { display: flex; margin-left: auto; }
+}
+
+@media (max-width: 34rem) {
+  .context { display: none; }
+  .currentSection { max-width: 30vw; }
+}
+
+@media (max-width: 22rem) {
+  .currentSection { display: none; }
+}
+
+@keyframes sheet-in { from { opacity: 0; transform: translateX(.75rem) scale(.985); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet { animation: none; }
+  .header *, .dialog * { transition: none !important; }
+}

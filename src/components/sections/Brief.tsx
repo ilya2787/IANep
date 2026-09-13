@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Container } from "@/components/layout";
 import { Button, ProgressiveImage } from "@/components/ui";
@@ -277,7 +278,7 @@ export function Brief() {
               <div className={styles.successStatus}><span className={styles.successCheck} aria-hidden="true" />{replaced ? 'Изменения сохранены' : 'Отправлено успешно'}</div>
               <h3>{replaced ? 'Заявка обновлена' : 'Заявка отправлена'}</h3>
               <p className={styles.successLead}>Спасибо! {replaced ? 'Новые ответы заменили предыдущую версию заявки.' : 'Информация о вашем проекте уже у нас.'} Изучим её и свяжемся для уточнения деталей.</p>
-              <ProgressiveImage className={styles.successMobileMascot} src="/images/brief/mascot-success-v2.png" alt="Персонаж IANep показывает большой палец вверх и анкету с галочкой" width={520} height={1100} sizes="180px" />
+              <Image className={styles.successMobileMascot} src="/images/brief/mascot-success-v2.png" alt="Персонаж IANep показывает большой палец вверх и анкету с галочкой" width={520} height={1100} sizes="180px" />
               <div className={styles.successReceipt}>
                 <div><span>Номер заявки</span><strong>{requestNumber}</strong></div>
                 <div><span>Ваш проект</span><strong>{briefProjectTypes.find((item) => item.id === draft.projectType)?.label}</strong></div>
@@ -305,6 +306,7 @@ export function Brief() {
 
           <div data-reveal className={styles.mascotScene} data-success={status === 'success'}>
             <ProgressiveImage
+              key={status === 'success' ? 'brief-success-mascot' : 'brief-questionnaire-mascot'}
               className={styles.mascot}
               src={status === 'success' ? "/images/brief/mascot-success-v2.png" : "/images/brief/mascot-questionnaire-v2.png"}
               alt={status === 'success' ? "Персонаж IANep показывает класс: заявка отправлена" : "Персонаж IANep в полный рост держит большую анкету проекта"}
