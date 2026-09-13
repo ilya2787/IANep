@@ -21,6 +21,11 @@ export const metadata: Metadata = {
     template: "%s - IANep",
   },
   description: "Разработка цифровых продуктов",
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+  },
 };
 
 export const viewport: Viewport = {

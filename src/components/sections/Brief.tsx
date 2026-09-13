@@ -184,7 +184,11 @@ export function Brief() {
           const invalidStep = briefStepFields.findIndex((keys) => keys.some((key) => nextErrors[key]));
           if (invalidStep >= 0) setStep(invalidStep);
         }
-        setErrorMessage(response.status === 422 ? 'Проверьте данные заявки. Ответы сохранены.' : 'Не удалось отправить заявку. Ответы сохранены, попробуйте ещё раз.');
+        setErrorMessage(response.status === 422
+          ? 'Проверьте данные заявки. Ответы сохранены.'
+          : response.status === 429
+            ? 'Слишком много заявок. Попробуйте снова немного позже.'
+            : 'Не удалось отправить заявку. Ответы сохранены, попробуйте ещё раз.');
         setStatus('error');
         return;
       }

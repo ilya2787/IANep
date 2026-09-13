@@ -43,6 +43,17 @@ export default function NotFound() {
 
           <div className={styles.character}>
             <div className={styles.orbit} aria-hidden="true" />
+            <div className={styles.question} aria-hidden="true">?</div>
+            <div className={`${styles.panel} ${styles.filePanel}`} aria-hidden="true">
+              <span className={styles.fileIcon}>
+                <span className={styles.fileEyes} />
+                <span className={styles.fileMouth} />
+              </span>
+            </div>
+            <div className={`${styles.panel} ${styles.errorPanel}`} aria-hidden="true">
+              <span>404</span>
+              <small>Not Found</small>
+            </div>
             <Image
               className={styles.characterImage}
               src="/images/not-found/mascot-thinking-v2.webp"

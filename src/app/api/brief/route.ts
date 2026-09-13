@@ -6,25 +6,15 @@ import { briefService } from "@/server/brief/brief.service";
 import { operationalError, requestId } from "@/server/operations/log";
 import { BodyTooLargeError, readJsonBody } from "@/server/security/body";
 import { clientIp } from "@/server/security/client-ip";
-import { consumeRateLimit } from "@/server/security/rate-limit";
+import { briefRateLimiter } from "@/server/brief/brief-rate-limit";
 import { dispatchPendingNotifications } from "@/server/notifications/service";
 
 export const runtime = "nodejs";
 const MAX_BRIEF_BODY_BYTES = 64 * 1024;
-const BRIEF_LIMIT = 20;
-const BRIEF_WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(request: Request) {
   let body: unknown;
   const correlationId = requestId(request.headers);
-  const rateLimit = consumeRateLimit("public-brief", clientIp(request.headers), { limit: BRIEF_LIMIT, windowMs: BRIEF_WINDOW_MS });
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { error: { code: "RATE_LIMITED", message: "Слишком много заявок. Попробуйте позже" } },
-      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds), "X-Request-Id": correlationId, "Cache-Control": "no-store" } },
-    );
-  }
-
   try {
     body = await readJsonBody(request, MAX_BRIEF_BODY_BYTES);
   } catch (error) {
@@ -70,6 +60,13 @@ export async function POST(request: Request) {
   }
 
   try {
+    const rateLimit = await briefRateLimiter.consume(clientIp(request.headers));
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Слишком много заявок. Попробуйте снова немного позже." } },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds), "X-Request-Id": correlationId, "Cache-Control": "no-store" } },
+      );
+    }
     const result = await briefService.submitPublic(validation.data, { receipt, action: action as 'new' | 'replace' | undefined });
     const briefRequest = result.request;
     await dispatchPendingNotifications();

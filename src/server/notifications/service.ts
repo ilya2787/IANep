@@ -6,6 +6,7 @@ import { operationalError } from "@/server/operations/log";
 import { notificationRetryDelayMs } from "@/server/notifications/retry";
 import { notificationEmail } from "@/server/notifications/email-template";
 import { appendAudit } from "@/server/security/audit-journal";
+import { notificationPage } from "@/server/notifications/pagination";
 
 export type NotificationRecipient = { clientId: string } | { adminId: string };
 export type NotificationEvent = {
@@ -92,9 +93,18 @@ export async function dispatchPendingNotifications(limit = 20) {
   return result;
 }
 
-export async function listNotifications(recipient: NotificationRecipient, limit = 50) {
+export async function listNotifications(recipient: NotificationRecipient, requestedPage = 1) {
   const where = "clientId" in recipient ? { recipientClientId: recipient.clientId } : { recipientAdminId: recipient.adminId };
-  return prisma.notification.findMany({ where, orderBy: { createdAt: "desc" }, take: limit, include: { attempts: true } });
+  const total = await prisma.notification.count({ where });
+  const pagination = notificationPage(total, requestedPage);
+  const items = await prisma.notification.findMany({
+    where,
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    skip: pagination.skip,
+    take: pagination.pageSize,
+    include: { attempts: true },
+  });
+  return { items, total, ...pagination };
 }
 
 export async function unreadCount(recipient: NotificationRecipient) {

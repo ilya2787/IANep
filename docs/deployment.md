@@ -44,7 +44,7 @@ npm start
 - Ограничить upload body минимум действующим application limit (20 MiB плюс небольшой protocol overhead) и установить разумные read/send timeouts.
 - Передавать/создавать `X-Request-ID`; приложение валидирует его и создаёт UUID при отсутствии.
 
-In-memory rate limit предназначен только для single-process v1 и сбрасывается при рестарте. Переход на несколько instances требует общего limiter store.
+Brief rate limit хранит только HMAC-SHA256 IP в PostgreSQL и учитывает две прошедшие schema-validation попытки за скользящий час. Он применяется до записи заявки и уведомлений, устойчив к рестартам и согласован между instances. Истёкшие записи удаляются лениво при новых попытках и командой ежедневного maintenance `npm run projects:cleanup`.
 
 ## Notification dispatcher
 

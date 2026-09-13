@@ -108,6 +108,7 @@
 .pageNumber { width:44px; padding:.5rem; font-variant-numeric:tabular-nums; }
 .pageNumberActive { color:var(--color-on-accent)!important; border-color:var(--color-action); background:var(--color-action); }
 .pageButtonDisabled { opacity:.45; pointer-events:none; }
+.mobilePageStatus { display:none; color:var(--color-muted); text-align:center; font-size:.86rem; font-variant-numeric:tabular-nums; }
 .emptyState { display:grid; gap:.45rem; justify-items:start; padding:1.5rem; border:1px dashed var(--color-border); border-radius:var(--radius-md); background:var(--color-background); }
 .emptyState p { color:var(--color-muted); font-size:.9rem; }
 .identityCard { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); overflow:hidden; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-background); }
@@ -141,7 +142,7 @@
 .main summary { cursor:pointer; padding:.75rem 0; font-weight:550; }
 .login { max-width:460px; margin:8dvh auto; }
 @media(max-width:700px) { .grid { grid-template-columns:1fr; } .main { padding-top:2rem; } .nav { gap:.75rem; font-size:.88rem; } .header { padding-inline:1.25rem; } }
-@media(max-width:760px) { .filterGrid, .identityCard, .relationGrid, .lookupResults { grid-template-columns:1fr; } .identityCard > div + div { border-inline-start:0; border-top:1px solid var(--color-border); } .journalItem { grid-template-columns:1fr; gap:.65rem; } .pagination { grid-template-columns:1fr 1fr; } .pageNumbers { grid-column:1 / -1; grid-row:1; } }
+@media(max-width:760px) { .filterGrid, .identityCard, .relationGrid, .lookupResults { grid-template-columns:1fr; } .identityCard > div + div { border-inline-start:0; border-top:1px solid var(--color-border); } .journalItem { grid-template-columns:1fr; gap:.65rem; } .pagination { grid-template-columns:minmax(0,1fr) minmax(0,1fr); } .pageNumbers { grid-column:1 / -1; grid-row:1; } .mobilePageStatus { display:block; grid-column:1 / -1; grid-row:1; } .notificationList + .pagination .pageNumbers { display:none; } }
 @media(prefers-reduced-motion:reduce) { .root *, .main * { scroll-behavior:auto!important; animation:none!important; transition:none!important; } }
 
 .embedded { padding: 0; max-width: none; }

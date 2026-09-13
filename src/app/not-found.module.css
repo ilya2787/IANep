@@ -1,13 +1,12 @@
 .page {
-  --not-found-grid: color-mix(in srgb, var(--color-lavender) 9%, transparent);
   position: relative;
   isolation: isolate;
   min-height: 100svh;
   overflow: hidden;
   color: var(--color-text);
   background:
-    radial-gradient(circle at 75% 54%, color-mix(in srgb, var(--color-lavender-soft) 78%, transparent) 0, transparent 34rem),
-    radial-gradient(circle at 18% 88%, color-mix(in srgb, var(--color-sky) 16%, transparent) 0, transparent 26rem),
+    radial-gradient(circle at 72% 48%, color-mix(in srgb, var(--color-lavender-soft) 82%, transparent) 0, transparent 35rem),
+    radial-gradient(ellipse at 70% 100%, color-mix(in srgb, var(--color-sky) 20%, transparent) 0, transparent 34rem),
     var(--color-background);
 }
 
@@ -15,14 +14,8 @@
   position: absolute;
   z-index: -1;
   inset: 0;
-  background-image:
-    linear-gradient(var(--not-found-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--not-found-grid) 1px, transparent 1px);
-  background-size: 5rem 5rem;
+  background: radial-gradient(circle at 71% 48%, transparent 0 20rem, color-mix(in srgb, var(--color-lavender) 13%, transparent) 20.05rem 20.12rem, transparent 20.18rem);
   content: "";
-  opacity: 0.32;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 2%, #000 48%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 2%, #000 48%, transparent 100%);
 }
 
 .header {
@@ -118,14 +111,16 @@
   position: relative;
   align-self: end;
   justify-self: center;
-  width: min(100%, 39rem);
+  width: min(118%, 47rem);
+  margin-right: -7%;
+  isolation: isolate;
 }
 
 .orbit {
   position: absolute;
   top: 17%;
   left: 50%;
-  width: min(90%, 34rem);
+  width: min(76%, 35rem);
   aspect-ratio: 1;
   border: 1px solid color-mix(in srgb, var(--color-lavender) 24%, transparent);
   border-radius: 50%;
@@ -135,10 +130,110 @@
   transform: translateX(-50%);
 }
 
+.question {
+  position: absolute;
+  z-index: 3;
+  top: 2%;
+  left: 44%;
+  color: #f4f0ff;
+  font-size: clamp(4rem, 7vw, 6.75rem);
+  font-weight: 760;
+  line-height: 1;
+  text-shadow:
+    0 0 0.3rem #fff,
+    0 0 1.5rem #7558ff,
+    0 0 3.5rem color-mix(in srgb, var(--color-lavender) 70%, transparent);
+  transform: rotate(-5deg);
+}
+
+.panel {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--color-lavender) 68%, transparent);
+  border-radius: 1rem;
+  color: color-mix(in srgb, var(--color-text) 72%, var(--color-lavender) 28%);
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 24%, transparent),
+    0 1.4rem 3rem color-mix(in srgb, #16094c 32%, transparent),
+    0 0 1.4rem color-mix(in srgb, var(--color-lavender) 18%, transparent);
+  backdrop-filter: blur(0.75rem);
+}
+
+.filePanel {
+  top: 27%;
+  left: -3%;
+  width: 24%;
+  transform: rotate(-10deg);
+}
+
+.errorPanel {
+  top: 34%;
+  right: -2%;
+  width: 23%;
+  align-content: center;
+  gap: 0.15em;
+  font-size: clamp(1.7rem, 3.2vw, 2.8rem);
+  font-weight: 580;
+  line-height: 1;
+  transform: rotate(7deg);
+}
+
+.errorPanel small {
+  font-size: 0.46em;
+  font-weight: 560;
+  letter-spacing: 0.01em;
+}
+
+.fileIcon {
+  position: relative;
+  width: 45%;
+  aspect-ratio: 0.82;
+  border: 0.25rem solid currentColor;
+}
+
+.fileIcon::after {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  width: 36%;
+  aspect-ratio: 1;
+  border-bottom: 0.25rem solid currentColor;
+  border-left: 0.25rem solid currentColor;
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+  content: "";
+}
+
+.fileEyes,
+.fileEyes::after {
+  position: absolute;
+  top: 46%;
+  left: 22%;
+  width: 0.32rem;
+  aspect-ratio: 1;
+  background: currentColor;
+  content: "";
+}
+
+.fileEyes::after { top: 0; left: 2rem; }
+
+.fileMouth {
+  position: absolute;
+  bottom: 20%;
+  left: 32%;
+  width: 38%;
+  height: 0.25rem;
+  background: currentColor;
+}
+
 .characterImage {
   position: relative;
   z-index: 1;
-  width: 100%;
+  width: 76%;
+  margin-inline: auto;
   height: auto;
   filter: drop-shadow(0 2rem 2.5rem color-mix(in srgb, #180a59 28%, transparent));
   transform-origin: 50% 100%;
@@ -161,7 +256,8 @@
   }
 
   .character {
-    width: min(110%, 34rem);
+    width: min(116%, 39rem);
+    margin-right: -5%;
   }
 }
 
@@ -213,9 +309,14 @@
 
   .character {
     align-self: end;
-    width: min(76vw, 25rem);
+    width: min(104vw, 32rem);
     margin-top: -0.5rem;
+    margin-right: 0;
   }
+
+  .filePanel { left: 0; }
+  .errorPanel { right: 0; }
+  .question { top: 0; }
 }
 
 @media (max-width: 22.5rem) {
@@ -240,8 +341,10 @@
   }
 
   .character {
-    width: min(74vw, 18rem);
+    width: min(108vw, 24rem);
   }
+
+  .panel { opacity: 0.78; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -136,12 +136,14 @@
 :global(:root[data-theme="dark"]) .card[id="service-multipage-site"] .visualImage {
   filter: saturate(.72) brightness(.84) contrast(.84);
 }
-.darkImage { opacity: 0; }
-:global(:root[data-theme="dark"]) .lightImage { opacity: 0; }
-:global(:root[data-theme="dark"]) .darkImage { opacity: 1; }
+.darkImage { --progressive-image-opacity: 0; }
+:global(:root[data-theme="light"]) .lightImage { --progressive-image-opacity: 1; }
+:global(:root[data-theme="light"]) .darkImage { --progressive-image-opacity: 0; }
+:global(:root[data-theme="dark"]) .lightImage { --progressive-image-opacity: 0; }
+:global(:root[data-theme="dark"]) .darkImage { --progressive-image-opacity: 1; }
 @media (prefers-color-scheme: dark) {
-  :global(:root:not([data-theme="light"])) .lightImage { opacity: 0; }
-  :global(:root:not([data-theme="light"])) .darkImage { opacity: 1; }
+  :global(:root:not([data-theme="light"])) .lightImage { --progressive-image-opacity: 0; }
+  :global(:root:not([data-theme="light"])) .darkImage { --progressive-image-opacity: 1; }
   :global(:root:not([data-theme="light"])) .card[id="service-multipage-site"] .visualImage {
     filter: saturate(.72) brightness(.84) contrast(.84);
   }

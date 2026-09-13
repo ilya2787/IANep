@@ -21,16 +21,16 @@ test("клиентский проект: публикации, изоляция 
     const version = await publish(project.id, admin, { stageId: stage.id, comment: "Первый результат", materials: [material] });
     assert.equal(version.number, 1);
     const notifications = await listNotifications({ clientId: user.id });
-    assert.equal(notifications[0].eventType, "RESULT_PUBLISHED");
-    assert.equal(notifications[0].readAt, null);
-    assert.equal((await markNotificationRead({ clientId: outsider.id }, notifications[0].id)).count, 0);
-    assert.equal((await markNotificationRead({ clientId: user.id }, notifications[0].id)).count, 1);
-    assert.equal(notifications[0].attempts.some(attempt => attempt.channel === "EMAIL"), false);
+    assert.equal(notifications.items[0].eventType, "RESULT_PUBLISHED");
+    assert.equal(notifications.items[0].readAt, null);
+    assert.equal((await markNotificationRead({ clientId: outsider.id }, notifications.items[0].id)).count, 0);
+    assert.equal((await markNotificationRead({ clientId: user.id }, notifications.items[0].id)).count, 1);
+    assert.equal(notifications.items[0].attempts.some(attempt => attempt.channel === "EMAIL"), false);
     await prisma.clientUser.update({ where: { id: user.id }, data: { email: "client@example.com", emailNotificationsEnabled: true } });
     await prisma.$transaction(tx => enqueueNotification(tx, { recipient: { clientId: user.id }, projectId: project.id, eventType: "EMAIL_TEST", title: "Проверка email", message: "Тест", email: true }));
     await dispatchPendingNotifications();
     const dispatched = await listNotifications({ clientId: user.id });
-    assert.equal(dispatched[0].attempts.find(attempt => attempt.channel === "EMAIL")?.status, "PENDING");
+    assert.equal(dispatched.items[0].attempts.find(attempt => attempt.channel === "EMAIL")?.status, "PENDING");
     assert.equal(await readProject(project.id, outsider), null);
     await assert.rejects(decide(project.id, outsider, { versionId: version.id, kind: "ACCEPTED", changes: "" }));
     await assert.rejects(publish(project.id, admin, { stageId: stage.id, comment: "Замена", materials: [material] }));
@@ -67,6 +67,30 @@ test("клиентский проект: публикации, изоляция 
       await tx.clientProject.delete({ where: { id: project.id } });
       await tx.clientUser.delete({ where: { id: user.id } });
     });
+    await prisma.$disconnect();
+  }
+});
+
+test("уведомления запрашиваются серверными страницами по 10 записей", async () => {
+  const user = await prisma.clientUser.create({ data: { name: "Проверка пагинации", username: `notifications-${randomUUID()}`, passwordHash: "unused" } });
+  try {
+    const baseTime = new Date("2026-09-13T12:00:00.000Z").getTime();
+    await prisma.notification.createMany({ data: Array.from({ length: 21 }, (_, index) => ({
+      recipientClientId: user.id,
+      eventType: "PAGINATION_TEST",
+      title: `Уведомление ${index + 1}`,
+      message: "Проверка",
+      createdAt: new Date(baseTime + index * 1000),
+    })) });
+    const first = await listNotifications({ clientId: user.id }, 1);
+    const last = await listNotifications({ clientId: user.id }, 999);
+    assert.deepEqual({ total: first.total, page: first.page, pages: first.pages, count: first.items.length }, { total: 21, page: 1, pages: 3, count: 10 });
+    assert.equal(first.items[0].title, "Уведомление 21");
+    assert.deepEqual({ page: last.page, pages: last.pages, count: last.items.length }, { page: 3, pages: 3, count: 1 });
+    assert.equal(last.items[0].title, "Уведомление 1");
+  } finally {
+    await prisma.notification.deleteMany({ where: { recipientClientId: user.id } });
+    await prisma.clientUser.delete({ where: { id: user.id } });
     await prisma.$disconnect();
   }
 });

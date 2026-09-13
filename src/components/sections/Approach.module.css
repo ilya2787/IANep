@@ -97,13 +97,15 @@
   background: linear-gradient(90deg, color-mix(in srgb, var(--color-surface) 70%, transparent), transparent 55%);
 }
 .visualImage { object-fit: cover; object-position: center 45%; }
-.lightImage { opacity: .82; }
-.darkImage { opacity: 0; }
-:global(:root[data-theme="dark"]) .lightImage { opacity: 0; }
-:global(:root[data-theme="dark"]) .darkImage { opacity: .78; }
+.lightImage { --progressive-image-opacity: .82; }
+.darkImage { --progressive-image-opacity: 0; }
+:global(:root[data-theme="light"]) .lightImage { --progressive-image-opacity: .82; }
+:global(:root[data-theme="light"]) .darkImage { --progressive-image-opacity: 0; }
+:global(:root[data-theme="dark"]) .lightImage { --progressive-image-opacity: 0; }
+:global(:root[data-theme="dark"]) .darkImage { --progressive-image-opacity: .78; }
 @media (prefers-color-scheme: dark) {
-  :global(:root:not([data-theme="light"])) .lightImage { opacity: 0; }
-  :global(:root:not([data-theme="light"])) .darkImage { opacity: .78; }
+  :global(:root:not([data-theme="light"])) .lightImage { --progressive-image-opacity: 0; }
+  :global(:root:not([data-theme="light"])) .darkImage { --progressive-image-opacity: .78; }
 }
 @media (max-width: 64rem) {
   .layout { grid-template-columns: 1fr; gap: var(--space-7); }

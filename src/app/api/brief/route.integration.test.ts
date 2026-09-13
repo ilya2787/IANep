@@ -6,6 +6,7 @@ import { briefService } from "@/server/brief/brief.service";
 import { POST } from "@/app/api/brief/route";
 import { prisma } from "@/server/db/prisma";
 import { resetRateLimitsForTests } from "@/server/security/rate-limit";
+import { briefRateLimitKey, briefRateLimiter } from "@/server/brief/brief-rate-limit";
 import { LEGAL_VERSIONS } from "@/config/legal";
 
 test("POST /api/brief отклоняет некорректный JSON", async () => {
@@ -165,6 +166,7 @@ test("POST /api/brief отклоняет поля, назначаемые сер
 });
 
 test("POST /api/brief скрывает внутренние ошибки", async (context) => {
+  context.mock.method(briefRateLimiter, "consume", async () => ({ allowed: true as const, retryAfterSeconds: 0 }));
   context.mock.method(briefService, "submitPublic", async () => {
     throw new Error("INTERNAL_DATABASE_DETAILS");
   });
@@ -195,19 +197,45 @@ test("POST /api/brief ограничивает размер тела до раз
   assert.equal((await response.json()).error.code, "BODY_TOO_LARGE");
 });
 
-test("POST /api/brief применяет server-side rate limit", async () => {
-  resetRateLimitsForTests();
-  let response!: Response;
-  for (let index = 0; index < 21; index += 1) {
-    response = await POST(new Request("http://localhost/api/brief", { method: "POST", body: "{}" }));
+test("POST /api/brief считает только валидные попытки и блокирует третью до бизнес-логики", async (context) => {
+  const ip = "203.0.113.77";
+  const keyHash = briefRateLimitKey(ip);
+  const previousTrust = process.env.TRUST_PROXY_HEADERS;
+  const previousHeader = process.env.CLIENT_IP_HEADER;
+  process.env.TRUST_PROXY_HEADERS = "true";
+  process.env.CLIENT_IP_HEADER = "x-real-ip";
+  const returnedIds: string[] = [];
+  const submit = context.mock.method(briefService, "submitPublic", async () => {
+    const id = crypto.randomUUID();
+    returnedIds.push(id);
+    return { request: { id, number: 1, status: "NEW" as const, createdAt: new Date() }, receipt: "a".repeat(64), replaced: false };
+  });
+  const request = (body: unknown) => POST(new Request("http://localhost/api/brief", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-real-ip": ip },
+    body: JSON.stringify(body),
+  }));
+
+  try {
+    await prisma.briefRateLimitAttempt.deleteMany({ where: { keyHash } });
+    assert.equal((await request({})).status, 422);
+    assert.equal((await request(validBriefPayload())).status, 201);
+    assert.equal((await request(validBriefPayload())).status, 201);
+    const blocked = await request(validBriefPayload());
+    assert.equal(blocked.status, 429);
+    assert.deepEqual(await blocked.json(), { error: { code: "RATE_LIMITED", message: "Слишком много заявок. Попробуйте снова немного позже." } });
+    assert.ok(Number(blocked.headers.get("retry-after")) >= 3_599);
+    assert.equal(submit.mock.calls.length, 2);
+    assert.equal(await prisma.briefRequest.count({ where: { id: { in: returnedIds } } }), 0);
+  } finally {
+    await prisma.briefRateLimitAttempt.deleteMany({ where: { keyHash } });
+    if (previousTrust === undefined) delete process.env.TRUST_PROXY_HEADERS; else process.env.TRUST_PROXY_HEADERS = previousTrust;
+    if (previousHeader === undefined) delete process.env.CLIENT_IP_HEADER; else process.env.CLIENT_IP_HEADER = previousHeader;
   }
-  assert.equal(response.status, 429);
-  assert.equal((await response.json()).error.code, "RATE_LIMITED");
-  assert.ok(Number(response.headers.get("retry-after")) >= 1);
-  resetRateLimitsForTests();
 });
 
-test('повторный бриф требует выбора, замена сохраняет номер, новая заявка получает другой', async () => {
+test('повторный бриф требует выбора, замена сохраняет номер, новая заявка получает другой', async (context) => {
+  context.mock.method(briefRateLimiter, "consume", async () => ({ allowed: true as const, retryAfterSeconds: 0 }));
   const ids: string[] = [];
   const send = (payload: ReturnType<typeof validBriefPayload>, receipt?: string, action?: string) => POST(new Request('http://localhost/api/brief', {
     method: 'POST', headers: { 'Content-Type': 'application/json', ...(receipt ? { 'x-brief-receipt': receipt } : {}), ...(action ? { 'x-brief-action': action } : {}) },

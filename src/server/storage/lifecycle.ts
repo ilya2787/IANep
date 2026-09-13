@@ -8,6 +8,10 @@ import { WorkspaceError } from "@/server/client/service";
 import { appendAudit } from "@/server/security/audit-journal";
 
 export type CleanupCandidate = { id: string; title: string; archivedAt: Date; deleteAfter: Date | null; files: number; bytes: number };
+export type ArchivedBriefCandidate = { id: string; number: number; name: string; archivedAt: Date | null; deleteAfter: Date | null };
+export type CandidatePage<T> = { items: T[]; page: number; pages: number; total: number };
+
+export const CLEANUP_CANDIDATES_PAGE_SIZE = 10;
 
 function storageRoot() {
   return path.dirname(storagePath(randomUUID()));
@@ -17,14 +21,31 @@ export async function cleanupCandidates(now = new Date()): Promise<CleanupCandid
   const settings = await getSystemSettings();
   const retentionCutoff = new Date(now.getTime() - settings.archivedProjectRetentionDays * 86_400_000);
   const projects = await prisma.clientProject.findMany({
-    where: { archivedAt: { not: null }, OR: [{ deleteAfter: { lte: now } }, { deleteAfter: null, archivedAt: { lte: retentionCutoff } }] },
-    select: { id: true, title: true, archivedAt: true, deleteAfter: true, files: { where: { physicalDeletedAt: null }, select: { size: true } } },
+    where: { archivedAt: { not: null }, files: { some: { physicalDeletedAt: null } }, OR: [{ deleteAfter: { lte: now } }, { deleteAfter: null, archivedAt: { lte: retentionCutoff } }] },
+    select: { id: true, title: true, archivedAt: true, deleteAfter: true, files: { where: { physicalDeletedAt: null }, select: { id: true, size: true } } },
     orderBy: { archivedAt: "asc" },
   });
-  return projects.map(project => ({ id: project.id, title: project.title, archivedAt: project.archivedAt!, deleteAfter: project.deleteAfter, files: project.files.length, bytes: project.files.reduce((sum, file) => sum + file.size, 0) }));
+  const entries = new Set(await readdir(storageRoot()).catch(() => [] as string[]));
+  const candidates = await Promise.all(projects.map(async project => {
+    const existingFiles = (await Promise.all(project.files.map(async file => {
+      if (!entries.has(file.id)) return null;
+      const info = await stat(storagePath(file.id)).catch(() => null);
+      return info?.isFile() ? file : null;
+    }))).filter((file): file is { id: string; size: number } => file !== null);
+    if (!existingFiles.length) return null;
+    return { id: project.id, title: project.title, archivedAt: project.archivedAt!, deleteAfter: project.deleteAfter, files: existingFiles.length, bytes: existingFiles.reduce((sum, file) => sum + file.size, 0) };
+  }));
+  return candidates.filter((candidate): candidate is CleanupCandidate => candidate !== null);
 }
 
-export async function storageSummary() {
+function candidatePage<T>(items: T[], requestedPage: number, pageSize = CLEANUP_CANDIDATES_PAGE_SIZE): CandidatePage<T> {
+  const total = items.length;
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(1, Number.isInteger(requestedPage) ? requestedPage : 1), pages);
+  return { items: items.slice((page - 1) * pageSize, page * pageSize), page, pages, total };
+}
+
+export async function storageSummary(projectPage = 1, briefPage = 1) {
   const [settings, aggregate, activeProjects, archivedProjects, materialCount, candidates, entries, briefCandidates] = await Promise.all([
     getSystemSettings(),
     prisma.storedFile.aggregate({ where: { physicalDeletedAt: null }, _sum: { size: true }, _count: true }),
@@ -33,7 +54,7 @@ export async function storageSummary() {
     prisma.versionMaterial.count(),
     cleanupCandidates(),
     readdir(storageRoot()).catch(() => [] as string[]),
-    archivedBriefCandidates(),
+    archivedBriefCandidatePage(briefPage),
   ]);
   const known = new Set((await prisma.storedFile.findMany({ where: { physicalDeletedAt: null }, select: { id: true } })).map(file => file.id));
   let orphanFiles = 0;
@@ -46,13 +67,24 @@ export async function storageSummary() {
       if (info?.isFile()) { orphanFiles++; orphanBytes += info.size; }
     }
   }
-  return { settings, totalFiles: aggregate._count, totalBytes: aggregate._sum.size ?? 0, activeProjects, archivedProjects, materialCount, candidates, briefCandidates, candidateFiles: candidates.reduce((sum, item) => sum + item.files, 0), candidateBytes: candidates.reduce((sum, item) => sum + item.bytes, 0), orphanFiles, orphanBytes };
+  return { settings, totalFiles: aggregate._count, totalBytes: aggregate._sum.size ?? 0, activeProjects, archivedProjects, materialCount, candidates: candidatePage(candidates, projectPage), briefCandidates, candidateFiles: candidates.reduce((sum, item) => sum + item.files, 0), candidateBytes: candidates.reduce((sum, item) => sum + item.bytes, 0), orphanFiles, orphanBytes };
 }
 
 export async function archivedBriefCandidates(now = new Date()) {
   const settings = await getSystemSettings();
   const cutoff = new Date(now.getTime() - settings.archivedBriefRetentionDays * 86_400_000);
   return prisma.briefRequest.findMany({ where: { status: "ARCHIVED", project: null, OR: [{ deleteAfter: { lte: now } }, { deleteAfter: null, archivedAt: { lte: cutoff } }] }, select: { id: true, number: true, name: true, archivedAt: true, deleteAfter: true }, orderBy: { archivedAt: "asc" } });
+}
+
+export async function archivedBriefCandidatePage(requestedPage: number, now = new Date()): Promise<CandidatePage<ArchivedBriefCandidate>> {
+  const settings = await getSystemSettings();
+  const cutoff = new Date(now.getTime() - settings.archivedBriefRetentionDays * 86_400_000);
+  const where = { status: "ARCHIVED" as const, project: null, OR: [{ deleteAfter: { lte: now } }, { deleteAfter: null, archivedAt: { lte: cutoff } }] };
+  const total = await prisma.briefRequest.count({ where });
+  const pages = Math.max(1, Math.ceil(total / CLEANUP_CANDIDATES_PAGE_SIZE));
+  const page = Math.min(Math.max(1, Number.isInteger(requestedPage) ? requestedPage : 1), pages);
+  const items = await prisma.briefRequest.findMany({ where, select: { id: true, number: true, name: true, archivedAt: true, deleteAfter: true }, orderBy: { archivedAt: "asc" }, skip: (page - 1) * CLEANUP_CANDIDATES_PAGE_SIZE, take: CLEANUP_CANDIDATES_PAGE_SIZE });
+  return { items, page, pages, total };
 }
 
 async function retireFile(file: { id: string; projectId: string }) {

@@ -2,6 +2,21 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { notificationEmail, notificationLink } from "@/server/notifications/email-template";
 import { notificationRetryDelayMs } from "@/server/notifications/retry";
+import { NOTIFICATIONS_PAGE_SIZE, notificationPage } from "@/server/notifications/pagination";
+
+test("notification pagination keeps ten items per page at list boundaries", () => {
+  assert.equal(NOTIFICATIONS_PAGE_SIZE, 10);
+  assert.deepEqual(notificationPage(0, 1), { page: 1, pages: 1, pageSize: 10, skip: 0 });
+  assert.deepEqual(notificationPage(10, 1), { page: 1, pages: 1, pageSize: 10, skip: 0 });
+  assert.deepEqual(notificationPage(11, 2), { page: 2, pages: 2, pageSize: 10, skip: 10 });
+  assert.deepEqual(notificationPage(20, 2), { page: 2, pages: 2, pageSize: 10, skip: 10 });
+  assert.deepEqual(notificationPage(21, 3), { page: 3, pages: 3, pageSize: 10, skip: 20 });
+});
+
+test("notification pagination normalizes invalid and excessive pages", () => {
+  for (const page of [0, -2, Number.NaN, Number.POSITIVE_INFINITY, 1.5]) assert.equal(notificationPage(21, page).page, 1);
+  assert.deepEqual(notificationPage(21, 999), { page: 3, pages: 3, pageSize: 10, skip: 20 });
+});
 
 test("notification retry uses bounded exponential backoff", () => {
   assert.equal(notificationRetryDelayMs(1), 120_000);

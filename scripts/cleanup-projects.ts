@@ -1,12 +1,14 @@
 import { prisma } from "../src/server/db/prisma";
 import { cleanupCandidates } from "../src/server/storage/lifecycle";
 import { cleanupExpiredPrivacyReceipts } from "../src/server/privacy/requests";
+import { briefRateLimiter } from "../src/server/brief/brief-rate-limit";
 
 async function main() {
   try {
-    const privacy = await cleanupExpiredPrivacyReceipts();
+    const [privacy, rateLimit] = await Promise.all([cleanupExpiredPrivacyReceipts(), briefRateLimiter.cleanupExpired()]);
     const candidates = await cleanupCandidates();
     console.log(`Истёкших privacy-квитанций очищено: ${privacy.receipts}.`);
+    console.log(`Истёкших записей ограничения Brief очищено: ${rateLimit.count}.`);
     console.log(`Кандидатов на контролируемую очистку: ${candidates.length}. Автоматическое удаление не выполнялось.`);
   } finally {
     await prisma.$disconnect();

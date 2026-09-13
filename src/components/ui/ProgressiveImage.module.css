@@ -33,7 +33,7 @@
 }
 
 :global(.js) .imageLoaded {
-  opacity: 1;
+  opacity: var(--progressive-image-opacity, 1);
   transition: opacity 280ms var(--ease-out);
 }
 
