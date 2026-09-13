@@ -34,6 +34,44 @@
   mask-image: linear-gradient(to bottom, transparent 8%, #000 55%, transparent 100%);
 }
 
+.loadingVeil {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 43%, color-mix(in srgb, var(--color-lavender-soft) 74%, transparent) 0, transparent 58%),
+    var(--color-background);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loadingVeil::after {
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(105deg, transparent 40%, color-mix(in srgb, var(--color-lavender-soft) 22%, transparent) 50%, transparent 60%);
+  content: "";
+  transform: translateX(-38%);
+  animation: heroLoadingShimmer 1.8s ease-in-out infinite;
+}
+
+:global(.js) .hero[data-hero-ready="false"] .loadingVeil {
+  animation: heroVeilEnter 1ms linear 120ms forwards;
+}
+
+:global(.js) .hero[data-hero-ready="true"] .loadingVeil {
+  opacity: 0;
+  transition: opacity 220ms var(--ease-out);
+}
+
+@keyframes heroVeilEnter {
+  to { opacity: 1; }
+}
+
+@keyframes heroLoadingShimmer {
+  to { transform: translateX(38%); }
+}
+
 .stage {
   position: relative;
   min-height: min(56rem, 100dvh);
@@ -343,6 +381,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mascot, .eyes { will-change: auto; }
-  .primaryAction::before, .eye { animation: none; }
+  .primaryAction::before, .eye, .loadingVeil::after { animation: none; }
   .actionArrow { transition: none; }
 }

@@ -1,36 +1,40 @@
 "use client";
 
 import Image, { type ImageProps } from "next/image";
-import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
 import styles from "./ProgressiveImage.module.css";
 
 type ProgressiveImageProps = ImageProps & {
   readyOverlay?: ReactNode;
+  showPlaceholder?: boolean;
+  onReady?: (state: Exclude<ImageState, "loading">) => void;
 };
 type ImageState = "loading" | "loaded" | "error";
 
-export function ProgressiveImage({ alt, className = "", onLoad, onError, readyOverlay, ...props }: ProgressiveImageProps) {
+export function ProgressiveImage({ alt, className = "", onLoad, onError, readyOverlay, showPlaceholder = true, onReady, ...props }: ProgressiveImageProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const [state, setState] = useState<ImageState>("loading");
 
-  const reveal = async (image: HTMLImageElement) => {
+  const reveal = useCallback(async (image: HTMLImageElement) => {
     try {
       await image.decode();
     } catch {
       // A successful load may still reject decode in some browsers.
     }
     setState("loaded");
-  };
+    onReady?.("loaded");
+  }, [onReady]);
 
   useEffect(() => {
     const image = imageRef.current;
     if (!image?.complete) return;
     if (image.naturalWidth === 0) {
       setState("error");
+      onReady?.("error");
       return;
     }
     void reveal(image);
-  }, []);
+  }, [onReady, reveal]);
 
   const handleLoad = (event: SyntheticEvent<HTMLImageElement>) => {
     onLoad?.(event);
@@ -39,15 +43,18 @@ export function ProgressiveImage({ alt, className = "", onLoad, onError, readyOv
 
   const handleError = (event: SyntheticEvent<HTMLImageElement>) => {
     setState("error");
+    onReady?.("error");
     onError?.(event);
   };
 
   return (
     <>
-      <span
-        className={`${styles.placeholder} ${state === "loaded" ? styles.placeholderLoaded : ""}`}
-        aria-hidden="true"
-      />
+      {showPlaceholder ? (
+        <span
+          className={`${styles.placeholder} ${state === "loaded" ? styles.placeholderLoaded : ""}`}
+          aria-hidden="true"
+        />
+      ) : null}
       <Image
         {...props}
         alt={alt}
