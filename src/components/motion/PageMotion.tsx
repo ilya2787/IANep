@@ -97,8 +97,7 @@ export function PageMotion({ children }: { children: ReactNode }) {
           if (!animation) continue;
           if (entry.isIntersecting) {
             animation.play();
-          } else if (!entry.target.contains(document.activeElement)) {
-            animation.pause(0);
+            revealObserver.unobserve(entry.target);
           }
         }
       }, { threshold: 0, rootMargin: "0px 0px -5% 0px" });

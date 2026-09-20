@@ -17,7 +17,7 @@
 .sceneNav { display: flex; flex-wrap: wrap; gap: .5rem 1.8rem; padding-block: 2rem; margin-top: 1rem; }
 .sceneNav a { display: inline-flex; align-items: center; min-height: 2.75rem; text-decoration: none; color: var(--color-muted); font-size: .85rem; border-bottom: 1px solid var(--color-border); }
 .shot { min-width: 0; margin: 0; }
-.shot a { display: block; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; background: #0c1020; }
+.shot a { position: relative; display: block; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; background: #0c1020; }
 .shot img { display: block; width: 100%; height: auto; }
 .shot figcaption { display: flex; justify-content: space-between; gap: 1rem; margin-top: .85rem; color: var(--color-muted); font-size: .78rem; line-height: 1.5; }
 .shot figcaption span { color: var(--color-lavender); }
