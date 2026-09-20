@@ -37,7 +37,9 @@ export function ProgressiveImage({ alt, className = "", onLoad, onError, readyOv
 function ProgressiveImageLifecycle({ alt, className = "", onLoad, onError, readyOverlay, showPlaceholder = true, onReady, ...props }: ProgressiveImageProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const [state, setState] = useState<ImageState>("loading");
+  const [useOriginalSource, setUseOriginalSource] = useState(false);
   const settledRef = useRef(false);
+  const canRetryOriginal = typeof props.src === "string" && props.src.startsWith("/") && !props.unoptimized;
 
   const settle = useCallback((nextState: Exclude<ImageState, "loading">) => {
     if (settledRef.current) return;
@@ -59,6 +61,10 @@ function ProgressiveImageLifecycle({ alt, className = "", onLoad, onError, ready
   };
 
   const handleError = (event: SyntheticEvent<HTMLImageElement>) => {
+    if (canRetryOriginal && !useOriginalSource) {
+      setUseOriginalSource(true);
+      return;
+    }
     settle("error");
     onError?.(event);
   };
@@ -73,6 +79,7 @@ function ProgressiveImageLifecycle({ alt, className = "", onLoad, onError, ready
       ) : null}
       <Image
         {...props}
+        unoptimized={props.unoptimized || useOriginalSource}
         alt={alt}
         ref={imageRef}
         className={`${styles.image} ${styles[`image${state[0].toUpperCase()}${state.slice(1)}`]} ${className}`}

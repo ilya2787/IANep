@@ -31,3 +31,10 @@ test("successful load is not blocked on decode and error reveals a usable fallba
   assert.doesNotMatch(component, /\.decode\(/);
   assert.match(styles, /\.imageError\s*\{\s*opacity:\s*1;/);
 });
+
+test("a failed optimized local image retries its original public URL once", () => {
+  assert.match(component, /const \[useOriginalSource, setUseOriginalSource\] = useState\(false\)/);
+  assert.match(component, /typeof props\.src === "string" && props\.src\.startsWith\("\/"\) && !props\.unoptimized/);
+  assert.match(component, /if \(canRetryOriginal && !useOriginalSource\) \{\s*setUseOriginalSource\(true\);\s*return;/);
+  assert.match(component, /unoptimized=\{props\.unoptimized \|\| useOriginalSource\}/);
+});
