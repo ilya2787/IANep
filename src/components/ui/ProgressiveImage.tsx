@@ -1,7 +1,8 @@
 "use client";
 
 import Image, { type ImageProps } from "next/image";
-import { useCallback, useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
+import { getCompleteImageState } from "./progressive-image-state";
 import styles from "./ProgressiveImage.module.css";
 
 type ProgressiveImageProps = ImageProps & {
@@ -12,38 +13,53 @@ type ProgressiveImageProps = ImageProps & {
 type ImageState = "loading" | "loaded" | "error";
 
 export function ProgressiveImage({ alt, className = "", onLoad, onError, readyOverlay, showPlaceholder = true, onReady, ...props }: ProgressiveImageProps) {
+  const source = typeof props.src === "string"
+    ? props.src
+    : "src" in props.src
+      ? props.src.src
+      : props.src.default.src;
+
+  return (
+    <ProgressiveImageLifecycle
+      key={source}
+      {...props}
+      alt={alt}
+      className={className}
+      onLoad={onLoad}
+      onError={onError}
+      readyOverlay={readyOverlay}
+      showPlaceholder={showPlaceholder}
+      onReady={onReady}
+    />
+  );
+}
+
+function ProgressiveImageLifecycle({ alt, className = "", onLoad, onError, readyOverlay, showPlaceholder = true, onReady, ...props }: ProgressiveImageProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const [state, setState] = useState<ImageState>("loading");
+  const settledRef = useRef(false);
 
-  const reveal = useCallback(async (image: HTMLImageElement) => {
-    try {
-      await image.decode();
-    } catch {
-      // A successful load may still reject decode in some browsers.
-    }
-    setState("loaded");
-    onReady?.("loaded");
+  const settle = useCallback((nextState: Exclude<ImageState, "loading">) => {
+    if (settledRef.current) return;
+    settledRef.current = true;
+    setState(nextState);
+    onReady?.(nextState);
   }, [onReady]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const image = imageRef.current;
-    if (!image?.complete) return;
-    if (image.naturalWidth === 0) {
-      setState("error");
-      onReady?.("error");
-      return;
-    }
-    void reveal(image);
-  }, [onReady, reveal]);
+    if (!image) return;
+    const completeState = getCompleteImageState(image);
+    if (completeState) settle(completeState);
+  }, [settle]);
 
   const handleLoad = (event: SyntheticEvent<HTMLImageElement>) => {
     onLoad?.(event);
-    void reveal(event.currentTarget);
+    settle("loaded");
   };
 
   const handleError = (event: SyntheticEvent<HTMLImageElement>) => {
-    setState("error");
-    onReady?.("error");
+    settle("error");
     onError?.(event);
   };
 
@@ -51,7 +67,7 @@ export function ProgressiveImage({ alt, className = "", onLoad, onError, readyOv
     <>
       {showPlaceholder ? (
         <span
-          className={`${styles.placeholder} ${state === "loaded" ? styles.placeholderLoaded : ""}`}
+          className={`${styles.placeholder} ${state !== "loading" ? styles.placeholderSettled : ""}`}
           aria-hidden="true"
         />
       ) : null}

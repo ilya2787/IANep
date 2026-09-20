@@ -37,12 +37,12 @@
   transition: opacity 280ms var(--ease-out);
 }
 
-:global(.js) .placeholderLoaded {
+:global(.js) .placeholderSettled {
   opacity: 0;
 }
 
 :global(.js) .imageError {
-  opacity: 0;
+  opacity: 1;
 }
 
 .readyOverlay {
