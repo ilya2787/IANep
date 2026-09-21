@@ -5,6 +5,7 @@ import { getCompleteImageState } from "./progressive-image-state";
 
 const component = readFileSync(new URL("./ProgressiveImage.tsx", import.meta.url), "utf8");
 const styles = readFileSync(new URL("./ProgressiveImage.module.css", import.meta.url), "utf8");
+const projectCase = readFileSync(new URL("../sections/ProjectCase.tsx", import.meta.url), "utf8");
 
 test("cached complete images settle from their real DOM state on mount", () => {
   assert.match(component, /useLayoutEffect\(\(\) => \{/);
@@ -37,4 +38,13 @@ test("a failed optimized local image retries its original public URL once", () =
   assert.match(component, /typeof props\.src === "string" && props\.src\.startsWith\("\/"\) && !props\.unoptimized/);
   assert.match(component, /if \(canRetryOriginal && !useOriginalSource\) \{\s*setUseOriginalSource\(true\);\s*return;/);
   assert.match(component, /unoptimized=\{props\.unoptimized \|\| useOriginalSource\}/);
+});
+
+test("project mockup layers bypass DPR-specific optimizer stalls in WebKit", () => {
+  const layers = projectCase.match(/<ProgressiveImage[\s\S]*?\/>/g) ?? [];
+  assert.equal(layers.length, 4);
+  for (const layer of layers) {
+    assert.match(layer, /loading="eager"/);
+    assert.match(layer, /unoptimized/);
+  }
 });

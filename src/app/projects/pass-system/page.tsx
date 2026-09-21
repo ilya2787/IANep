@@ -16,7 +16,7 @@ function Screenshot({ name, caption, priority = false, className = "" }: { name:
   const shot = shots[name];
   return <figure className={`${styles.shot} ${className}`}>
     <a href={shot.src} target="_blank" rel="noreferrer" aria-label={`${caption}. Открыть скриншот в полном размере`}>
-      <ProgressiveImage src={shot.src} width={shot.width} height={shot.height} alt={shot.alt} priority={priority} fetchPriority={priority ? "high" : "auto"} sizes={name === "phone" ? "(max-width: 768px) 70vw, 240px" : "(max-width: 768px) 92vw, (max-width: 1024px) 90vw, 1200px"} />
+      <ProgressiveImage src={shot.src} width={shot.width} height={shot.height} alt={shot.alt} priority={priority} fetchPriority={priority ? "high" : "auto"} unoptimized sizes={name === "phone" ? "(max-width: 768px) 70vw, 240px" : "(max-width: 768px) 92vw, (max-width: 1024px) 90vw, 1200px"} />
     </a>
     <figcaption>{caption}<span aria-hidden="true">↗</span></figcaption>
   </figure>;

@@ -51,6 +51,8 @@ export function ProjectCase({ project }: ProjectCaseProps) {
               src={project.deviceImage}
               alt={project.deviceAlt}
               fill
+              loading="eager"
+              unoptimized
               sizes="(max-width: 48rem) 92vw, (max-width: 80rem) 62vw, 58vw"
             />
             <div className={styles.mainScreen}>
@@ -59,6 +61,8 @@ export function ProjectCase({ project }: ProjectCaseProps) {
                 src={project.desktopImage}
                 alt={project.desktopAlt}
                 fill
+                loading="eager"
+                unoptimized
                 sizes="(max-width: 48rem) 62vw, (max-width: 80rem) 48vw, 44vw"
               />
             </div>
@@ -66,9 +70,11 @@ export function ProjectCase({ project }: ProjectCaseProps) {
           <div data-parallax="-36" className={styles.phoneDevice}>
             <ProgressiveImage
               className={styles.phoneImage}
-              src="/images/projects/devices/separate/phone.png"
+              src="/images/projects/devices/separate/phone.webp"
               alt="Фотореалистичный смартфон"
               fill
+              loading="eager"
+              unoptimized
               sizes="(max-width: 48rem) 24vw, 14vw"
             />
             <div className={styles.phoneScreen}>
@@ -77,6 +83,8 @@ export function ProjectCase({ project }: ProjectCaseProps) {
                 src={project.mobileImage}
                 alt={project.mobileAlt}
                 fill
+                loading="eager"
+                unoptimized
                 sizes="(max-width: 48rem) 15vw, 9vw"
               />
             </div>
