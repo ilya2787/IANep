@@ -9,6 +9,7 @@ type ProgressiveImageProps = ImageProps & {
   readyOverlay?: ReactNode;
   showPlaceholder?: boolean;
   onReady?: (state: Exclude<ImageState, "loading">) => void;
+  staticSrcSet?: string;
 };
 type ImageState = "loading" | "loaded" | "error";
 
@@ -34,7 +35,7 @@ export function ProgressiveImage({ alt, className = "", onLoad, onError, readyOv
   );
 }
 
-function ProgressiveImageLifecycle({ alt, className = "", onLoad, onError, readyOverlay, showPlaceholder = true, onReady, ...props }: ProgressiveImageProps) {
+function ProgressiveImageLifecycle({ alt, className = "", onLoad, onError, readyOverlay, showPlaceholder = true, onReady, staticSrcSet, ...props }: ProgressiveImageProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const [state, setState] = useState<ImageState>("loading");
   const [useOriginalSource, setUseOriginalSource] = useState(false);
@@ -77,15 +78,35 @@ function ProgressiveImageLifecycle({ alt, className = "", onLoad, onError, ready
           aria-hidden="true"
         />
       ) : null}
-      <Image
-        {...props}
-        unoptimized={props.unoptimized || useOriginalSource}
-        alt={alt}
-        ref={imageRef}
-        className={`${styles.image} ${styles[`image${state[0].toUpperCase()}${state.slice(1)}`]} ${className}`}
-        onLoad={handleLoad}
-        onError={handleError}
-      />
+      {staticSrcSet && typeof props.src === "string" ? (
+        // Pre-generated variants intentionally bypass the production optimizer, whose cache misses caused multi-second placeholders.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={props.src}
+          srcSet={staticSrcSet}
+          sizes={props.sizes}
+          width={props.fill ? undefined : typeof props.width === "number" ? props.width : undefined}
+          height={props.fill ? undefined : typeof props.height === "number" ? props.height : undefined}
+          alt={alt}
+          ref={imageRef}
+          className={`${styles.image} ${props.fill ? styles.imageFill : ""} ${styles[`image${state[0].toUpperCase()}${state.slice(1)}`]} ${className}`}
+          loading={props.priority ? "eager" : props.loading}
+          fetchPriority={props.fetchPriority}
+          decoding="async"
+          onLoad={handleLoad}
+          onError={handleError}
+        />
+      ) : (
+        <Image
+          {...props}
+          unoptimized={props.unoptimized || useOriginalSource}
+          alt={alt}
+          ref={imageRef}
+          className={`${styles.image} ${styles[`image${state[0].toUpperCase()}${state.slice(1)}`]} ${className}`}
+          onLoad={handleLoad}
+          onError={handleError}
+        />
+      )}
       {readyOverlay ? (
         <span
           className={`${styles.readyOverlay} ${state === "loaded" ? styles.readyOverlayLoaded : ""} ${state === "error" ? styles.readyOverlayError : ""}`}

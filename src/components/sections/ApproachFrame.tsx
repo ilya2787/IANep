@@ -1,4 +1,4 @@
-import { ProgressiveImage } from "@/components/ui";
+import { ThemeProgressiveImage } from "@/components/ui";
 import type { ApproachStep } from "./approach.data";
 import styles from "./Approach.module.css";
 
@@ -30,20 +30,18 @@ export function ApproachFrame({ step, isLast }: ApproachFrameProps) {
 
         <p className={styles.description}>{step.description}</p>
         <div className={styles.visual}>
-          <ProgressiveImage
-            className={`${styles.visualImage} ${styles.lightImage}`}
-            src={step.imageLight}
+          <ThemeProgressiveImage
+            className={styles.visualImage}
+            light={{
+              src: `/images/responsive/approach/${step.id}-light-1080.webp`,
+              srcSet: `/images/responsive/approach/${step.id}-light-640.webp 640w, /images/responsive/approach/${step.id}-light-1080.webp 1080w`,
+            }}
+            dark={{
+              src: `/images/responsive/approach/${step.id}-dark-1080.webp`,
+              srcSet: `/images/responsive/approach/${step.id}-dark-640.webp 640w, /images/responsive/approach/${step.id}-dark-1080.webp 1080w`,
+            }}
             alt=""
             fill
-            quality={75}
-            sizes="(max-width: 48rem) 86vw, (max-width: 64rem) 44vw, 28vw"
-          />
-          <ProgressiveImage
-            className={`${styles.visualImage} ${styles.darkImage}`}
-            src={step.imageDark}
-            alt=""
-            fill
-            quality={75}
             sizes="(max-width: 48rem) 86vw, (max-width: 64rem) 44vw, 28vw"
           />
         </div>

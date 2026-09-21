@@ -46,13 +46,14 @@ export function Hero() {
 					<div data-hero-mascot-motion className={styles.mascot}>
 						<ProgressiveImage
 							className={styles.mascotImage}
-							src='/images/hero-mascot-front-no-eyes-v3.png'
+							src='/images/responsive/hero/mascot-1200.webp'
+							staticSrcSet='/images/responsive/hero/mascot-750.webp 750w, /images/responsive/hero/mascot-1200.webp 1200w'
 							alt='Фирменный цифровой помощник IANep'
 							fill
 							priority
 							fetchPriority='high'
-							quality={90}
 							sizes='(max-width: 768px) 88vw, 42vw'
+							unoptimized
 							showPlaceholder={false}
 							onReady={revealHero}
 							readyOverlay={

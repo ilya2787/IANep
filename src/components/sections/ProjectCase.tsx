@@ -1,4 +1,4 @@
-import { Link, ProgressiveImage } from "@/components/ui";
+import { Link, ViewportProgressiveImage } from "@/components/ui";
 import type { Project } from "./projects.data";
 import styles from "./Projects.module.css";
 
@@ -46,44 +46,44 @@ export function ProjectCase({ project }: ProjectCaseProps) {
       <div data-reveal className={styles.scene} aria-label={`Интерфейс проекта «${project.title}»`}>
         <div className={styles.deviceCanvas}>
           <div className={styles.mainDevice}>
-            <ProgressiveImage
+            <ViewportProgressiveImage
               className={styles.deviceImage}
               src={project.deviceImage}
               alt={project.deviceAlt}
               fill
-              loading="eager"
+              loading="lazy"
               unoptimized
               sizes="(max-width: 48rem) 92vw, (max-width: 80rem) 62vw, 58vw"
             />
             <div className={styles.mainScreen}>
-              <ProgressiveImage
+              <ViewportProgressiveImage
                 className={styles.desktopImage}
                 src={project.desktopImage}
                 alt={project.desktopAlt}
                 fill
-                loading="eager"
+                loading="lazy"
                 unoptimized
                 sizes="(max-width: 48rem) 62vw, (max-width: 80rem) 48vw, 44vw"
               />
             </div>
           </div>
           <div data-parallax="-36" className={styles.phoneDevice}>
-            <ProgressiveImage
+            <ViewportProgressiveImage
               className={styles.phoneImage}
               src="/images/projects/devices/separate/phone.webp"
               alt="Фотореалистичный смартфон"
               fill
-              loading="eager"
+              loading="lazy"
               unoptimized
               sizes="(max-width: 48rem) 24vw, 14vw"
             />
             <div className={styles.phoneScreen}>
-              <ProgressiveImage
+              <ViewportProgressiveImage
                 className={styles.mobileImage}
                 src={project.mobileImage}
                 alt={project.mobileAlt}
                 fill
-                loading="eager"
+                loading="lazy"
                 unoptimized
                 sizes="(max-width: 48rem) 15vw, 9vw"
               />

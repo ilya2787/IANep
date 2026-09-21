@@ -32,21 +32,25 @@ export function FinalCTA() {
           <div data-parallax="-28" className={styles.brand} data-motion-anchor="final-cta-ian" aria-hidden="true">
             <ProgressiveImage
               className={styles.image}
-              src="/reference/brand-symbol.png"
+              src="/images/responsive/final-cta/brand-symbol-1080.webp"
+              staticSrcSet="/images/responsive/final-cta/brand-symbol-640.webp 640w, /images/responsive/final-cta/brand-symbol-1080.webp 1080w"
               alt=""
               width={1536}
               height={1024}
               sizes="(max-width: 768px) 92vw, 48vw"
+              unoptimized
             />
           </div>
           <div className={styles.mascot}>
             <ProgressiveImage
               className={styles.image}
-              src="/images/final-cta/mascot-inviting-v3.png"
+              src="/images/responsive/final-cta/mascot-1080.webp"
+              staticSrcSet="/images/responsive/final-cta/mascot-640.webp 640w, /images/responsive/final-cta/mascot-1080.webp 1080w"
               alt="Персонаж IANep приглашает обсудить проект, протягивая открытую ладонь"
               width={1024}
               height={1536}
               sizes="(max-width: 768px) 70vw, (max-width: 1440px) 34vw, 480px"
+              unoptimized
             />
           </div>
         </div>

@@ -312,11 +312,15 @@ export function Brief() {
             <ProgressiveImage
               key={status === 'success' ? 'brief-success-mascot' : 'brief-questionnaire-mascot'}
               className={styles.mascot}
-              src={status === 'success' ? "/images/brief/mascot-success-v2.png" : "/images/brief/mascot-questionnaire-v2.png"}
+              src={status === 'success' ? "/images/responsive/brief/success-1080.webp" : "/images/responsive/brief/questionnaire-1080.webp"}
+              staticSrcSet={status === 'success'
+                ? "/images/responsive/brief/success-640.webp 640w, /images/responsive/brief/success-1080.webp 1080w"
+                : "/images/responsive/brief/questionnaire-640.webp 640w, /images/responsive/brief/questionnaire-1080.webp 1080w"}
               alt={status === 'success' ? "Персонаж IANep показывает класс: заявка отправлена" : "Персонаж IANep в полный рост держит большую анкету проекта"}
               width={1024}
               height={1536}
               sizes="(max-width: 48rem) 90vw, (max-width: 72rem) 32rem, 38vw"
+              unoptimized
             />
           </div>
         </div>

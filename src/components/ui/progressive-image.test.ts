@@ -40,11 +40,17 @@ test("a failed optimized local image retries its original public URL once", () =
   assert.match(component, /unoptimized=\{props\.unoptimized \|\| useOriginalSource\}/);
 });
 
-test("project mockup layers bypass DPR-specific optimizer stalls in WebKit", () => {
-  const layers = projectCase.match(/<ProgressiveImage[\s\S]*?\/>/g) ?? [];
+test("project mockup layers bypass DPR-specific optimizer stalls without competing with the hero", () => {
+  const layers = projectCase.match(/<ViewportProgressiveImage[\s\S]*?\/>/g) ?? [];
   assert.equal(layers.length, 4);
   for (const layer of layers) {
-    assert.match(layer, /loading="eager"/);
+    assert.match(layer, /loading="lazy"/);
     assert.match(layer, /unoptimized/);
   }
+});
+
+test("static responsive images bypass the dynamic optimizer", () => {
+  assert.match(component, /staticSrcSet/);
+  assert.match(component, /<img[\s\S]*srcSet=\{staticSrcSet\}/);
+  assert.match(component, /decoding="async"/);
 });

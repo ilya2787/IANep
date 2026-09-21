@@ -10,6 +10,7 @@ const imageReference = /["'`](\/[^"'`\s]+?\.(?:avif|gif|ico|jpe?g|png|svg|webp))
 const runtimeRaster = /\.(?:avif|gif|jpe?g|png|webp)$/i;
 const maxRuntimeRasterBytes = 3 * 1024 * 1024;
 const maxDirectProjectAssetBytes = 800 * 1024;
+const maxResponsiveVariantBytes = 150 * 1024;
 const directProjectPrefixes = [
   "/images/projects/devices/separate/",
   "/images/projects/onyx-cleaning/",
@@ -42,6 +43,7 @@ test("every source-referenced public image exists with exact filename casing", (
   for (const file of filesBelow(sourceRoot).filter((path) => /\.(?:css|ts|tsx)$/.test(path))) {
     const source = readFileSync(file, "utf8");
     for (const match of source.matchAll(imageReference)) {
+      if (match[1].includes("${")) continue;
       references.add(match[1]);
       if (!resolvesWithExactCase(match[1])) missing.push(`${match[1]} (${relative(projectRoot, file)})`);
     }
@@ -56,7 +58,9 @@ test("runtime raster assets stay within category-aware payload budgets", () => {
 
   for (const file of filesBelow(sourceRoot).filter((path) => /\.(?:css|ts|tsx)$/.test(path))) {
     const source = readFileSync(file, "utf8");
-    for (const match of source.matchAll(imageReference)) references.add(match[1]);
+    for (const match of source.matchAll(imageReference)) {
+      if (!match[1].includes("${")) references.add(match[1]);
+    }
   }
 
   const oversized = [...references]
@@ -70,4 +74,21 @@ test("runtime raster assets stay within category-aware payload budgets", () => {
     });
 
   assert.deepEqual(oversized, []);
+});
+
+test("pre-generated responsive variants stay small enough for direct delivery", () => {
+  const responsiveRoot = join(publicRoot, "images/responsive");
+  const oversized = filesBelow(responsiveRoot).flatMap((path) => {
+    const bytes = statSync(path).size;
+    return bytes > maxResponsiveVariantBytes ? [`${relative(publicRoot, path)}: ${bytes} bytes`] : [];
+  });
+  assert.deepEqual(oversized, []);
+});
+
+test("theme artwork renders one active image instead of two CSS-hidden downloads", () => {
+  for (const filename of ["ServiceCard.tsx", "ApproachFrame.tsx"]) {
+    const source = readFileSync(join(sourceRoot, "components/sections", filename), "utf8");
+    assert.equal((source.match(/<ThemeProgressiveImage/g) ?? []).length, 1);
+    assert.equal((source.match(/<ProgressiveImage/g) ?? []).length, 0);
+  }
 });

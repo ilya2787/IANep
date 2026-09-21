@@ -38,10 +38,12 @@ export function Projects() {
           <div className={styles.portfolioMascot} aria-hidden="true">
             <ProgressiveImage
               className={styles.portfolioMascotImage}
-              src="/images/projects/portfolio-mascot-seated-v2.png"
+              src="/images/responsive/portfolio/mascot-384.webp"
+              staticSrcSet="/images/responsive/portfolio/mascot-256.webp 256w, /images/responsive/portfolio/mascot-384.webp 384w"
               alt=""
               fill
               sizes="(max-width: 768px) 8rem, 10rem"
+              unoptimized
             />
           </div>
           <div className={styles.portfolioFooterCopy}>
