@@ -5,7 +5,7 @@ import { BriefRateLimiter, BRIEF_RATE_LIMIT_WINDOW_MS, briefRateLimitKey } from 
 import { prisma } from "@/server/db/prisma";
 
 test("DB-backed Brief limiter enforces a rolling window independently per normalized IP hash", async () => {
-  const start = new Date("2026-09-13T10:00:00.000Z");
+  const start = new Date(Date.now() + BRIEF_RATE_LIMIT_WINDOW_MS);
   let now = start;
   const limiter = new BriefRateLimiter(prisma, () => now);
   const firstIp = "2001:db8::1";

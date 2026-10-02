@@ -62,7 +62,8 @@ test("POST /api/brief отклоняет заявку без согласия", 
   assert.ok(body.error.issues.some((issue: { path: string[] }) => issue.path.at(-1) === "consent"));
 });
 
-test("POST /api/brief создаёт заявку и событие аудита", async () => {
+test("POST /api/brief создаёт заявку и событие аудита", async (context) => {
+  context.mock.method(briefRateLimiter, "consume", async () => ({ allowed: true as const, retryAfterSeconds: 0 }));
   let briefRequestId: string | undefined;
 
   try {
@@ -131,7 +132,8 @@ test("POST /api/brief создаёт заявку и событие аудита
   }
 });
 
-test("POST /api/brief канонизирует телефон без доверия к клиентской маске", async () => {
+test("POST /api/brief канонизирует телефон без доверия к клиентской маске", async (context) => {
+  context.mock.method(briefRateLimiter, "consume", async () => ({ allowed: true as const, retryAfterSeconds: 0 }));
   let briefRequestId: string | undefined;
   try {
     const payload = validBriefPayload();
