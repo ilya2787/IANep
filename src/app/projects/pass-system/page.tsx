@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Link, ProgressiveImage, SectionLink } from "@/components/ui";
 import { PropuscMotion } from "./PropuscMotion";
 import { shots, type ShotName } from "./screenshots";
+import { ProjectImageLightbox } from "@/components/ui/ProjectImageLightbox";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -15,9 +16,9 @@ export const metadata: Metadata = {
 function Screenshot({ name, caption, priority = false, className = "" }: { name: ShotName; caption: string; priority?: boolean; className?: string }) {
   const shot = shots[name];
   return <figure className={`${styles.shot} ${className}`}>
-    <a href={shot.src} target="_blank" rel="noreferrer" aria-label={`${caption}. Открыть скриншот в полном размере`}>
+    <ProjectImageLightbox src={shot.src} alt={shot.alt} caption={caption}>
       <ProgressiveImage src={shot.src} width={shot.width} height={shot.height} alt={shot.alt} priority={priority} fetchPriority={priority ? "high" : "auto"} unoptimized sizes={name === "phone" ? "(max-width: 768px) 70vw, 240px" : "(max-width: 768px) 92vw, (max-width: 1024px) 90vw, 1200px"} />
-    </a>
+    </ProjectImageLightbox>
     <figcaption>{caption}<span aria-hidden="true">↗</span></figcaption>
   </figure>;
 }
@@ -33,9 +34,9 @@ export default function PropuscCase() {
     <PropuscMotion>
       <section id="top" className={styles.hero} aria-labelledby="case-title">
         <Container>
-          <p className={styles.kicker}>Проект 02 / Propusc</p>
+          <p className={styles.kicker}>Проект 02 / Система пропусков</p>
           <h1 id="case-title">СИСТЕМА УПРАВЛЕНИЯ <span>ПРОПУСКАМИ</span></h1>
-          <div className={styles.heroIntro}><p className={styles.lead}>Локальное web-приложение для создания, настройки и печати пропусков.</p><p className={styles.context}>Работающая внутренняя система. Рассчитана прежде всего на компьютер без интернета: рабочие данные остаются в локальной среде.</p></div>
+          <div className={styles.heroIntro}><p className={styles.lead}>Локальное веб-приложение для создания, настройки и печати пропусков.</p><p className={styles.context}>Работающая внутренняя система. Рассчитана прежде всего на компьютер без интернета: рабочие данные остаются в локальной среде.</p></div>
           <nav className={styles.sceneNav} aria-label="Разделы кейса"><Link href="#creation">Создание пропуска</Link><Link href="#editor">Редактор шаблонов</Link><Link href="#access">Роли и управление</Link><Link href="#print">A4 и печать</Link></nav>
           <Screenshot name="home" caption="Рабочее пространство системы" priority />
           <div className={styles.systemIntro}>
@@ -59,9 +60,9 @@ export default function PropuscCase() {
           <div className={styles.heading}><p className={styles.kicker}>Универсальный редактор</p><h2 id="editor-title">Новый тип пропуска.<br /><span>Без изменения кода.</span></h2><p>От размера карточки до последнего текстового поля: шаблон собирается в визуальном редакторе, а затем используется оператором.</p></div>
           <div className={styles.editorStage}><div data-editor-screen><Screenshot name="editor" caption="Редактор шаблона: инструменты, свойства и рабочая область" /></div></div>
           <div className={styles.editorDetails}>
-            <div><h3>Форма и стороны</h3><p>Размеры карточки, односторонние и двусторонние шаблоны, отдельные фоны лицевой и оборотной стороны. Переключение front / back.</p></div>
+            <div><h3>Форма и стороны</h3><p>Размеры карточки, односторонние и двусторонние шаблоны, отдельные фоны лицевой и оборотной стороны. Переключение лицевой и оборотной стороны.</p></div>
             <div><h3>Содержание и точность</h3><p>Изображения, фото, стандартные и пользовательские поля, постоянный текст и декоративные блоки. Стили текста, позиции и размеры, сетка и привязка.</p></div>
-            <div><h3>Правки и перенос</h3><p>Undo / redo помогают работать с изменениями. Импорт и экспорт позволяют переносить готовые шаблоны.</p></div>
+            <div><h3>Правки и перенос</h3><p>Отмена и повтор действия помогают работать с изменениями. Импорт и экспорт позволяют переносить готовые шаблоны.</p></div>
           </div>
         </Container>
       </section>
@@ -69,11 +70,11 @@ export default function PropuscCase() {
       <section id="access" className={styles.section} data-access aria-labelledby="access-title">
         <Container>
           <div className={styles.accessHeading}><div className={styles.heading}><p className={styles.kicker}>Роли и управление</p><h2 id="access-title">Каждому —<br />свои действия</h2></div><div className={styles.roles}>
-            <div data-role><span className={styles.roleName}>operator</span><h3>Создаёт и печатает</h3><p>Выбирает шаблон, вводит данные, проверяет пропуск и отправляет очередь на печать.</p></div>
-            <div data-role><span className={styles.roleName}>admin</span><h3>Настраивает и управляет</h3><p>Шаблоны, пользователи и роли, блокировка, сброс паролей и завершение сессий. Справочники, данные руководителя, журнал и системные операции.</p></div>
+            <div data-role><span className={styles.roleName}>Оператор</span><h3>Создаёт и печатает</h3><p>Выбирает шаблон, вводит данные, проверяет пропуск и отправляет очередь на печать.</p></div>
+            <div data-role><span className={styles.roleName}>Администратор</span><h3>Настраивает и управляет</h3><p>Шаблоны, пользователи и роли, блокировка, сброс паролей и завершение сессий. Справочники, данные руководителя, журнал и системные операции.</p></div>
           </div></div>
           <Screenshot name="users" caption="Пользователи и управление доступом" />
-          <div className={styles.audit}><div><h3>Действия остаются в журнале</h3><p>Audit собран в администрировании: события можно просматривать и фильтровать при проверке работы системы.</p></div><div data-audit><Screenshot name="audit" caption="Журнал действий" /></div></div>
+          <div className={styles.audit}><div><h3>Действия остаются в журнале</h3><p>Журнал действий находится в разделе администрирования: события можно просматривать и фильтровать при проверке работы системы.</p></div><div data-audit><Screenshot name="audit" caption="Журнал действий" /></div></div>
         </Container>
       </section>
 
@@ -84,11 +85,11 @@ export default function PropuscCase() {
             <div data-print-step><span className={styles.stepLabel}>Очередь → A4</span><Screenshot name="preview" caption="Предпросмотр листа с лицевыми и оборотными сторонами" /></div>
             <div data-print-step><span className={styles.stepLabel}>A4 → Печать</span><Screenshot name="print" caption="Подготовленный лист в диалоге печати" /></div>
           </div>
-          <div className={styles.local}><div><p className={styles.kicker}>Локальная эксплуатация</p><h3>Данные остаются<br />под контролем</h3><p>Состояние базы, резервное копирование и восстановление доступны в системном разделе.</p><p>Перед restore выполняется проверка и создаётся страховочная копия. После восстановления активные сессии завершаются.</p></div><Screenshot name="system" caption="Система и перенос данных" /></div>
+          <div className={styles.local}><div><p className={styles.kicker}>Локальная эксплуатация</p><h3>Данные остаются<br />под контролем</h3><p>Состояние базы, резервное копирование и восстановление доступны в системном разделе.</p><p>Перед восстановлением выполняется проверка и создаётся страховочная копия. После восстановления активные сессии завершаются.</p></div><Screenshot name="system" caption="Система и перенос данных" /></div>
           <div className={styles.final}>
             <p className={styles.kicker}>Результат</p><h2>От универсального шаблона — до готового листа для печати в одной системе.</h2>
             <ul className={styles.outcomes}><li>Универсальные шаблоны</li><li>Ролевой доступ</li><li>A4 и печать</li><li>Локальная работа</li></ul>
-            <details className={styles.stack}><summary>Технологии проекта</summary><p>React 18, TypeScript, Vite, Mantine, React Router, Axios</p><p>Node.js, Express, TypeScript, MySQL</p><p>JWT, bcrypt, cookie auth, Multer, react-to-print</p></details>
+            <details className={styles.stack}><summary>Технологии проекта</summary><p>React 18, TypeScript, Vite, Mantine, React Router, Axios</p><p>Node.js, Express, TypeScript, MySQL</p><p>JWT, bcrypt, аутентификация через cookie, Multer, react-to-print</p></details>
             <div className={styles.finalLinks}><SectionLink href="/#brief" className={styles.cta}>Обсудить похожий проект <span aria-hidden="true">↗</span></SectionLink><SectionLink href="/#projects" className={styles.back}>Все проекты <span aria-hidden="true">↗</span></SectionLink></div>
           </div>
         </Container>

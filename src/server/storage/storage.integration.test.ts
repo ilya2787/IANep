@@ -16,6 +16,7 @@ test("хранилище: изоляция, публикация, неизмен
   const other = await prisma.clientProject.create({ data: { title: "Другой проект", clientId: client.id } });
   const ids: string[] = [];
   const content = Buffer.from("Первый результат");
+  const image = Buffer.from("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000b49444154789c636000020000050001a5f645400000000049454e44ae426082", "hex");
   const stream = (bytes: Buffer) => new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(bytes); controller.close(); } });
   try {
     await assert.rejects(saveUpload(project.id, stranger, "file.txt", stream(content)));
@@ -30,11 +31,20 @@ test("хранилище: изоляция, публикация, неизмен
     assert.equal(await readableFile(file.id, stranger), null);
     await decide(project.id, actor, { versionId: version.id, kind: "CHANGES", changes: "Обновить текст" });
     const second = await saveUpload(project.id, admin, "результат.txt", stream(Buffer.from("Второй результат"))); ids.push(second.id);
-    await publish(project.id, admin, { stageId: stage.id, comment: "Вторая версия", materials: [{ title: "Файл", fileId: second.id }] });
+    const secondVersion = await publish(project.id, admin, { stageId: stage.id, comment: "Вторая версия", materials: [{ title: "Файл", fileId: second.id }] });
+    await decide(project.id, actor, { versionId: secondVersion.id, kind: "CHANGES", changes: "Добавить изображение" });
     assert.notEqual(second.id, file.id);
     assert.deepEqual(await fileBytes(file), content);
     const clientFile = await saveUpload(project.id, actor, "материал.txt", stream(content)); ids.push(clientFile.id);
     assert.ok(await readableFile(clientFile.id, actor));
+    const privateImage = await saveUpload(project.id, admin, "этап.png", stream(image)); ids.push(privateImage.id);
+    assert.equal(privateImage.kind, "IMAGE");
+    assert.equal(privateImage.mimeType, "image/png");
+    assert.ok(await readableFile(privateImage.id, admin));
+    assert.equal(await readableFile(privateImage.id, actor), null);
+    await publish(project.id, admin, { stageId: stage.id, comment: "Изображение на согласование", materials: [{ title: "Этап", fileId: privateImage.id }] });
+    assert.deepEqual(await fileBytes((await readableFile(privateImage.id, actor))!), image);
+    assert.equal(await readableFile(privateImage.id, stranger), null);
     await writeFile(storagePath(second.id), "Повреждение");
     await assert.rejects(fileBytes(second));
     await assert.rejects(saveUpload(project.id, actor, "large.txt", stream(Buffer.alloc(MAX_FILE_BYTES + 1))));

@@ -1,9 +1,9 @@
 "use client";
 
 import { Select } from "@/components/ui/fields/Select";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { ImageLightbox } from "@/components/ui/ProjectImageLightbox";
 
-import { useActionState, useEffect, useRef, useState, useId, createContext, useContext } from "react";
+import { useActionState, useRef, useState, useId, createContext, useContext } from "react";
 import type { ActionState } from "@/app/client/actions";
 import { kinds } from "@/server/client/model";
 import s from "./workspace.module.css";
@@ -53,20 +53,12 @@ export function MaterialFields({ multiple = false, projectId, side }: { multiple
   const [rows, setRows] = useState([0]); const next = useRef(1);
   return <div className={s.stack}>{rows.map((id, index) => <div key={id} className={s.materialFields}><AttachmentRow multiple={multiple} projectId={projectId} side={side} />{multiple && rows.length > 1 && <button type="button" onClick={() => setRows(rows.filter(row => row !== id))}>Убрать материал {index + 1}</button>}</div>)}{multiple && rows.length < 20 && <button type="button" onClick={() => setRows([...rows, next.current++])}>Добавить ещё материал</button>}</div>;
 }
-export function ImagePreview({ url, title }: { url: string; title: string }) {
-  const dialog = useRef<HTMLDialogElement>(null);
+export function ImagePreview({ url, title, privateFile = false }: { url: string; title: string; privateFile?: boolean }) {
   const [failed, setFailed] = useState(false);
-  const [open, setOpen] = useState(false);
-  useBodyScrollLock(open);
-  useEffect(() => {
-    if (open && !dialog.current?.open) dialog.current?.showModal();
-    else if (dialog.current?.open) dialog.current.close();
-  }, [open]);
-  return <div><button type="button" className={s.previewButton} onClick={() => setOpen(true)} aria-label={`Увеличить: ${title}`}>
+  return <ImageLightbox src={url} alt={title} caption={title}><span className={s.previewButton}>
     {/* Внешние материалы не проксируются через сервер. */}
     {/* eslint-disable-next-line @next/next/no-img-element */}
-    {!failed ? <img src={url} alt={title} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} /> : <span>Превью недоступно. Открыть просмотр</span>}
-  </button><dialog ref={dialog} className={s.lightbox} aria-label={title} onCancel={() => setOpen(false)} onClose={() => setOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) setOpen(false); }}><button type="button" onClick={() => setOpen(false)} autoFocus>Закрыть просмотр</button><p>{title}</p>
-    {/* eslint-disable-next-line @next/next/no-img-element */}
-    <img src={url} alt={title} referrerPolicy="no-referrer" /><a href={url} target="_blank" rel="noopener noreferrer">Открыть оригинал ↗</a></dialog></div>;
+    {privateFile ? <span className={s.privatePreview}>Посмотреть изображение</span> : !failed ? <img src={url} alt={title} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} /> : <span>Превью недоступно. Открыть просмотр</span>}
+    {!privateFile && <span className={s.previewHint}>Увеличить изображение</span>}
+  </span></ImageLightbox>;
 }
