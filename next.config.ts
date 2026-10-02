@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const scriptPolicy = process.env.NODE_ENV === "production" ? "script-src 'self' 'unsafe-inline'" : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+const httpsOnlyDirectives = process.env.NODE_ENV === "production" && process.env.APP_BASE_URL?.startsWith("https://")
+  ? "; upgrade-insecure-requests"
+  : "";
 
 const nextConfig: NextConfig = {
   images: {
@@ -18,8 +21,8 @@ const nextConfig: NextConfig = {
       { key: "X-Frame-Options", value: "DENY" },
       { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
       { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-      { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
-      { key: "Content-Security-Policy", value: `default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; ${scriptPolicy}; connect-src 'self'; upgrade-insecure-requests` },
+      ...(process.env.NODE_ENV === "production" ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }] : []),
+      { key: "Content-Security-Policy", value: `default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; ${scriptPolicy}; connect-src 'self'${httpsOnlyDirectives}` },
     ] }];
   },
 };
