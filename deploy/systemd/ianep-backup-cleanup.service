@@ -1,0 +1,15 @@
+[Unit]
+Description=Remove expired IANep backup downloads
+
+[Service]
+Type=oneshot
+User=ianep
+Group=ianep
+WorkingDirectory=/opt/ianep/app
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/env node --import tsx scripts/backup-cleanup.ts
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/backups/ianep
+PrivateTmp=true

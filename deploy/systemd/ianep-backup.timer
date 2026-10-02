@@ -1,0 +1,12 @@
+[Unit]
+Description=IANep daily backup on VPS
+
+[Timer]
+OnCalendar=*-*-* 02:30:00 Europe/Berlin
+RandomizedDelaySec=5m
+AccuracySec=1m
+Persistent=true
+Unit=ianep-backup.service
+
+[Install]
+WantedBy=timers.target

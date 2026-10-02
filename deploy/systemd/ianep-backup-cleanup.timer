@@ -1,0 +1,10 @@
+[Unit]
+Description=Check expired IANep backup downloads
+
+[Timer]
+OnCalendar=*:0/15
+Persistent=true
+Unit=ianep-backup-cleanup.service
+
+[Install]
+WantedBy=timers.target
