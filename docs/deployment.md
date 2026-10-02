@@ -117,6 +117,8 @@ sudo systemctl reset-failed ianep-maintenance.service
 
 После изменения dependency graph выполните чистый `npm ci --omit=dev`, затем запустите `npm run verify:production-install`. Проверка подтверждает, что lockfile и установленный production dependency graph содержат рабочий TypeScript loader, используемый maintenance entrypoint.
 
+В `package.json` временно закреплены `deepmerge-ts@8.0.2`, `mysql2@3.24.5` и `fast-uri@3.1.8` через `overrides`: Prisma 7.10.0 фиксирует уязвимые версии в своей CLI-цепочке, которую `@prisma/client` включает в production dependency graph. `deepmerge-ts` используется при чтении конфигурации Prisma, `mysql2` — инструментами Prisma для MySQL (приложение работает с PostgreSQL), `fast-uri` — локальным dev-пакетом Prisma через Ajv. Совместимость проверена `prisma validate/generate/migrate deploy` и полным gate. Удалите overrides, когда Prisma начнёт закреплять исправленные версии, и повторите `npm audit --omit=dev`.
+
 ## Staging validation
 
 На disposable PostgreSQL и отдельном storage выполните:
