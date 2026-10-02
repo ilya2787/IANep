@@ -4,6 +4,7 @@ import test from "node:test";
 import { getCompleteImageState } from "./progressive-image-state";
 
 const component = readFileSync(new URL("./ProgressiveImage.tsx", import.meta.url), "utf8");
+const viewportComponent = readFileSync(new URL("./ViewportProgressiveImage.tsx", import.meta.url), "utf8");
 const styles = readFileSync(new URL("./ProgressiveImage.module.css", import.meta.url), "utf8");
 const projectCase = readFileSync(new URL("../sections/ProjectCase.tsx", import.meta.url), "utf8");
 
@@ -47,6 +48,11 @@ test("project mockup layers bypass DPR-specific optimizer stalls without competi
     assert.match(layer, /loading="lazy"/);
     assert.match(layer, /unoptimized/);
   }
+});
+
+test("project images render without depending on an intersection observer", () => {
+  assert.doesNotMatch(viewportComponent, /IntersectionObserver|requested/);
+  assert.match(viewportComponent, /return <ProgressiveImage \{\.\.\.props\} \/>/);
 });
 
 test("static responsive images bypass the dynamic optimizer", () => {

@@ -1,23 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
 import { Container } from '@/components/layout'
 import { ProgressiveImage, SectionLink } from '@/components/ui'
 import styles from './Hero.module.css'
 
 export function Hero() {
-	const [visualReady, setVisualReady] = useState(false)
-	const revealHero = useCallback(() => setVisualReady(true), [])
-
-	useEffect(() => {
-		const fallback = window.setTimeout(revealHero, 10_000)
-		return () => window.clearTimeout(fallback)
-	}, [revealHero])
-
 	return (
 		<section
 			data-hero
-			data-hero-ready={visualReady ? 'true' : 'false'}
 			className={styles.hero}
 			aria-labelledby='hero-title'
 		>
@@ -55,7 +45,6 @@ export function Hero() {
 							sizes='(max-width: 768px) 88vw, 42vw'
 							unoptimized
 							showPlaceholder={false}
-							onReady={revealHero}
 							readyOverlay={
 								<div className={styles.visor} aria-hidden='true'>
 									<div data-hero-eyes className={styles.eyes}>
@@ -87,7 +76,6 @@ export function Hero() {
 					</div>
 				</div>
 			</Container>
-			<div className={styles.loadingVeil} aria-hidden='true' />
 		</section>
 	)
 }
