@@ -2,7 +2,7 @@
 Description=IANep daily backup on VPS
 
 [Timer]
-OnCalendar=*-*-* 02:30:00 Europe/Berlin
+OnCalendar=*-*-* 02:30:00 Europe/Kaliningrad
 RandomizedDelaySec=5m
 AccuracySec=1m
 Persistent=true
