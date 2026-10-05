@@ -1,4 +1,4 @@
-import { accessSync, constants } from "node:fs";
+import { accessSync, constants, statSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
 import { z } from "zod";
 
@@ -24,7 +24,7 @@ function absoluteUrl(value: string, name: string, https: boolean) {
   return url;
 }
 
-export function validateProductionEnvironment(env: Environment = process.env) {
+export function validateProductionEnvironment(env: Environment = process.env, storageAccess: "read-write" | "read-only" = "read-write") {
   if (env.NODE_ENV !== "production" || env.NEXT_PHASE === "phase-production-build") return;
 
   const required = ["DATABASE_URL", "ADMIN_SESSION_SECRET", "PRIVACY_LOOKUP_SECRET", "APP_BASE_URL", "CORS_ALLOWED_ORIGINS", "IANEP_STORAGE_DIR"] as const;
@@ -46,7 +46,12 @@ export function validateProductionEnvironment(env: Environment = process.env) {
 
   if (!isAbsolute(env.IANEP_STORAGE_DIR!)) throw new Error("Production configuration invalid: IANEP_STORAGE_DIR must be an absolute persistent path");
   const storage = resolve(env.IANEP_STORAGE_DIR!);
-  try { accessSync(storage, constants.R_OK | constants.W_OK); } catch { throw new Error("Production configuration invalid: IANEP_STORAGE_DIR must already exist and be readable/writable"); }
+  try {
+    if (!statSync(storage).isDirectory()) throw new Error("Not a directory");
+    accessSync(storage, constants.R_OK | constants.X_OK | (storageAccess === "read-write" ? constants.W_OK : 0));
+  } catch {
+    throw new Error(`Production configuration invalid: IANEP_STORAGE_DIR must already exist and be ${storageAccess === "read-write" ? "readable/writable" : "readable"}`);
+  }
 
   let smtpEnabled: boolean;
   let trustProxy: boolean;

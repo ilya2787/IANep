@@ -9,6 +9,7 @@ User=ianep
 Group=ianep
 WorkingDirectory=/opt/ianep/app
 Environment=NODE_ENV=production
+Environment=IANEP_BACKUP_ROLE=scheduled
 Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=/usr/bin/env node --env-file=.env.local --import tsx scripts/backup.ts scheduled
 UMask=0077

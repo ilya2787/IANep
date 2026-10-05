@@ -3,7 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 import { assertProductionConfiguration } from "@/server/security/request";
 
-assertProductionConfiguration();
+assertProductionConfiguration(process.env.IANEP_BACKUP_ROLE === "scheduled" ? "read-only" : "read-write");
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

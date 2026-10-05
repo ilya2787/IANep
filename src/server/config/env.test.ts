@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { chmodSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { smtpEnvironment, validateProductionEnvironment } from "@/server/config/env";
 
 const valid = {
@@ -10,6 +13,16 @@ const valid = {
 } as NodeJS.ProcessEnv;
 
 test("production environment accepts a coherent minimal configuration", () => assert.doesNotThrow(() => validateProductionEnvironment(valid)));
+test("backup may read a read-only storage directory while the application still requires write access", () => {
+  const storage = mkdtempSync(join(tmpdir(), "ianep-read-only-storage-"));
+  try {
+    chmodSync(storage, 0o500);
+    assert.doesNotThrow(() => validateProductionEnvironment({ ...valid, IANEP_STORAGE_DIR: storage }, "read-only"));
+    assert.throws(() => validateProductionEnvironment({ ...valid, IANEP_STORAGE_DIR: storage }), /readable\/writable/);
+    chmodSync(storage, 0o000);
+    assert.throws(() => validateProductionEnvironment({ ...valid, IANEP_STORAGE_DIR: storage }, "read-only"), /must already exist and be readable/);
+  } finally { chmodSync(storage, 0o700); rmSync(storage, { recursive: true }); }
+});
 test("production environment rejects HTTP and relative storage", () => {
   assert.throws(() => validateProductionEnvironment({ ...valid, APP_BASE_URL: "http://ianep.example" }), /HTTPS/);
   assert.throws(() => validateProductionEnvironment({ ...valid, IANEP_STORAGE_DIR: ".storage" }), /absolute persistent path/);

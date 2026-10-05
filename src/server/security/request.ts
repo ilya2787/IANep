@@ -11,6 +11,6 @@ export async function requireSameOrigin() {
   if (originUrl.host !== host && !allowed.has(origin)) throw new Error("CSRF_CHECK_FAILED");
 }
 
-export function assertProductionConfiguration() {
-  validateProductionEnvironment();
+export function assertProductionConfiguration(storageAccess: "read-write" | "read-only" = "read-write") {
+  validateProductionEnvironment(process.env, storageAccess);
 }
