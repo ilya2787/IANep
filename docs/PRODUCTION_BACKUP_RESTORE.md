@@ -10,9 +10,11 @@
 
 Архив содержит только `database.dump`, `storage.tar.gz`, `SHA256SUMS`, `manifest.json`. Секреты, `.env.local`, конфигурация приложения и ключи не включаются. Храните скачанный архив как конфиденциальный: он содержит данные клиентов.
 
-## Установка на VPS (отдельный будущий шаг, сейчас production не меняется)
+## Установка на VPS
 
 Создайте `/var/backups/ianep` с владельцем `ianep:ianep` и правами `0700`. Пользователь приложения должен читать storage, запускать `pg_dump`, `pg_restore`, `tar` и подключаться к БД для чтения. Не запускайте приложение от root и не выдавайте широкий `sudo`. Установите `deploy/systemd/ianep-backup.service` и `.timer`, а также `ianep-backup-cleanup.service` и `.timer`, убедитесь, что `/opt/ianep/app/.env.local` доступен только пользователю приложения, затем включите оба timer. Оба запуска (timer и Admin) используют атомарную блокировку `.running` в backup root. Если процесс аварийно завершился и блокировка осталась, оператор проверяет состояние и снимает её вручную после исключения действующего запуска. Web-приложение должно работать постоянным процессом на VPS и иметь доступ к этому каталогу.
+
+При `ProtectSystem=strict` веб-сервису нужен repo-managed drop-in `deploy/systemd/ianep.service.d/backup-access.conf`: текущий Admin API сам создаёт запрос и статус в backup root, а запущенный им worker записывает набор или временный export. Поэтому для этого каталога требуется `ReadWritePaths=/var/backups/ianep`; одного доступа на чтение недостаточно. Установите drop-in в `/etc/systemd/system/ianep.service.d/backup-access.conf` с правами `0644`, выполните `systemctl daemon-reload` и `systemctl restart ianep.service`. Проверьте `systemctl show ianep.service -p ReadWritePaths` и запись от `ianep` внутри mount namespace сервиса. Каталог остаётся `0700`, вне web root; остальные пути по-прежнему ограничены исходным unit. При откате удалите только этот drop-in, затем повторите `daemon-reload` и restart.
 
 Проверка перед фиксацией success: `pg_restore --list`, `tar -tzf`, повторный SHA-256 обеих частей. Только после этого записывается manifest со статусом success и выполняется prune. Наборы сортируются по проверенной паре имени и временной метки manifest; удаление ограничено непосредственными каталогами внутри backup root. Для download используется потоковая передача, `Content-Disposition: attachment` и `Cache-Control: no-store`.
 
