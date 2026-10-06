@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 readonly repo=/opt/ianep/app
 readonly service=ianep.service
-readonly lock=/run/lock/ianep-deploy.lock
+readonly lock=/run/ianep-deploy.lock
 
 log() { printf '[ianep-deploy] %s\n' "$*"; }
 die() { log "ERROR: $*" >&2; exit 1; }

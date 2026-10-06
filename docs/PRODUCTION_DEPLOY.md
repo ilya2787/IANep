@@ -8,17 +8,27 @@ The exact sudoers rule is:
 ianep-admin ALL=(root) NOPASSWD: /usr/local/sbin/ianep-deploy ""
 ```
 
-Before installing, verify the SSH ED25519 fingerprint is `SHA256:zING1LB5kTWGxVV1CMUZhZHiO5d6+xYOwB0Wh+3JxAo` and ensure Beget console recovery remains available. From an interactive `ianep-admin` shell, use ordinary password-protected sudo once; type the password only into that terminal:
+Before installing, verify the SSH ED25519 fingerprint is `SHA256:zING1LB5kTWGxVV1CMUZhZHiO5d6+xYOwB0Wh+3JxAo` and ensure Beget console recovery remains available. Open the VPS VNC console in Beget and log in as root there. Type the existing root password only into that console, never into chat or a command. The `ianep-admin` account has no sudo password.
+
+From the root shell, fetch the reviewed commit as `ianep`, stage its two files in a root-owned temporary directory, and compare their SHA-256 hashes with the locally reviewed copies before installing. Do not advance the application checkout during bootstrap. Install each file to a temporary path in its destination directory, then rename it into place:
 
 ```bash
-sudo install -o root -g root -m 0755 /opt/ianep/app/deploy/scripts/ianep-deploy /usr/local/sbin/ianep-deploy
-sudo visudo -cf /opt/ianep/app/deploy/sudoers/ianep-deploy
-sudo install -o root -g root -m 0440 /opt/ianep/app/deploy/sudoers/ianep-deploy /etc/sudoers.d/ianep-deploy
-sudo visudo -cf /etc/sudoers.d/ianep-deploy
-sudo visudo -c
+id -u # must print 0
+runuser -u ianep -- git -C /opt/ianep/app fetch --no-tags origin master
+stage=$(mktemp -d /run/ianep-bootstrap.XXXXXX)
+runuser -u ianep -- git -C /opt/ianep/app show origin/master:deploy/scripts/ianep-deploy > "$stage/ianep-deploy"
+runuser -u ianep -- git -C /opt/ianep/app show origin/master:deploy/sudoers/ianep-deploy > "$stage/sudoers"
+sha256sum "$stage/ianep-deploy" "$stage/sudoers" # compare with reviewed local hashes
+install -o root -g root -m 0755 "$stage/ianep-deploy" /usr/local/sbin/ianep-deploy.new
+mv -T /usr/local/sbin/ianep-deploy.new /usr/local/sbin/ianep-deploy
+install -o root -g root -m 0440 "$stage/sudoers" /etc/sudoers.d/ianep-deploy.new
+visudo -cf /etc/sudoers.d/ianep-deploy.new
+mv -T /etc/sudoers.d/ianep-deploy.new /etc/sudoers.d/ianep-deploy
+visudo -cf /etc/sudoers.d/ianep-deploy && visudo -c
+rm -rf "$stage"
 ```
 
-The bootstrap needs the repository files to be present on the server. If the production checkout cannot advance before the wrapper exists, transfer the two files from the verified local commit into a root-controlled temporary location, inspect their checksums, and substitute those paths in the installation commands. Do not change checkout ownership or give `ianep-admin` direct access.
+If either `visudo` check fails, remove the installed sudoers snippet immediately and stop. Check root ownership and file permissions before leaving the console. Do not change checkout ownership or give `ianep-admin` direct access.
 
 From a fresh Mac/Work session, invoke:
 
