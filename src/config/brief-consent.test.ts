@@ -23,6 +23,9 @@ test("утверждённая редакция 1.0 идентифицирует
   const content = consent?.blocks.flatMap((block) => block.content.map((item) => item.value)).join("") ?? "";
   assert.match(content, /Оператор персональных данных — Непряхин Илья Сергеевич, физическое лицо, владелец сайта IANep \(ianep\.ru\)/);
   assert.match(content, /даю оператору персональных данных согласие/);
+  const data = current.sections.find((section) => section.id === "data");
+  assert.match(data?.blocks.flatMap(block => block.content.map(item => item.value)).join("") ?? "", /номер телефона \(в том числе привязанный к MAX\)/);
+  assert.equal(current.effectiveDate, "6 октября 2026 года");
 });
 
 test("редакция 1.0 остаётся доступной при добавлении более новой", () => {

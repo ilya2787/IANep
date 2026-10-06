@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/server/auth/admin-auth";
 import { requireSameOrigin } from "@/server/security/request";
 import { prisma } from "@/server/db/prisma";
-import { cleanArchivedProjectFiles, cleanOrphanFiles, deleteArchivedBriefs } from "@/server/storage/lifecycle";
+import { purgeArchivedProjects, cleanOrphanFiles, deleteArchivedBriefs } from "@/server/storage/lifecycle";
 import { deleteUnusedClient, setClientActive } from "@/server/client/users";
 import { WorkspaceError } from "@/server/client/service";
 import type { ActionState } from "@/app/client/actions";
@@ -27,7 +27,7 @@ export async function updateRetentionSettings(_state: ActionState, form: FormDat
 
 export async function cleanupSelectedProjects(_state: ActionState, form: FormData): Promise<ActionState> {
   await requireSameOrigin(); const admin = await requireAdmin();
-  try { z.literal("yes").parse(form.get("confirm")); const ids = z.array(z.uuid()).min(1).parse(form.getAll("projectId")); const result = await cleanArchivedProjectFiles(ids, admin.adminId); revalidatePath("/admin/system"); return { ok: true, message: `Очищено файлов: ${result.files}. История проектов сохранена.` }; } catch (error) { return failure(error); }
+  try { z.literal("yes").parse(form.get("confirm")); const ids = z.array(z.uuid()).min(1).parse(form.getAll("projectId")); const result = await purgeArchivedProjects(ids, admin.adminId); revalidatePath("/admin/system"); return { ok: true, message: `Удалено проектов: ${result.projects}; файлов: ${result.files}; аккаунтов без других проектов: ${result.accounts}.${result.warnings ? ` Физическая очистка ${result.warnings} изолированных файлов завершится при очистке технических остатков.` : ""}` }; } catch (error) { return failure(error); }
 }
 
 export async function updateAdminNotificationEmail(_state: ActionState, form: FormData): Promise<ActionState> {

@@ -5,7 +5,7 @@ import { unlink, writeFile } from "node:fs/promises";
 import { prisma } from "@/server/db/prisma";
 import { addStage, publish, decide, type Actor } from "@/server/client/service";
 import { saveUpload, fileBytes, inspectFile, readableFile, storagePath, MAX_FILE_BYTES } from "./files";
-import { cleanArchivedProjectFiles } from "./lifecycle";
+import { purgeArchivedProjects } from "./lifecycle";
 
 test("хранилище: изоляция, публикация, неизменяемые версии и целостность", async () => {
   const admin: Actor = { id: randomUUID(), side: "ADMIN" };
@@ -72,22 +72,25 @@ test("формат и безопасный путь файла", () => {
   assert.equal(inspectFile("file.pdf", Buffer.from("%PDF-1.7\n")).kind, "DOCUMENT");
 });
 
-test("контролируемая очистка удаляет физический файл, но сохраняет метаданные", async () => {
+test("контролируемое удаление убирает файл, проект и последний аккаунт", async () => {
   const admin: Actor = { id: randomUUID(), side: "ADMIN" };
   const client = await prisma.clientUser.create({ data: { name: "Тест retention", username: randomUUID(), passwordHash: "unused" } });
   const project = await prisma.clientProject.create({ data: { title: "Архив retention", clientId: client.id, archivedAt: new Date("2020-01-01"), deleteAfter: new Date("2020-02-01") } });
   const stream = new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(Buffer.from("Исторический файл")); controller.close(); } });
   const file = await saveUpload(project.id, admin, "history.txt", stream);
   try {
-    const result = await cleanArchivedProjectFiles([project.id], admin.id);
+    const result = await purgeArchivedProjects([project.id], admin.id);
     assert.equal(result.files, 1);
-    const metadata = await prisma.storedFile.findUniqueOrThrow({ where: { id: file.id } });
-    assert.ok(metadata.physicalDeletedAt);
+    assert.equal(result.projects, 1);
+    assert.equal(result.accounts, 1);
+    assert.equal(await prisma.storedFile.findUnique({ where: { id: file.id } }), null);
+    assert.equal(await prisma.clientProject.findUnique({ where: { id: project.id } }), null);
+    assert.equal(await prisma.clientUser.findUnique({ where: { id: client.id } }), null);
     await assert.rejects(fileBytes(file));
   } finally {
     await prisma.storedFile.deleteMany({ where: { projectId: project.id } });
-    await prisma.clientProject.delete({ where: { id: project.id } });
-    await prisma.clientUser.delete({ where: { id: client.id } });
+    await prisma.clientProject.deleteMany({ where: { id: project.id } });
+    await prisma.clientUser.deleteMany({ where: { id: client.id } });
     await unlink(storagePath(file.id)).catch(() => undefined);
   }
 });

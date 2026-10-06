@@ -14,7 +14,7 @@ const eventLabels: Record<string, string> = {
   PAYMENT_UPDATED: "Данные об оплате обновлены", MATERIAL_ADDED: "Добавлен материал",
   NOTIFICATION_ENQUEUED: "Уведомление подготовлено к отправке", NOTIFICATION_DISPATCHED: "Отправка уведомлений завершена", NOTIFICATION_PREFERENCES_UPDATED: "Настройки уведомлений изменены",
   PRIVACY_REQUEST_REGISTERED: "Запрос субъекта зарегистрирован", PRIVACY_REQUEST_PREPARED: "Состав данных подтверждён", PRIVACY_REQUEST_COMPLETED: "Запрос субъекта исполнен", PRIVACY_RECEIPTS_PURGED: "Истёк срок хранения подтверждения уничтожения ПД; данные подтверждения очищены",
-  STORAGE_CLEANUP_COMPLETED: "Очистка файлов завершена", ARCHIVED_BRIEFS_DELETED: "Архивные заявки удалены", ORPHAN_STORAGE_CLEANUP_COMPLETED: "Очистка несвязанных файлов завершена",
+  STORAGE_CLEANUP_COMPLETED: "Очистка файлов завершена", ARCHIVED_PROJECT_PURGED: "Архивный проект удалён", ARCHIVED_BRIEFS_DELETED: "Архивные заявки удалены", ORPHAN_STORAGE_CLEANUP_COMPLETED: "Очистка несвязанных файлов завершена",
   RETENTION_SETTINGS_UPDATED: "Сроки хранения изменены", ADMIN_NOTIFICATION_EMAIL_UPDATED: "Адрес уведомлений администратора изменён",
   BACKUP_REQUESTED: "Резервная копия запрошена вручную", BACKUP_STARTED: "Создание резервной копии началось", BACKUP_SUCCEEDED: "Резервная копия создана", BACKUP_FAILED: "Ошибка резервного копирования",
   AUTH_RATE_LIMITED: "Вход временно ограничен", AUTH_FAILED: "Неудачная попытка входа", AUTH_SUCCEEDED: "Выполнен вход", SESSION_REVOKED: "Сеанс завершён",

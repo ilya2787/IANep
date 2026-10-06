@@ -14,7 +14,7 @@ const metadataAllowlist: Record<string, readonly string[]> = {
   NOTIFICATION_ENQUEUED: ["eventType", "channelCount"], NOTIFICATION_DISPATCHED: ["sent", "failed", "skipped"], NOTIFICATION_PREFERENCES_UPDATED: ["importantEmail"],
   PRIVACY_REQUEST_REGISTERED: ["requestNumber", "kind", "scope", "channel"], PRIVACY_REQUEST_PREPARED: ["requestNumber", "excludedCategoryCount"], PRIVACY_REQUEST_COMPLETED: ["requestNumber", "destroyedCategoryCount", "result", "storageWarnings"],
   PRIVACY_RECEIPTS_PURGED: ["count"],
-  STORAGE_CLEANUP_COMPLETED: ["files", "bytes", "preservedHistory"], ARCHIVED_BRIEFS_DELETED: ["count"], ORPHAN_STORAGE_CLEANUP_COMPLETED: ["files", "bytes"], RETENTION_SETTINGS_UPDATED: ["projectDays", "briefDays", "warningDays", "automaticCleanupEnabled"], ADMIN_NOTIFICATION_EMAIL_UPDATED: ["enabled"],
+  STORAGE_CLEANUP_COMPLETED: ["files", "bytes", "preservedHistory"], ARCHIVED_PROJECT_PURGED: ["projects", "files", "bytes", "accounts"], ARCHIVED_BRIEFS_DELETED: ["count"], ORPHAN_STORAGE_CLEANUP_COMPLETED: ["files", "bytes"], RETENTION_SETTINGS_UPDATED: ["projectDays", "briefDays", "warningDays", "automaticCleanupEnabled"], ADMIN_NOTIFICATION_EMAIL_UPDATED: ["enabled"],
 };
 
 function primitive(value: unknown): value is string | number | boolean { return typeof value === "string" || typeof value === "number" || typeof value === "boolean"; }

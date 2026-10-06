@@ -1,8 +1,7 @@
-import { getSystemSettings } from "@/server/system/settings";
 import { event, withProject, WorkspaceError, type Actor } from "./service";
 
 const DAY = 24 * 60 * 60 * 1000;
-export const retentionDays = [30, 90, 180, 365, 730] as const;
+export const retentionDays = [30, 90, 180, 365, 730, 1095] as const;
 
 export async function archiveProject(projectId: string, actor: Actor, days: number | null) {
   if (actor.side !== "ADMIN") throw new WorkspaceError("Действие доступно только администратору.");
@@ -11,7 +10,7 @@ export async function archiveProject(projectId: string, actor: Actor, days: numb
     const archivedAt = new Date();
     const deleteAfter = days === null ? null : new Date(archivedAt.getTime() + days * DAY);
     await tx.clientProject.update({ where: { id: projectId }, data: { archivedAt, deleteAfter } });
-    await event(tx, projectId, actor, "PROJECT_ARCHIVED", deleteAfter ? `Проект перенесён в архив. После ${deleteAfter.toLocaleDateString("ru-RU", { timeZone: "UTC" })} файлы станут кандидатами на ручную очистку.` : "Проект перенесён в архив без срока очистки.");
+    await event(tx, projectId, actor, "PROJECT_ARCHIVED", deleteAfter ? `Проект перенесён в архив. После ${deleteAfter.toLocaleDateString("ru-RU", { timeZone: "UTC" })} он станет кандидатом на контролируемое удаление.` : "Проект перенесён в архив без срока удаления.");
   });
 }
 
@@ -25,12 +24,8 @@ export async function restoreProject(projectId: string, actor: Actor) {
   });
 }
 
-export async function purgeExpiredProjects(_now = new Date(), limit = 100) {
-  const settings = await getSystemSettings();
-  if (!settings.automaticCleanupEnabled) return 0;
-  const { cleanupCandidates, cleanArchivedProjectFiles } = await import("@/server/storage/lifecycle");
-  const due = (await cleanupCandidates(_now)).slice(0, limit);
-  if (!due.length) return 0;
-  await cleanArchivedProjectFiles(due.map(project => project.id), "SYSTEM_SCHEDULED_CLEANUP");
-  return due.length;
+export async function purgeExpiredProjects(_now = new Date(), _limit = 100) {
+  // Scheduled maintenance only reports candidates. Destruction requires Admin preview and confirmation.
+  void _now; void _limit;
+  return 0;
 }

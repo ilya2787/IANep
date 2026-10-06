@@ -1,6 +1,6 @@
 export const LEGAL_DOCUMENTS = {
-  privacy: { version: "2026-09-11", effectiveDate: "11 сентября 2026 года" },
-  briefConsent: { version: "1.0", effectiveDate: "11 сентября 2026 года" },
+  privacy: { version: "2026-10-06", effectiveDate: "6 октября 2026 года" },
+  briefConsent: { version: "1.0", effectiveDate: "6 октября 2026 года" },
   cookies: { version: "2026-09-11", effectiveDate: "11 сентября 2026 года" },
   clientTerms: { version: "2026-09-11", effectiveDate: "11 сентября 2026 года" },
 } as const;

@@ -76,8 +76,8 @@ export async function adminProjectAction(projectId: string, command: string, _st
   try {
     if (command === "add-stage") await addStage(projectId, actor, form.get("title"));
     else if (command === "archive-project") {
-      const value = z.union([z.literal("forever"), z.string().regex(/^\d{2,4}$/)]).parse(form.get("retention"));
-      await archiveProject(projectId, actor, value === "forever" ? null : Number(value));
+      const value = z.string().regex(/^\d{2,4}$/).parse(form.get("retention"));
+      await archiveProject(projectId, actor, Number(value));
     } else if (command === "restore-project") await restoreProject(projectId, actor);
     else if (command === "publish") {
       const titles = form.getAll("materialTitle"); const urls = form.getAll("url"); const kinds = form.getAll("kind"); const files = form.getAll("fileId");
