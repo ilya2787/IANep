@@ -264,7 +264,8 @@ export function Brief() {
           <input name="contact" type={a.contactMethod === 'Email' ? 'email' : a.contactMethod === 'Телефон' ? 'tel' : 'text'} inputMode={a.contactMethod === 'Телефон' ? 'tel' : a.contactMethod === 'Email' ? 'email' : 'text'} autoComplete={a.contactMethod === 'Email' ? 'email' : a.contactMethod === 'Телефон' ? 'tel' : 'off'} autoCapitalize="none" spellCheck={false} placeholder={a.contactMethod === 'Telegram' ? '@username' : a.contactMethod === 'Телефон' ? '+7 (___) ___-__-__' : 'name@example.ru'} value={draft.contact} maxLength={200} {...accessibility('contact')} onChange={(event) => setDraft({ ...draft, contact: a.contactMethod === 'Телефон' ? maskRussianPhone(event.target.value) : event.target.value })} />{errorFor('contact')}
         </label>}
         {field('comment', 'Комментарий (необязательно)', 2000)}
-        <label className={styles.consent}><input name="consent" type="checkbox" checked={a.consent} {...accessibility('consent')} onChange={(event) => answer('consent', event.target.checked)} /><span>Я даю <Link href={LEGAL_ROUTES.briefConsent} target="_blank">согласие на обработку персональных данных для заявки</Link> и ознакомлен с <Link href={LEGAL_ROUTES.privacy} target="_blank">политикой обработки персональных данных</Link>.</span></label>
+        <label className={styles.consent}><input name="consent" type="checkbox" checked={a.consent} {...accessibility('consent')} onChange={(event) => answer('consent', event.target.checked)} /><span>Я даю <Link href={LEGAL_ROUTES.briefConsent} target="_blank">согласие на обработку персональных данных для заявки</Link>.</span></label>
+        <p className={styles.privacyNote}>Информация об обработке персональных данных приведена в <Link href={LEGAL_ROUTES.privacy} target="_blank">Политике обработки персональных данных</Link>.</p>
         {errorFor('consent')}
       </>;
   }

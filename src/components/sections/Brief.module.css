@@ -64,6 +64,7 @@
 .subFieldset legend { margin-bottom: .75rem; font-size: var(--text-sm); }
 .hint { margin-top: 1rem; color: var(--color-muted); font-size: var(--text-sm); }
 .consent { display: flex; align-items: flex-start; gap: .65rem; margin-top: 1.5rem; font-size: var(--text-sm); cursor: pointer; }
+.privacyNote { margin: .5rem 0 0 1.75rem; color: var(--color-muted); font-size: var(--text-sm); }
 .fieldError { display: block; margin-top: .5rem; color: var(--color-text); font-size: var(--text-sm); font-weight: 600; }
 .formError { padding: 1rem; margin-top: 1rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
 .formFooter { gap: .75rem; justify-content: space-between; }
