@@ -10,6 +10,8 @@ import styles from "./page.module.css";
 export const metadata: Metadata = {
   title: "ONYX CLEANING",
   description: "Кейс сайта клининговой компании с конфигуратором заказа и панелью управления.",
+  alternates: { canonical: "/projects/onyx-cleaning" },
+  openGraph: { title: "ONYX CLEANING", description: "Кейс сайта клининговой компании с конфигуратором заказа и панелью управления.", url: "/projects/onyx-cleaning", images: ["/reference/logo-ia.png"] },
 };
 
 const flow = ["Услуга", "Тип уборки", "Площадь", "Доп. услуги", "Адрес и выезд", "Итог"];

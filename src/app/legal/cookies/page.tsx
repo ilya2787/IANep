@@ -1,6 +1,11 @@
 import { LegalDocument, type LegalSection } from "@/components/legal";
 import { LEGAL_DOCUMENTS } from "@/config/legal";
-export const metadata = { title: "Файлы cookie и хранилище браузера" };
+export const metadata = {
+  title: "Файлы cookie и хранилище браузера",
+  description: "Какие данные IANep сохраняет в браузере и как ими управлять.",
+  alternates: { canonical: "/legal/cookies" },
+  openGraph: { title: "Файлы cookie и хранилище браузера", url: "/legal/cookies", images: ["/reference/logo-ia.png"] },
+};
 const sections: LegalSection[] = [
   { id: "why", title: "Что используется сейчас", content: <p>Файлы cookie — это небольшие записи, которые сайт сохраняет в браузере. IANep использует только файлы cookie и хранилище браузера, необходимые для входа, сохранения темы интерфейса, закрытия уведомления и безопасной повторной отправки заявки. Рекламные, аналитические и профилирующие файлы cookie сейчас не используются.</p> },
   { id: "cookies", title: "Необходимые файлы cookie", content: <ul><li><code>ianep_admin_session</code> — защищённые данные сеанса администратора, недоступные программам на странице;</li><li><code>ianep_client_session</code> — защищённые данные сеанса пользователя личного кабинета, недоступные программам на странице.</li></ul> },

@@ -5,6 +5,8 @@ import styles from "@/app/admin/admin.module.css";
 import { requireAdmin } from "@/server/auth/admin-auth";
 import { unreadCount } from "@/server/notifications/service";
 
+export const metadata = { robots: { index: false, follow: false, noarchive: true } };
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await requireAdmin();
   const unread = await unreadCount({ adminId: admin.adminId });

@@ -16,6 +16,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!actor) return Response.json({ error: "Войдите в кабинет, чтобы загрузить файл." }, { status: 401 });
   const { id } = await params;
   if (!idSchema.safeParse(id).success || !request.body) return Response.json({ error: "Некорректный запрос." }, { status: 400 });
+  if (request.headers.get("content-type")?.toLowerCase() !== "application/octet-stream") return Response.json({ error: "Неверный тип запроса." }, { status: 415 });
   if (Number(request.headers.get("content-length")) > MAX_FILE_BYTES) return Response.json({ error: "Максимальный размер файла — 20 МБ." }, { status: 413 });
   if (total >= 4 || (uploads.get(actor.id) ?? 0) >= 2) return Response.json({ error: "Уже загружаются файлы. Попробуйте через минуту." }, { status: 429 });
   total++; uploads.set(actor.id, (uploads.get(actor.id) ?? 0) + 1);

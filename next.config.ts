@@ -6,6 +6,7 @@ const httpsOnlyDirectives = process.env.NODE_ENV === "production" && process.env
   : "";
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   images: {
     qualities: [75, 90],
   },
@@ -15,6 +16,7 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
+    const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }];
     return [{ source: "/(.*)", headers: [
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -23,7 +25,7 @@ const nextConfig: NextConfig = {
       { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
       ...(process.env.NODE_ENV === "production" ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }] : []),
       { key: "Content-Security-Policy", value: `default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; ${scriptPolicy}; connect-src 'self'${httpsOnlyDirectives}` },
-    ] }];
+    ] }, ...["/admin", "/admin/:path*", "/client", "/client/:path*", "/api", "/api/:path*"].map(source => ({ source, headers: noindex }))];
   },
 };
 

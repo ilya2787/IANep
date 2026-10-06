@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import styles from "@/app/admin/admin.module.css";
 import { getAdminSession } from "@/server/auth/admin-auth";
 
-export const metadata = { title: "Вход в Admin" };
+export const metadata = { title: "Вход в Admin", robots: { index: false, follow: false, noarchive: true } };
 type LoginPageProps = { searchParams: Promise<{ error?: string }> };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {

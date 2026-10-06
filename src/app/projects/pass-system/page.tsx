@@ -11,6 +11,8 @@ import styles from "./page.module.css";
 export const metadata: Metadata = {
   title: "Propusc — Система управления пропусками",
   description: "Локальная система для создания, управления и печати пропусков с универсальным редактором шаблонов и разграничением прав доступа.",
+  alternates: { canonical: "/projects/pass-system" },
+  openGraph: { title: "Propusc — Система управления пропусками", description: "Локальная система для создания, управления и печати пропусков.", url: "/projects/pass-system", images: ["/reference/logo-ia.png"] },
 };
 
 function Screenshot({ name, caption, priority = false, className = "" }: { name: ShotName; caption: string; priority?: boolean; className?: string }) {

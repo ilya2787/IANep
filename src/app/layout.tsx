@@ -16,15 +16,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://ianep.ru"),
   title: {
-    default: "IANep",
+    default: "IANep — разработка цифровых продуктов",
     template: "%s - IANep",
   },
   description: "Разработка цифровых продуктов",
-  robots: {
-    index: false,
-    follow: false,
-    noarchive: true,
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    siteName: "IANep",
+    images: [{ url: "/reference/logo-ia.png", width: 1619, height: 971, alt: "Логотип IANep" }],
   },
 };
 

@@ -7,6 +7,13 @@ import { idSchema } from "@/server/client/model";
 
 export const MAX_FILE_BYTES = 20 * 1024 * 1024;
 const PROJECT_QUOTA = 1024 * 1024 * 1024;
+export function uploadName(value: string) {
+  const name = value.normalize("NFC");
+  if (!name || name.length > 200 || name !== name.trim() || /[\\/\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/u.test(name) || name.startsWith(".") || name.split(".").length !== 2 || !name.split(".")[0]) {
+    throw new WorkspaceError("Укажите имя файла без пути, управляющих символов и двойного расширения (до 200 символов).");
+  }
+  return name;
+}
 export function storagePath(id: string) {
   idSchema.parse(id);
   const root = path.resolve(/* turbopackIgnore: true */ process.env.IANEP_STORAGE_DIR || path.join(process.cwd(), ".ianep-storage"));
@@ -16,7 +23,7 @@ export function storagePath(id: string) {
 }
 export function inspectFile(name: string, bytes: Buffer) {
   if (!bytes.length || bytes.length > MAX_FILE_BYTES) throw new WorkspaceError("Файл должен быть непустым и не больше 20 МБ.");
-  const extension = path.extname(name).toLowerCase();
+  const extension = path.extname(uploadName(name)).toLowerCase();
   const starts = (hex: string) => bytes.subarray(0, hex.length / 2).toString("hex") === hex;
   if (extension === ".png" && starts("89504e470d0a1a0a")) return { mimeType: "image/png", kind: "IMAGE" as const };
   if ([".jpg", ".jpeg"].includes(extension) && starts("ffd8ff")) return { mimeType: "image/jpeg", kind: "IMAGE" as const };
@@ -24,15 +31,17 @@ export function inspectFile(name: string, bytes: Buffer) {
   if (extension === ".pdf" && bytes.toString("ascii", 0, 5) === "%PDF-") return { mimeType: "application/pdf", kind: "DOCUMENT" as const };
   if ([".zip", ".docx", ".xlsx", ".pptx"].includes(extension) && (starts("504b0304") || starts("504b0506"))) return { mimeType: "application/octet-stream", kind: "FILE" as const };
   if ([".txt", ".csv"].includes(extension) && !bytes.includes(0)) {
-    try { new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { throw new WorkspaceError("Текстовый файл должен быть в кодировке UTF-8."); }
+    if (starts("4d5a") || starts("7f454c46") || starts("feedface") || starts("feedfacf") || starts("cffaedfe") || starts("cefaedfe")) throw new WorkspaceError("Исполняемые файлы не поддерживаются.");
+    let content: string;
+    try { content = new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { throw new WorkspaceError("Текстовый файл должен быть в кодировке UTF-8."); }
+    if (/^(?:#!|<!doctype\s+html\b|<html\b|<script\b|<svg\b|<\?php\b)/i.test(content.trimStart())) throw new WorkspaceError("Активное содержимое не поддерживается.");
     return { mimeType: "application/octet-stream", kind: "FILE" as const };
   }
   throw new WorkspaceError("Поддерживаются PNG, JPEG, WebP, PDF, ZIP, DOCX, XLSX, PPTX, TXT и CSV. Формат файла должен соответствовать расширению.");
 }
 export async function saveUpload(projectId: string, actor: Actor, originalName: string, stream: ReadableStream<Uint8Array>) {
   idSchema.parse(projectId);
-  const name = originalName.split(/[\\/]/).pop()?.replace(/[\u0000-\u001f\u007f]/g, "").trim();
-  if (!name || name.length > 200) throw new WorkspaceError("Укажите имя файла длиной до 200 символов.");
+  const name = uploadName(originalName);
   const project = await prisma.clientProject.findFirst({ where: { id: projectId, ...(actor.side === "CLIENT" ? { clientId: actor.id } : {}) }, select: { id: true } });
   if (!project) throw new WorkspaceError("Проект недоступен.");
   const reader = stream.getReader(); const chunks: Buffer[] = []; let size = 0;

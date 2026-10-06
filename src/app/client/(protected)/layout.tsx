@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import s from "@/components/workspace/workspace.module.css";
 import { unreadCount } from "@/server/notifications/service";
 import { ResponsiveWorkspaceHeader } from "@/components/workspace/ResponsiveWorkspaceHeader";
-export const metadata = { title: "Кабинет клиента", robots: { index: false, follow: false } };
+export const metadata = { title: "Кабинет клиента", robots: { index: false, follow: false, noarchive: true } };
 export default async function ClientLayout({ children }: { children: React.ReactNode }) {
   const client = await requireClient();
   const unread = await unreadCount({ clientId: client.id });

@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { LegalDocument, type LegalSection } from "@/components/legal";
 import { LEGAL_DOCUMENTS, LEGAL_OPERATOR, LEGAL_ROUTES } from "@/config/legal";
-export const metadata = { title: "Правила личного кабинета IANep" };
+export const metadata = {
+  title: "Правила личного кабинета IANep",
+  description: "Правила доступа к проектам, материалам и уведомлениям в личном кабинете IANep.",
+  alternates: { canonical: "/legal/client-terms" },
+  openGraph: { title: "Правила личного кабинета IANep", url: "/legal/client-terms", images: ["/reference/logo-ia.png"] },
+};
 const sections: LegalSection[] = [
   { id: "scope", title: "Назначение кабинета", content: <p>Личный кабинет IANep — закрытое рабочее пространство для приглашённых клиентов. Здесь отображаются проекты, этапы, материалы, версии результатов, согласования, правки, сведения о платежах и уведомления. Личный кабинет дополняет договорённости по проекту и сам по себе не заменяет договор.</p> },
   { id: "access", title: "Доступ и безопасность", content: <ul><li>используйте только выданные вам учётные данные и не передавайте их посторонним;</li><li>сообщите IANep, если подозреваете доступ другого лица;</li><li>не пытайтесь получить доступ к чужим проектам, файлам или служебным разделам;</li><li>после работы на общем устройстве завершайте сессию.</li></ul> },
