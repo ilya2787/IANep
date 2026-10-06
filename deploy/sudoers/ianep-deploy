@@ -1,1 +1,1 @@
-ianep-admin ALL=(root) NOPASSWD: /usr/local/sbin/ianep-deploy
+ianep-admin ALL=(root) NOPASSWD: /usr/local/sbin/ianep-deploy ""

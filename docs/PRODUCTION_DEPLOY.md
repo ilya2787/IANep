@@ -5,7 +5,7 @@
 The exact sudoers rule is:
 
 ```sudoers
-ianep-admin ALL=(root) NOPASSWD: /usr/local/sbin/ianep-deploy
+ianep-admin ALL=(root) NOPASSWD: /usr/local/sbin/ianep-deploy ""
 ```
 
 Before installing, verify the SSH ED25519 fingerprint is `SHA256:zING1LB5kTWGxVV1CMUZhZHiO5d6+xYOwB0Wh+3JxAo` and ensure Beget console recovery remains available. From an interactive `ianep-admin` shell, use ordinary password-protected sudo once; type the password only into that terminal:
