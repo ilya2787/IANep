@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+readonly repo=/opt/ianep/app
+readonly service=ianep.service
+readonly lock=/run/lock/ianep-deploy.lock
+
+log() { printf '[ianep-deploy] %s\n' "$*"; }
+die() { log "ERROR: $*" >&2; exit 1; }
+as_app() { runuser -u ianep -- "$@"; }
+git_app() { as_app git -C "$repo" "$@"; }
+
+(( $# == 0 )) || die 'This command takes no arguments'
+(( EUID == 0 )) || die 'Root is required'
+exec 9>"$lock"
+flock -n 9 || die 'Another deployment is running'
+
+[[ -d "$repo" && ! -L "$repo" && -d "$repo/.git" && ! -L "$repo/.git" ]] || die 'Invalid checkout path'
+[[ $(stat -c %U "$repo") == ianep && $(stat -c %U "$repo/.git") == ianep ]] || die 'Checkout ownership mismatch'
+[[ $(stat -c %a "$repo") != *7 && $(stat -c %a "$repo/.git") != *7 ]] || die 'World-writable checkout'
+[[ $(git_app rev-parse --show-toplevel) == "$repo" ]] || die 'Unexpected repository root'
+[[ $(git_app symbolic-ref -q --short HEAD) == master ]] || die 'Expected master branch'
+
+git_app fetch --no-tags origin master
+[[ -z $(git_app status --porcelain=v1 --untracked-files=all) ]] || die 'Checkout is dirty'
+current=$(git_app rev-parse HEAD)
+target=$(git_app rev-parse --verify refs/remotes/origin/master^{commit})
+git_app merge-base --is-ancestor "$current" "$target" || die 'Fast-forward is not possible'
+
+changed=$(git_app diff --name-only "$current" "$target" --)
+if printf '%s\n' "$changed" | grep -Eq '^prisma/(schema\.prisma|migrations/)'; then
+  die 'Prisma change requires a reviewed manual migration plan'
+fi
+packages=false
+if printf '%s\n' "$changed" | grep -Eq '^(package\.json|package-lock\.json)$'; then packages=true; fi
+log "Preflight: current=$current target=$target clean=yes package_change=$packages prisma_change=no"
+
+if [[ "$current" != "$target" ]]; then git_app merge --ff-only "$target"; fi
+if [[ "$packages" == true ]]; then log 'Installing dependencies'; as_app npm --prefix "$repo" ci; fi
+log 'Building application'
+as_app npm --prefix "$repo" run build || die 'Build failed; service was not restarted. Inspect checkout and build output manually'
+log 'Restarting service'
+systemctl restart "$service" || die 'Restart failed; inspect service journal and recover manually'
+systemctl is-active --quiet "$service" || die 'Service is not active after restart'
+
+for attempt in 1 2 3 4 5 6; do
+  if curl --fail --silent --show-error --max-time 5 https://ianep.ru/api/health | grep -q '"status":"ready"'; then
+    log "Deployed $target; service active; health ready"
+    exit 0
+  fi
+  sleep 3
+done
+die 'Health did not become ready; inspect service journal and recover manually'
