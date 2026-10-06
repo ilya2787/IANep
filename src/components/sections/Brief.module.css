@@ -6,12 +6,10 @@
 .title span { color: var(--color-lavender); }
 .subtitle { max-width: 38rem; margin-top: var(--space-5); color: var(--color-muted); font-size: var(--text-md); }
 .form { padding: clamp(1.25rem, 2.5vw, 2rem); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
-.progressHeading { display: flex; justify-content: space-between; gap: 1rem; color: var(--color-muted); font-size: var(--text-sm); }
+.progressHeading { display: flex; justify-content: space-between; gap: 1rem; color: var(--color-muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
 .progressHeading span:first-child { color: var(--color-text); font-weight: 600; }
-.progress { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: .375rem; margin: 1rem 0 2rem; padding: 0; list-style: none; }
-.progressItem { position: relative; height: 3px; border-radius: var(--radius-pill); background: var(--color-border); }
-.progressItem[data-active="true"] { background: var(--color-action); }
-.progressItem > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.progress { height: .3rem; margin: .7rem 0 1.75rem; overflow: hidden; border-radius: var(--radius-pill); background: var(--color-border); }
+.progressFill { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--color-action); transform-origin: left center; transition: transform 240ms var(--ease-out); }
 .fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .question { margin-bottom: 1.25rem; padding: 0; font-weight: 600; font-size: 1.125rem; }
 .options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
@@ -47,8 +45,8 @@
 
 .submissionWarning { margin-top: var(--space-5); color: var(--color-muted); font-size: var(--text-sm); }
 .answerOptions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
-.contactSwitch { grid-template-columns: repeat(3, minmax(0, 1fr)); width: fit-content; padding: .25rem; gap: .25rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-background); }
-.contactSwitch .answerOption { min-width: 7rem; min-height: 2.8rem; padding: .6rem 1rem; justify-content: center; border-color: transparent; background: transparent; text-align: center; }
+.contactSwitch { grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; padding: .25rem; gap: .25rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-background); }
+.contactSwitch .answerOption { min-width: 0; min-height: 2.75rem; padding: .55rem .35rem; justify-content: center; border-color: transparent; background: transparent; text-align: center; }
 .contactSwitch .answerOption:has(input:checked) { border-color: transparent; background: var(--color-lavender-soft); }
 .contactSwitch .choiceMark { display: none; }
 .answerOption { display: flex; align-items: center; gap: .65rem; min-height: 3rem; padding: .8rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: var(--text-sm); cursor: pointer; }
@@ -71,7 +69,7 @@
 .formFooter > :only-child { margin-left: auto; }
 .requestId { margin-top: 1rem; overflow-wrap: anywhere; font-size: var(--text-sm); color: var(--color-muted); }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-@media (max-width: 36rem) { .answerOptions { grid-template-columns: minmax(0, 1fr); } .contactSwitch { grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; } .contactSwitch .answerOption { min-width: 0; padding-inline: .45rem; } .formFooter { flex-wrap: wrap; } }
+@media (max-width: 36rem) { .answerOptions { grid-template-columns: minmax(0, 1fr); } .contactSwitch { grid-template-columns: repeat(2, minmax(0, 1fr)); } .formFooter { flex-wrap: wrap; } }
 
 .answerOption { position: relative; min-height: 4.1rem; padding: 1rem 3rem 1rem 1.05rem; background: var(--color-background); transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease; }
 .answerOption > input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
@@ -131,3 +129,6 @@
 @media (max-width: 64rem) { .successMobileMascot { display: block; width: auto; height: clamp(15rem, 36vw, 19rem); margin: 1.5rem auto 0; object-fit: contain; } }
 @media (max-width: 36rem) { .successActions button { width: 100%; font-size: .85rem; } .successReceipt { gap: 1.2rem; justify-content: space-between; } }
 @media (prefers-reduced-motion: reduce) { .answerOption { transition: none; } .answerOption:active, .option:active { transform: none; } }
+
+@media (hover: hover) and (pointer: fine) { .contactSwitch .answerOption:hover { border-color: transparent; background: var(--color-lavender-soft); } }
+@media (prefers-reduced-motion: reduce) { .progressFill { transition: none; } }

@@ -292,10 +292,10 @@ export function Brief() {
               <p className={styles.submissionWarning}>{briefSubmissionWarning}</p>
               <div className={styles.successActions}><Button type="button" onClick={restart}>Заполнить ещё одну анкету <span aria-hidden="true">↗</span></Button></div>
             </div> : <form ref={form} className={styles.form} onSubmit={submit} noValidate aria-busy={status === 'pending'}>
-              <div className={styles.progressHeading}><span>{briefSteps[step].group}</span><span>Шаг {step + 1} из {briefSteps.length}</span></div>
-              <ol className={styles.progress} aria-label="Шаги анкеты проекта" style={{ gridTemplateColumns: `repeat(${briefSteps.length}, minmax(0, 1fr))` }}>
-                {briefSteps.map((item, index) => <li className={styles.progressItem} data-active={index <= step} aria-current={index === step ? 'step' : undefined} key={item.id}><span>{index + 1}. {item.group}</span></li>)}
-              </ol>
+              <div className={styles.progressHeading}><span>Шаг {step + 1} из {briefSteps.length}</span><span>{briefSteps[step].group}</span></div>
+              <div className={styles.progress} role="progressbar" aria-label="Заполнение анкеты проекта" aria-valuemin={0} aria-valuemax={briefSteps.length} aria-valuenow={step + 1} aria-valuetext={`Шаг ${step + 1} из ${briefSteps.length}: ${briefSteps[step].group}`}>
+                <span className={styles.progressFill} style={{ transform: `scaleX(${(step + 1) / briefSteps.length})` }} />
+              </div>
               <fieldset className={styles.fieldset} disabled={status === 'pending'} key={step}>
                 <legend className={styles.question} ref={heading} tabIndex={-1}>{step === 1 ? getGoalQuestion(draft.projectType) : briefSteps[step].question}</legend>
                 {content}
