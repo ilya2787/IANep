@@ -10,7 +10,7 @@ import { enqueueForActiveAdmins } from "@/server/notifications/service";
 import { appendAudit } from "@/server/security/audit-journal";
 import { normalizeBriefContact } from "./brief.receipt";
 
-const contactTypes = { Email: "EMAIL", "Телефон": "PHONE", Telegram: "TELEGRAM" } as const;
+const contactTypes = { Email: "EMAIL", "Телефон": "PHONE", MAX: "PHONE", Telegram: "TELEGRAM" } as const;
 
 function normalizedBriefData(data: CreateBriefRequestData) {
   const answers = data.answers as { contactMethod?: string };

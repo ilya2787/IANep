@@ -10,7 +10,7 @@ export function hashBriefReceipt(receipt: string) {
 }
 
 export function normalizeBriefContact(contact: string, method: string) {
-  if (method === 'Телефон') return normalizeRussianPhone(contact);
+  if (method === 'Телефон' || method === 'MAX') return normalizeRussianPhone(contact);
   if (method === 'Email') return normalizeEmail(contact);
   return contact.normalize('NFKC').trim().toLowerCase();
 }

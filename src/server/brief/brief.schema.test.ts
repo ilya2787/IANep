@@ -30,6 +30,7 @@ test('схема проверяет все способы связи', () => {
   for (const [method, valid, invalid] of [
     ['Email', 'user@example.com', 'not-email'],
     ['Телефон', '+7 (900) 123-45-67', 'abc1234567890'],
+    ['MAX', '+7 (900) 123-45-67', '@username'],
     ['Telegram', '@test_user', '@x'],
   ]) {
     const input = validBriefPayload();
@@ -37,7 +38,7 @@ test('схема проверяет все способы связи', () => {
     input.contact = valid;
     const result = submitBriefSchema.safeParse(input);
     assert.ok(result.success);
-    if (result.success && method === 'Телефон') assert.equal(result.data.contact, '+79001234567');
+    if (result.success && (method === 'Телефон' || method === 'MAX')) assert.equal(result.data.contact, '+79001234567');
     input.contact = invalid;
     assert.equal(submitBriefSchema.safeParse(input).success, false);
   }
@@ -56,6 +57,15 @@ test('email нормализуется, а телефон проверяется
   assert.equal(submitBriefSchema.safeParse(phone).success, false);
   phone.contact = '+1 (415) 555-0100';
   assert.equal(submitBriefSchema.safeParse(phone).success, false);
+});
+
+test('MAX нормализуется как российский телефон независимо от маски', () => {
+  const input = validBriefPayload();
+  input.answers.contactMethod = 'MAX';
+  input.contact = '8 999 123 45 67';
+  assert.equal(submitBriefSchema.parse(input).contact, '+79991234567');
+  input.contact = '+1 (415) 555-0100';
+  assert.equal(submitBriefSchema.safeParse(input).success, false);
 });
 
 test('схема отклоняет несовместимые и неполные ответы', () => {

@@ -156,6 +156,32 @@ test("POST /api/brief канонизирует телефон без довер�
 });
 
 
+test("POST /api/brief сохраняет MAX как PHONE с выбранным каналом и согласием 1.0", async (context) => {
+  context.mock.method(briefRateLimiter, "consume", async () => ({ allowed: true as const, retryAfterSeconds: 0 }));
+  let briefRequestId: string | undefined;
+  try {
+    const payload = validBriefPayload();
+    payload.answers.contactMethod = "MAX";
+    payload.contact = "8 999 123 45 67";
+    const response = await POST(new Request("http://localhost/api/brief", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) }));
+    const body = await response.json();
+    assert.equal(response.status, 201);
+    briefRequestId = body.data.id;
+    const saved = await prisma.briefRequest.findUniqueOrThrow({ where: { id: briefRequestId } });
+    assert.equal(saved.contact, "+79991234567");
+    assert.equal(saved.contactType, "PHONE");
+    assert.equal((saved.answers as { contactMethod: string }).contactMethod, "MAX");
+    assert.equal(saved.consentVersion, "1.0");
+    assert.ok(saved.consentAcceptedAt instanceof Date);
+  } finally {
+    if (briefRequestId) await prisma.$transaction([
+      prisma.auditEvent.deleteMany({ where: { entityType: "BriefRequest", entityId: briefRequestId } }),
+      prisma.briefRequest.delete({ where: { id: briefRequestId } }),
+    ]);
+    await prisma.$disconnect();
+  }
+});
+
 test("POST /api/brief отклоняет поля, назначаемые сервером", async () => {
   for (const field of ["status", "source", "eventType", "consentVersion", "consentAcceptedAt"]) {
     const response = await POST(new Request("http://localhost/api/brief", {

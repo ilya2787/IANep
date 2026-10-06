@@ -30,7 +30,7 @@ export const materialOptions = ['Логотип и фирменный стиль
 export const readinessOptions = ['Всё готово', 'Большая часть готова', 'Есть только часть', 'Пока ничего нет'];
 export const timeframeOptions = ['Конкретного срока нет', 'В течение месяца', 'В течение 1-2 месяцев', 'Есть конкретная дата'];
 export const budgetOptions = ['До 20 000 ₽', '20 000-40 000 ₽', '40 000-70 000 ₽', '70 000-100 000 ₽', 'Более 100 000 ₽', 'Пока не определён'];
-export const contactMethods = ['Telegram', 'Телефон', 'Email'];
+export const contactMethods = ['Telegram', 'MAX', 'Телефон', 'Email'];
 export const briefSubmissionWarning = 'Отправка брифа не означает автоматическое принятие проекта в работу.';
 export const briefDeadlineWarning = 'Желаемая дата не является автоматически подтверждённым сроком. Возможность реализации проекта в указанный период определим после оценки проекта.';
 

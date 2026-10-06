@@ -16,6 +16,15 @@ test("публичная редакция согласия берётся из �
   assert.ok(current.sections.length > 0);
 });
 
+test("утверждённая редакция 1.0 идентифицирует оператора", () => {
+  const current = getCurrentBriefConsentRevision();
+  assert.equal(current.version, "1.0");
+  const consent = current.sections.find((section) => section.id === "consent");
+  const content = consent?.blocks.flatMap((block) => block.content.map((item) => item.value)).join("") ?? "";
+  assert.match(content, /Оператор персональных данных — Непряхин Илья Сергеевич, физическое лицо, владелец сайта IANep \(ianep\.ru\)/);
+  assert.match(content, /даю оператору персональных данных согласие/);
+});
+
 test("редакция 1.0 остаётся доступной при добавлении более новой", () => {
   const versionOne = getBriefConsentRevision("1.0");
   assert.ok(versionOne);
