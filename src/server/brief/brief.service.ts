@@ -5,6 +5,7 @@ import { requireAdmin } from "@/server/auth/admin-auth";
 import { z } from "zod";
 import {
   briefRepository,
+  BriefAccessDenied,
   BriefStatusConflict,
   type BriefRepository,
 } from "@/server/brief/brief.repository";
@@ -77,13 +78,14 @@ export class BriefService {
   }
 
   async changeStatusForAdmin(id: string, status: unknown) {
-    await requireAdmin();
+    const session = await requireAdmin();
     const input = z.object({ id: z.uuid(), status: z.enum(["NEW", "IN_REVIEW", "CONTACTED", "ARCHIVED"]) }).safeParse({ id, status });
     if (!input.success) return { ok: false as const, reason: "INVALID" as const };
     try {
-      const result = await this.repository.changeStatus(input.data.id, input.data.status);
+      const result = await this.repository.changeStatus(input.data.id, input.data.status, session.adminId, session.accessRole === "owner");
       return result ? { ok: true as const, ...result } : { ok: false as const, reason: "NOT_FOUND" as const };
     } catch (error) {
+      if (error instanceof BriefAccessDenied) return { ok: false as const, reason: "FORBIDDEN" as const };
       if (error instanceof BriefStatusConflict) return { ok: false as const, reason: "CONFLICT" as const };
       throw error;
     }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/server/auth/admin-auth";
+import { requireOwner } from "@/server/auth/admin-auth";
 import { prisma } from "@/server/db/prisma";
 import { previewTarget, privacyCategories, type PrivacyCategory } from "@/server/privacy/requests";
 import { executeRequest, prepareRequest } from "@/app/admin/privacy/actions";
@@ -19,7 +19,7 @@ const categoryLabels: Record<PrivacyCategory, string> = { ACCOUNT: "Аккаун
 const bytes = (value: number) => new Intl.NumberFormat("ru-RU", { style: "unit", unit: value >= 1024 ** 2 ? "megabyte" : "kilobyte", maximumFractionDigits: 1 }).format(value / (value >= 1024 ** 2 ? 1024 ** 2 : 1024));
 
 export default async function PrivacyRequestsPage({ searchParams }: { searchParams: Promise<{ scope?: string }> }) {
-  await requireAdmin();
+  await requireOwner();
   const query = await searchParams;
   const scope = query.scope === "BRIEF" || query.scope === "PROJECT" ? query.scope : "CLIENT";
   const lookupReady = privacyLookupReady();

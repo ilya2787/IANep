@@ -46,10 +46,14 @@ async function main() {
   if (password.length < 12) throw new Error("Пароль должен содержать не менее 12 символов");
   if (password !== confirmation) throw new Error("Пароли не совпадают");
 
+  const existing = await prisma.adminUser.findUnique({ where: { username }, select: { role: true } });
+  if (existing && existing.role !== "owner") throw new Error("Этот логин принадлежит оператору. Используйте раздел «Сотрудники».");
+  if (!existing && await prisma.adminUser.count({ where: { role: "owner" } })) throw new Error("Главный администратор уже существует. Создавайте сотрудников в разделе «Сотрудники».");
+
   const admin = await prisma.adminUser.upsert({
     where: { username },
-    create: { username, passwordHash: hashAdminPassword(password) },
-    update: { passwordHash: hashAdminPassword(password), active: true },
+    create: { username, passwordHash: hashAdminPassword(password), role: "owner" },
+    update: { passwordHash: hashAdminPassword(password), active: true, sessionVersion: { increment: 1 } },
     select: { username: true },
   });
   stdout.write(`Администратор ${admin.username} сохранён.\n`);

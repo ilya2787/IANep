@@ -24,7 +24,7 @@ export async function withProject<T>(projectId: string, actor: Actor, work: (tx:
 }
 export async function event(tx: Prisma.TransactionClient, projectId: string, actor: Actor, type: string, message: string, metadata: Record<string, unknown> = {}) {
   await tx.projectEvent.create({ data: { projectId, actorId: actor.id, actorSide: actor.side, type, message } });
-  await appendAudit(tx, { eventType: type, entityType: "PROJECT", entityId: projectId, metadata: { actorSide: actor.side, ...metadata } });
+  await appendAudit(tx, { eventType: type, entityType: "PROJECT", entityId: projectId, metadata: { actorSide: actor.side, actorId: actor.id, ...metadata } });
 }
 function admin(actor: Actor) { if (actor.side !== "ADMIN") throw new WorkspaceError("Действие доступно только администратору."); }
 export async function publish(projectId: string, actor: Actor, input: unknown) {

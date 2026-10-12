@@ -20,7 +20,7 @@ let otherImageId = "";
 
 test.beforeAll(async () => {
   const passwordHash = hashAdminPassword(password);
-  const admin = await prisma.adminUser.create({ data: { username, passwordHash } }); adminId = admin.id;
+  const admin = await prisma.adminUser.create({ data: { username, passwordHash, role: "owner" } }); adminId = admin.id;
   const client = await prisma.clientUser.create({ data: { name: "Проверка изображений", username: `${username}-client`, passwordHash } }); clientId = client.id;
   const otherClient = await prisma.clientUser.create({ data: { name: "Другой клиент", username: `${username}-other`, passwordHash } }); otherClientId = otherClient.id;
   const project = await prisma.clientProject.create({ data: { title: "Проверка просмотра", clientId } }); projectId = project.id;

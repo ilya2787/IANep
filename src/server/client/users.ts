@@ -15,8 +15,7 @@ export async function clientDependencies(id: string) {
 }
 
 export async function setClientActive(id: string, active: boolean, adminId: string) {
-  await prisma.$transaction(async tx => { const updated = await tx.clientUser.updateMany({ where: { id }, data: { active, sessionVersion: { increment: 1 } } }); if (!updated.count) throw new WorkspaceError("Пользователь не найден."); await appendAudit(tx, { eventType: active ? "CLIENT_REACTIVATED" : "CLIENT_DEACTIVATED", entityType: "CLIENT_USER", entityId: id, metadata: { sessionsRevoked: true } }); });
-  void adminId;
+  await prisma.$transaction(async tx => { const updated = await tx.clientUser.updateMany({ where: { id }, data: { active, sessionVersion: { increment: 1 } } }); if (!updated.count) throw new WorkspaceError("Пользователь не найден."); await appendAudit(tx, { eventType: active ? "CLIENT_REACTIVATED" : "CLIENT_DEACTIVATED", entityType: "CLIENT_USER", entityId: id, metadata: { sessionsRevoked: true, actorId: adminId } }); });
 }
 
 export async function deleteUnusedClient(id: string, adminId: string) {
@@ -24,6 +23,5 @@ export async function deleteUnusedClient(id: string, adminId: string) {
   if (dependencies.total) throw new WorkspaceError("Физическое удаление запрещено: у пользователя есть связанная история. Используйте блокировку.");
   const deleted = await prisma.clientUser.deleteMany({ where: { id } });
   if (!deleted.count) throw new WorkspaceError("Пользователь не найден.");
-  await prisma.auditEvent.create({ data: { eventType: "UNUSED_CLIENT_DELETED", entityType: "SECURITY", entityId: createHash("sha256").update(id).digest("hex"), metadata: { dependencyCount: dependencies.total } } });
-  void adminId;
+  await appendAudit(prisma, { eventType: "UNUSED_CLIENT_DELETED", entityType: "SECURITY", entityId: createHash("sha256").update(id).digest("hex"), metadata: { dependencyCount: dependencies.total, actorId: adminId } });
 }

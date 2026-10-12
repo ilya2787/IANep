@@ -50,6 +50,7 @@
     "typescript": "^5"
   },
   "overrides": {
+    "sharp": "0.35.5",
     "deepmerge-ts": "8.0.2",
     "mysql2": "3.24.5",
     "fast-uri": "3.1.8",

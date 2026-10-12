@@ -62,7 +62,7 @@ export async function changeBriefStatus(id: string, _state: StatusActionState, f
   }
   const result = await briefService.changeStatusForAdmin(id, formData.get("status"));
   if (!result.ok) {
-    return { ok: false, message: result.reason === "CONFLICT" ? "Статус уже изменился. Обновите страницу и попробуйте снова." : "Не удалось изменить статус заявки." };
+    return { ok: false, message: result.reason === "FORBIDDEN" ? "Архивировать или восстановить заявку может только владелец." : result.reason === "CONFLICT" ? "Статус уже изменился. Обновите страницу и попробуйте снова." : "Не удалось изменить статус заявки." };
   }
   revalidatePath("/admin");
   revalidatePath(`/admin/briefs/${id}`);

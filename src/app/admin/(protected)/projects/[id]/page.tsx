@@ -9,5 +9,5 @@ export default async function AdminProject({ params, searchParams }: { params: P
   const project = await readProject((await params).id, { id: admin.adminId, side: "ADMIN" });
   if (!project) notFound();
   const [query, settings] = await Promise.all([searchParams, getSystemSettings()]);
-  return <div className={`${s.main} ${s.embedded}`}><ProjectWorkspace project={project} admin tab={query.tab} stageId={query.stage} retentionDefault={settings.archivedProjectRetentionDays} /></div>;
+  return <div className={`${s.main} ${s.embedded}`}><ProjectWorkspace project={project} admin owner={admin.accessRole === "owner"} tab={query.tab} stageId={query.stage} retentionDefault={settings.archivedProjectRetentionDays} /></div>;
 }

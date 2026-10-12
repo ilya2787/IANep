@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { randomUUID } from "node:crypto";
 
 import { BriefRequestStatus } from "@/generated/prisma/enums";
 import { briefService } from "@/server/brief/brief.service";
@@ -117,9 +118,10 @@ test("смена статуса создаёт минимальное событ
     name: "Проверка статуса", contact: "status-test@example.com", projectType: "landing-page", answers: {}, source: "INTEGRATION_TEST",
   } });
   const repository = new BriefRepository(prisma);
+  const actorId = randomUUID();
 
   try {
-    const result = await repository.changeStatus(request.id, BriefRequestStatus.IN_REVIEW);
+    const result = await repository.changeStatus(request.id, BriefRequestStatus.IN_REVIEW, actorId, true);
     assert.deepEqual(result, { status: BriefRequestStatus.IN_REVIEW, changed: true });
 
     const saved = await prisma.briefRequest.findUniqueOrThrow({ where: { id: request.id } });
@@ -132,7 +134,10 @@ test("смена статуса создаёт минимальное событ
       previousStatus: BriefRequestStatus.NEW,
       newStatus: BriefRequestStatus.IN_REVIEW,
       actor: "ADMIN",
+      actorId,
     });
+    await assert.rejects(repository.changeStatus(request.id, BriefRequestStatus.ARCHIVED, actorId, false));
+    assert.equal((await prisma.briefRequest.findUniqueOrThrow({ where: { id: request.id } })).status, BriefRequestStatus.IN_REVIEW);
   } finally {
     await prisma.$transaction([
       prisma.auditEvent.deleteMany({ where: { entityType: "BriefRequest", entityId: request.id } }),

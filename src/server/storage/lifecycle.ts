@@ -94,7 +94,7 @@ function containsIdentifier(value: unknown, ids: Set<string>): boolean {
   return Boolean(value && typeof value === "object" && Object.values(value).some(item => containsIdentifier(item, ids)));
 }
 
-async function purgeOneArchivedProject(projectId: string, now: Date) {
+async function purgeOneArchivedProject(projectId: string, now: Date, adminId: string) {
   const stale = () => new WorkspaceError("Состав кандидатов изменился. Обновите предварительный просмотр.");
   const settings = await getSystemSettings();
   const cutoff = new Date(now.getTime() - settings.archivedProjectRetentionDays * 86_400_000);
@@ -153,7 +153,7 @@ async function purgeOneArchivedProject(projectId: string, now: Date) {
       const auditIds = audits.filter(item => identifiers.has(item.entityId) || containsIdentifier(item.metadata, identifiers)).map(item => item.id);
       if (auditIds.length) await tx.auditEvent.deleteMany({ where: { id: { in: auditIds } } });
       const bytes = files.reduce((sum, file) => sum + file.size, 0);
-      await appendAudit(tx, { eventType: "ARCHIVED_PROJECT_PURGED", entityType: "SYSTEM", entityId: "project-retention", metadata: { projects: 1, files: files.length, bytes, accounts: Number(accountDeleted) } });
+      await appendAudit(tx, { eventType: "ARCHIVED_PROJECT_PURGED", entityType: "SYSTEM", entityId: "project-retention", metadata: { projects: 1, files: files.length, bytes, accounts: Number(accountDeleted), actorId: adminId } });
       return { projects: 1, files: files.length, bytes, accounts: Number(accountDeleted) };
     }, { timeout: 30_000 });
     let warnings = 0;
@@ -167,23 +167,21 @@ async function purgeOneArchivedProject(projectId: string, now: Date) {
 
 export async function purgeArchivedProjects(projectIds: string[], adminId: string, now = new Date()) {
   if (!projectIds.length || new Set(projectIds).size !== projectIds.length) throw new WorkspaceError("Выберите проекты для удаления.");
-  void adminId;
   const totals = { projects: 0, files: 0, bytes: 0, accounts: 0, warnings: 0 };
   for (const id of projectIds) {
-    const result = await purgeOneArchivedProject(id, now);
+    const result = await purgeOneArchivedProject(id, now, adminId);
     for (const key of Object.keys(totals) as (keyof typeof totals)[]) totals[key] += result[key];
   }
   return totals;
 }
 
 export async function deleteArchivedBriefs(ids: string[], adminId: string) {
-  void adminId;
   const allowed = new Set((await archivedBriefCandidates()).map(brief => brief.id));
   if (!ids.length || ids.some(id => !allowed.has(id))) throw new WorkspaceError("Состав заявок изменился. Обновите предварительный просмотр.");
   return prisma.$transaction(async tx => {
     const linked = await tx.briefRequest.count({ where: { id: { in: ids }, project: { isNot: null } } });
     if (linked) throw new WorkspaceError("Связанную с проектом заявку удалить нельзя.");
-    await appendAudit(tx, { eventType: "ARCHIVED_BRIEFS_DELETED", entityType: "SYSTEM", entityId: "brief-retention", metadata: { count: ids.length } });
+    await appendAudit(tx, { eventType: "ARCHIVED_BRIEFS_DELETED", entityType: "SYSTEM", entityId: "brief-retention", metadata: { count: ids.length, actorId: adminId } });
     await tx.auditEvent.deleteMany({ where: { entityType: "BriefRequest", entityId: { in: ids } } });
     return tx.briefRequest.deleteMany({ where: { id: { in: ids }, status: "ARCHIVED", project: null } });
   });
@@ -202,7 +200,6 @@ export async function cleanOrphanFiles(adminId: string) {
     if (!known.has(id) || entry.includes(".deleting-")) candidates.push({ path: path.join(root, entry), size: info.size });
   }
   for (const candidate of candidates) await unlink(candidate.path);
-  await appendAudit(prisma, { eventType: "ORPHAN_STORAGE_CLEANUP_COMPLETED", entityType: "SYSTEM", entityId: "storage", metadata: { files: candidates.length, bytes: candidates.reduce((sum, file) => sum + file.size, 0) } });
-  void adminId;
+  await appendAudit(prisma, { eventType: "ORPHAN_STORAGE_CLEANUP_COMPLETED", entityType: "SYSTEM", entityId: "storage", metadata: { files: candidates.length, bytes: candidates.reduce((sum, file) => sum + file.size, 0), actorId: adminId } });
   return { files: candidates.length, bytes: candidates.reduce((sum, file) => sum + file.size, 0) };
 }

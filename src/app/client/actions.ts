@@ -4,7 +4,7 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/server/db/prisma";
-import { requireAdmin, canAttemptAdminLogin, recordAdminLoginFailure, clearAdminLoginFailures } from "@/server/auth/admin-auth";
+import { requireAdmin, requireOwner, canAttemptAdminLogin, recordAdminLoginFailure, clearAdminLoginFailures } from "@/server/auth/admin-auth";
 import { hashAdminPassword, verifyAdminPassword } from "@/server/auth/admin-password";
 import { createClientSession, deleteClientSession, requireClient } from "@/server/client/auth";
 import { addStage, decide, event, publish, withProject, resolveAttachment, WorkspaceError, type Actor } from "@/server/client/service";
@@ -46,10 +46,10 @@ export async function loginClient(_state: ActionState, form: FormData): Promise<
 export async function logoutClient() { await requireSameOrigin(); const client = await requireClient(); await deleteClientSession(); await securityAudit("SESSION_REVOKED", "CLIENT_USER", client.id); redirect("/client/login"); }
 export async function createClient(_state: ActionState, form: FormData): Promise<ActionState> {
   await requireSameOrigin();
-  await requireAdmin();
+  const admin = await requireAdmin();
   try {
     const data = z.object({ name: titleSchema, username: z.string().trim().toLowerCase().regex(/^[a-z0-9._@+-]{3,100}$/), password: z.string().min(12).max(200), email: z.union([z.literal(""), z.email().max(320)]) }).parse(Object.fromEntries(form));
-    await prisma.$transaction(async tx => { const client = await tx.clientUser.create({ data: { name: data.name, username: data.username, passwordHash: hashAdminPassword(data.password), email: data.email || null } }); await appendAudit(tx, { eventType: "CLIENT_CREATED", entityType: "CLIENT_USER", entityId: client.id, metadata: { actorSide: "ADMIN" } }); });
+    await prisma.$transaction(async tx => { const client = await tx.clientUser.create({ data: { name: data.name, username: data.username, passwordHash: hashAdminPassword(data.password), email: data.email || null } }); await appendAudit(tx, { eventType: "CLIENT_CREATED", entityType: "CLIENT_USER", entityId: client.id, metadata: { actorSide: "ADMIN", actorId: admin.adminId } }); });
     revalidatePath("/admin/projects"); return { ok: true, message: "Аккаунт создан. Передайте клиенту логин и пароль безопасным способом. Сообщение не отправлялось." };
   } catch (error) { return failure(error); }
 }
@@ -62,7 +62,7 @@ export async function createProject(_state: ActionState, form: FormData): Promis
     if (!client) throw new WorkspaceError("Выберите действующего клиента.");
     const project = await prisma.$transaction(async tx => {
       const created = await tx.clientProject.create({ data: { ...data, events: { create: { type: "PROJECT_CREATED", message: "Проект создан. Готовим план работы.", actorId: admin.adminId, actorSide: "ADMIN" } } } });
-      await appendAudit(tx, { eventType: "PROJECT_CREATED", entityType: "PROJECT", entityId: created.id, metadata: { actorSide: "ADMIN" } });
+      await appendAudit(tx, { eventType: "PROJECT_CREATED", entityType: "PROJECT", entityId: created.id, metadata: { actorSide: "ADMIN", actorId: admin.adminId } });
       await enqueueNotification(tx, { recipient: { clientId: data.clientId }, projectId: created.id, eventType: "PROJECT_ASSIGNED", title: "Вам назначен проект", message: `Проект «${data.title}» доступен в кабинете.`, href: `/client/projects/${created.id}`, email: true });
       return created;
     }); id = project.id;
@@ -74,6 +74,7 @@ export async function adminProjectAction(projectId: string, command: string, _st
   await requireSameOrigin();
   const session = await requireAdmin(); const actor: Actor = { id: session.adminId, side: "ADMIN" };
   try {
+    if (["archive-project", "restore-project", "reset-client-sessions", "client-access"].includes(command) || command === "stage" && form.get("operation") === "archive") await requireOwner();
     if (command === "add-stage") await addStage(projectId, actor, form.get("title"));
     else if (command === "archive-project") {
       const value = z.string().regex(/^\d{2,4}$/).parse(form.get("retention"));

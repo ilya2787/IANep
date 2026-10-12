@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireAdmin } from "@/server/auth/admin-auth";
+import { requireOwner } from "@/server/auth/admin-auth";
 import { requireSameOrigin } from "@/server/security/request";
 import { executePrivacyRequest, preparePrivacyRequest, privacyCategories, registerPrivacyRequest } from "@/server/privacy/requests";
 import { findCompletedPrivacyRequests } from "@/server/privacy/lookup";
@@ -15,7 +15,7 @@ function failure(error: unknown): ActionState {
 const receipt = (number: number) => `PD-${String(number).padStart(6, "0")}`;
 
 export async function registerRequest(_state: ActionState, form: FormData): Promise<ActionState> {
-  await requireSameOrigin(); await requireAdmin();
+  await requireSameOrigin(); const admin = await requireOwner();
   try {
     const data = z.object({
       kind: z.enum(["CONSENT_WITHDRAWAL", "ERASURE", "PROCESSING_TERMINATION", "OTHER"]),
@@ -24,7 +24,7 @@ export async function registerRequest(_state: ActionState, form: FormData): Prom
       receivedAt: z.coerce.date(), dueAt: z.union([z.literal(""), z.coerce.date()]).optional(),
       lookupValue: z.string().max(254).optional(),
     }).parse(Object.fromEntries(form));
-    const request = await registerPrivacyRequest({ ...data, dueAt: data.dueAt || null });
+    const request = await registerPrivacyRequest({ ...data, dueAt: data.dueAt || null }, admin.adminId);
     revalidatePath("/admin/privacy-requests");
     return { ok: true, message: `Запрос ${receipt(request.number)} зарегистрирован. Проверьте состав данных и исключения.` };
   } catch (error) { return failure(error); }
@@ -34,7 +34,7 @@ export type PrivacyLookupState = ActionState & { matches?: Array<{ number: numbe
 
 export async function lookupCompletedRequests(_state: PrivacyLookupState, form: FormData): Promise<PrivacyLookupState> {
   await requireSameOrigin();
-  await requireAdmin();
+  await requireOwner();
   try {
     const data = z.object({ lookupType: z.enum(["EMAIL", "PHONE"]), lookupValue: z.string().min(1).max(254) }).parse(Object.fromEntries(form));
     const matches = await findCompletedPrivacyRequests(data.lookupType, data.lookupValue, { side: "ADMIN" });
@@ -50,23 +50,23 @@ export async function lookupCompletedRequests(_state: PrivacyLookupState, form: 
 }
 
 export async function prepareRequest(id: string, _state: ActionState, form: FormData): Promise<ActionState> {
-  await requireSameOrigin(); await requireAdmin();
+  await requireSameOrigin(); const admin = await requireOwner();
   try {
     z.literal("yes").parse(form.get("reviewed"));
     const excluded = z.array(z.enum(privacyCategories)).parse(form.getAll("excludedCategory"));
     const reason = z.string().trim().max(1000).parse(form.get("exclusionReason") ?? "");
-    await preparePrivacyRequest(z.uuid().parse(id), excluded, reason || null);
+    await preparePrivacyRequest(z.uuid().parse(id), excluded, reason || null, admin.adminId);
     revalidatePath("/admin/privacy-requests");
     return { ok: true, message: "Область подтверждена. Для исполнения требуется второе подтверждение." };
   } catch (error) { return failure(error); }
 }
 
 export async function executeRequest(id: string, _state: ActionState, form: FormData): Promise<ActionState> {
-  await requireSameOrigin(); await requireAdmin();
+  await requireSameOrigin(); const admin = await requireOwner();
   try {
     z.literal("yes").parse(form.get("finalConfirm"));
     const confirmation = z.string().max(100).parse(form.get("confirmation"));
-    const result = await executePrivacyRequest(z.uuid().parse(id), confirmation);
+    const result = await executePrivacyRequest(z.uuid().parse(id), confirmation, admin.adminId);
     revalidatePath("/admin/privacy-requests"); revalidatePath("/admin/users"); revalidatePath("/admin/projects"); revalidatePath("/admin"); revalidatePath("/admin/system");
     return { ok: true, message: result.warnings ? `Запрос ${receipt(result.number)} исполнен. ${result.warnings} файлов в карантине требуют повторной технической очистки.` : `Запрос ${receipt(result.number)} исполнен. Персональные данные уничтожены в выбранной области.` };
   } catch (error) { return failure(error); }

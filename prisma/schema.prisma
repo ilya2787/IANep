@@ -144,6 +144,7 @@ model AdminUser {
   username     String   @unique @db.VarChar(100)
   passwordHash String
   active       Boolean  @default(true)
+  role         String   @db.VarChar(16)
   sessionVersion Int    @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

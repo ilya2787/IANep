@@ -14,6 +14,8 @@ const metadataAllowlist: Record<string, readonly string[]> = {
   NOTIFICATION_ENQUEUED: ["eventType", "channelCount"], NOTIFICATION_DISPATCHED: ["sent", "failed", "skipped"], NOTIFICATION_PREFERENCES_UPDATED: ["importantEmail"],
   PRIVACY_REQUEST_REGISTERED: ["requestNumber", "kind", "scope", "channel"], PRIVACY_REQUEST_PREPARED: ["requestNumber", "excludedCategoryCount"], PRIVACY_REQUEST_COMPLETED: ["requestNumber", "destroyedCategoryCount", "result", "storageWarnings"],
   PRIVACY_RECEIPTS_PURGED: ["count"],
+  OPERATOR_CREATED: ["actorId"], OPERATOR_BLOCKED: ["actorId"], OPERATOR_UNBLOCKED: ["actorId"], OPERATOR_CREDENTIALS_RESET: ["actorId"], OPERATOR_SESSIONS_REVOKED: ["actorId"],
+  BACKUP_STARTED: ["actorId", "mode", "source"], BACKUP_DOWNLOADED: ["actorId", "mode"],
   STORAGE_CLEANUP_COMPLETED: ["files", "bytes", "preservedHistory"], ARCHIVED_PROJECT_PURGED: ["projects", "files", "bytes", "accounts"], ARCHIVED_BRIEFS_DELETED: ["count"], ORPHAN_STORAGE_CLEANUP_COMPLETED: ["files", "bytes"], RETENTION_SETTINGS_UPDATED: ["projectDays", "briefDays", "warningDays", "automaticCleanupEnabled"], ADMIN_NOTIFICATION_EMAIL_UPDATED: ["enabled"],
 };
 
@@ -21,7 +23,7 @@ function primitive(value: unknown): value is string | number | boolean { return 
 
 export function sanitizeAuditMetadata(eventType: string, metadata?: Record<string, unknown> | null): Record<string, string | number | boolean> | undefined {
   if (!metadata) return undefined;
-  const allowed = new Set(metadataAllowlist[eventType] ?? []);
+  const allowed = new Set([...(metadataAllowlist[eventType] ?? []), ...(eventType in metadataAllowlist ? ["actorId"] : [])]);
   const safe = Object.fromEntries(Object.entries(metadata).filter(([key, value]) => allowed.has(key) && primitive(value)).map(([key, value]) => [key, typeof value === "string" ? value.slice(0, 160) : value])) as Record<string, string | number | boolean>;
   return Object.keys(safe).length ? safe : undefined;
 }

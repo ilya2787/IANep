@@ -14,16 +14,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className={styles.adminRoot}>
       <ResponsiveWorkspaceHeader
         brandHref="/admin"
-        contextLabel="Администратор"
+        contextLabel={admin.accessRole === "owner" ? "Администратор" : "Оператор"}
         navigationLabel="Навигация администратора"
         unreadCount={unread}
         items={[
           { href: "/admin", label: "Заявки", matchPrefixes: ["/admin", "/admin/briefs"] },
           { href: "/admin/projects", label: "Проекты" },
-          { href: "/admin/users", label: "Пользователи" },
-          { href: "/admin/privacy-requests", label: "Персональные данные" },
+          ...(admin.accessRole === "owner" ? [{ href: "/admin/users", label: "Пользователи" }, { href: "/admin/staff", label: "Сотрудники" }, { href: "/admin/privacy-requests", label: "Персональные данные" }] : []),
           { href: "/admin/events", label: "Журнал" },
-          { href: "/admin/system", label: "Система" },
+          ...(admin.accessRole === "owner" ? [{ href: "/admin/system", label: "Система" }] : []),
           { href: "/admin/notifications", label: "Уведомления" },
         ]}
         themeControl={<ThemeToggle />}

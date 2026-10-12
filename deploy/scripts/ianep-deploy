@@ -28,17 +28,34 @@ target=$(git_app rev-parse --verify refs/remotes/origin/master^{commit})
 git_app merge-base --is-ancestor "$current" "$target" || die 'Fast-forward is not possible'
 
 changed=$(git_app diff --name-only "$current" "$target" --)
-if printf '%s\n' "$changed" | grep -Eq '^prisma/(schema\.prisma|migrations/)'; then
-  die 'Prisma change requires a reviewed manual migration plan'
+migration=false
+prisma_changed=$(git_app diff --name-only "$current" "$target" -- prisma)
+if [[ -n "$prisma_changed" ]]; then
+  readonly rbac_base=0e1b38266be85c090cf00130ea23a5dae584e1df
+  readonly rbac_sql=prisma/migrations/20261011120000_admin_roles/migration.sql
+  readonly rbac_sql_sha256=eb5b9c2f010eff4f3789d8cc99079d7dd2fadea562d2775594fff2bb6fdfe3ba
+  expected_prisma=$(printf '%s\n%s' "$rbac_sql" 'prisma/schema.prisma')
+  [[ "$current" == "$rbac_base" && "$prisma_changed" == "$expected_prisma" ]] || die 'Prisma change requires a reviewed manual migration plan'
+  actual_sql_sha256=$(git_app show "$target:$rbac_sql" | sha256sum | cut -d ' ' -f 1)
+  [[ "$actual_sql_sha256" == "$rbac_sql_sha256" ]] || die 'Reviewed migration checksum mismatch'
+  readonly recovery="$repo/.release-recovery/release-20261012"
+  [[ -d "$recovery" && ! -L "$recovery" && -f "$recovery/manifest.json" ]] || die 'Verified recovery set is missing'
+  as_app bash -c 'cd "$1" && sha256sum -c SHA256SUMS >/dev/null && pg_restore --list database.dump >/dev/null && tar -tzf storage.tar.gz >/dev/null' _ "$recovery" || die 'Recovery set verification failed'
+  migration=true
 fi
 packages=false
 if printf '%s\n' "$changed" | grep -Eq '^(package\.json|package-lock\.json)$'; then packages=true; fi
-log "Preflight: current=$current target=$target clean=yes package_change=$packages prisma_change=no"
+log "Preflight: current=$current target=$target clean=yes package_change=$packages reviewed_migration=$migration"
 
 if [[ "$current" != "$target" ]]; then git_app merge --ff-only "$target"; fi
 if [[ "$packages" == true ]]; then log 'Installing dependencies'; as_app npm --prefix "$repo" ci; fi
+if [[ "$migration" == true ]]; then log 'Generating Prisma client'; as_app npm --prefix "$repo" run db:generate || die 'Prisma client generation failed'; fi
 log 'Building application'
 as_app npm --prefix "$repo" run build || die 'Build failed; service was not restarted. Inspect checkout and build output manually'
+if [[ "$migration" == true ]]; then
+  log 'Applying reviewed database migration'
+  as_app bash -c 'cd "$1" && ./node_modules/.bin/prisma migrate deploy' _ "$repo" || die 'Migration failed; service was not restarted. Inspect migration status and recover manually'
+fi
 log 'Restarting service'
 systemctl restart "$service" || die 'Restart failed; inspect service journal and recover manually'
 systemctl is-active --quiet "$service" || die 'Service is not active after restart'

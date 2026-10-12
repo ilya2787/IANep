@@ -20,6 +20,7 @@ function normalizedBriefData(data: CreateBriefRequestData) {
 }
 
 export class BriefStatusConflict extends Error {}
+export class BriefAccessDenied extends Error {}
 
 export type CreateBriefRequestData = {
   name: string;
@@ -66,12 +67,13 @@ export class BriefRepository {
     });
   }
 
-  async changeStatus(id: string, newStatus: BriefRequest["status"]) {
+  async changeStatus(id: string, newStatus: BriefRequest["status"], actorId: string, owner = false) {
     if (newStatus === "IN_PROGRESS") throw new BriefStatusConflict("Используйте создание проекта из заявки.");
     const settings = await getSystemSettings();
     return this.db.$transaction(async (transaction) => {
       const current = await transaction.briefRequest.findUnique({ where: { id }, select: { status: true } });
       if (!current) return null;
+      if (!owner && (current.status === "ARCHIVED" || newStatus === "ARCHIVED")) throw new BriefAccessDenied("Действие доступно только владельцу.");
       if (current.status === newStatus) return { status: current.status, changed: false };
 
       const updated = await transaction.briefRequest.updateMany({
@@ -86,7 +88,7 @@ export class BriefRepository {
           eventType: "BRIEF_STATUS_CHANGED",
           entityType: "BriefRequest",
           entityId: id,
-          metadata: { previousStatus: current.status, newStatus, actor: "ADMIN" },
+          metadata: { previousStatus: current.status, newStatus, actor: "ADMIN", actorId },
       });
 
       return { status: newStatus, changed: true };

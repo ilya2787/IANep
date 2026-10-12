@@ -6,10 +6,12 @@ import styles from "@/app/admin/admin.module.css";
 import { briefService } from "@/server/brief/brief.service";
 import { prisma } from "@/server/db/prisma";
 import { StatusForm } from "@/app/admin/status-form";
+import { requireAdmin } from "@/server/auth/admin-auth";
 
 type BriefPageProps = { params: Promise<{ id: string }> };
 
 export default async function BriefPage({ params }: BriefPageProps) {
+  const admin = await requireAdmin();
   const { id } = await params;
   const brief = await briefService.getForAdmin(id);
   if (!brief) notFound();
@@ -38,7 +40,7 @@ export default async function BriefPage({ params }: BriefPageProps) {
       <div className={styles.detailColumns}>
         <section className={styles.panel} aria-labelledby="status-title">
           <h2 id="status-title">Работа с заявкой</h2>
-          <StatusForm id={brief.id} currentStatus={brief.status} projectId={brief.project?.id} defaultTitle={`${projectTypeLabel(brief.projectType)} · ${brief.name}`} defaultUsername={`client-${brief.number}`} clients={clients} />
+          <StatusForm id={brief.id} currentStatus={brief.status} projectId={brief.project?.id} defaultTitle={`${projectTypeLabel(brief.projectType)} · ${brief.name}`} defaultUsername={`client-${brief.number}`} clients={clients} owner={admin.accessRole === "owner"} />
         </section>
         <section className={styles.panel} aria-labelledby="history-title">
           <h2 id="history-title">История</h2>

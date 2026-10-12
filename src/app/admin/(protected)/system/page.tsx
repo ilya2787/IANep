@@ -1,6 +1,6 @@
 import { backupAvailable, readStatus, successfulSets, latestSuccessfulDetails, readyDownload, ROOT } from "@/server/backup/core";
 import { BackupPanel } from "@/components/workspace/BackupPanel";
-import { requireAdmin } from "@/server/auth/admin-auth";
+import { requireOwner } from "@/server/auth/admin-auth";
 import { storageSummary } from "@/server/storage/lifecycle";
 import { cleanupOrphans, cleanupSelectedBriefs, cleanupSelectedProjects, updateAdminNotificationEmail, updateRetentionSettings } from "@/app/admin/system/actions";
 import { WorkspaceForm } from "@/components/workspace/forms";
@@ -16,7 +16,7 @@ const requestedPage = (value?: string) => {
 };
 
 export default async function SystemPage({ searchParams }: { searchParams: Promise<{ projectPage?: string; briefPage?: string }> }) {
-  const adminSession = await requireAdmin();
+  const adminSession = await requireOwner();
   const query = await searchParams;
   const summary = await storageSummary(requestedPage(query.projectPage), requestedPage(query.briefPage));
   const available = await backupAvailable();

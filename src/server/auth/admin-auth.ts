@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { adminRepository } from "@/server/auth/admin.repository";
 import { verifyAdminPassword } from "@/server/auth/admin-password";
 export { canAttemptAdminLogin, clearAdminLoginFailures, recordAdminLoginFailure } from "@/server/auth/login-rate-limit";
@@ -8,7 +8,9 @@ export { canAttemptAdminLogin, clearAdminLoginFailures, recordAdminLoginFailure 
 const SESSION_COOKIE = "ianep_admin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 12;
 
-type AdminSession = { role: "ADMIN"; adminId: string; username: string; sessionVersion: number; expiresAt: number };
+export type AdminRole = "owner" | "operator";
+type AdminSession = { role: "ADMIN"; accessRole: AdminRole; adminId: string; username: string; sessionVersion: number; expiresAt: number };
+export function isAdminRole(value: unknown): value is AdminRole { return value === "owner" || value === "operator"; }
 function getSessionSecret() {
   const sessionSecret = process.env.ADMIN_SESSION_SECRET;
   return sessionSecret && sessionSecret.length >= 32 ? sessionSecret : null;
@@ -29,15 +31,15 @@ const DUMMY_PASSWORD_HASH = "scrypt$16384$8$1$aWFuZXAtZHVtbXktYWRtaW4tc2FsdA$x7H
 export async function authenticateAdmin(username: string, password: string) {
   const admin = await adminRepository.findActiveByUsername(username);
   const passwordMatches = verifyAdminPassword(password, admin?.passwordHash ?? DUMMY_PASSWORD_HASH);
-  return admin && passwordMatches ? { id: admin.id, username: admin.username } : null;
+  return admin && passwordMatches && isAdminRole(admin.role) ? { id: admin.id, username: admin.username } : null;
 }
 
 export async function createAdminSession(admin: { id: string; username: string }) {
   const sessionSecret = getSessionSecret();
   if (!sessionSecret) throw new Error("Авторизация администратора не настроена");
   const current = await adminRepository.findActiveById(admin.id);
-  if (!current || current.username !== admin.username) throw new Error("Учётная запись администратора недоступна");
-  const session: AdminSession = { role: "ADMIN", adminId: admin.id, username: admin.username, sessionVersion: current.sessionVersion, expiresAt: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS };
+  if (!current || current.username !== admin.username || !isAdminRole(current.role)) throw new Error("Учётная запись администратора недоступна");
+  const session: AdminSession = { role: "ADMIN", accessRole: current.role, adminId: admin.id, username: admin.username, sessionVersion: current.sessionVersion, expiresAt: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS };
   const payload = Buffer.from(JSON.stringify(session)).toString("base64url");
   (await cookies()).set(SESSION_COOKIE, `${payload}.${sign(payload, sessionSecret)}`, {
     httpOnly: true,
@@ -62,9 +64,9 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   if (!payload || !signature || rest.length || !safeEqual(signature, sign(payload, sessionSecret))) return null;
   try {
     const session = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as AdminSession;
-    if (session.role !== "ADMIN" || typeof session.adminId !== "string" || typeof session.username !== "string" || !Number.isInteger(session.sessionVersion) || !Number.isFinite(session.expiresAt) || session.expiresAt <= Math.floor(Date.now() / 1000)) return null;
+    if (session.role !== "ADMIN" || !isAdminRole(session.accessRole) || typeof session.adminId !== "string" || typeof session.username !== "string" || !Number.isInteger(session.sessionVersion) || !Number.isFinite(session.expiresAt) || session.expiresAt <= Math.floor(Date.now() / 1000)) return null;
     const admin = await adminRepository.findActiveById(session.adminId);
-    if (!admin || admin.username !== session.username || admin.sessionVersion !== session.sessionVersion) return null;
+    if (!admin || admin.username !== session.username || admin.sessionVersion !== session.sessionVersion || admin.role !== session.accessRole) return null;
     return session;
   } catch {
     return null;
@@ -74,5 +76,11 @@ export async function getAdminSession(): Promise<AdminSession | null> {
 export async function requireAdmin() {
   const session = await getAdminSession();
   if (!session) redirect("/admin/login");
+  return session;
+}
+
+export async function requireOwner() {
+  const session = await requireAdmin();
+  if (session.accessRole !== "owner") notFound();
   return session;
 }

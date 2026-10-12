@@ -85,7 +85,7 @@ async function aggregatePreview(label: string, clientId: string | null, briefIds
   };
 }
 
-export async function registerPrivacyRequest(input: { kind: PersonalDataRequestKind; scope: PersonalDataRequestScope; targetId: string; receivedAt: Date; dueAt?: Date | null; channel: PersonalDataRequestChannel; lookupValue?: string | null }) {
+export async function registerPrivacyRequest(input: { kind: PersonalDataRequestKind; scope: PersonalDataRequestScope; targetId: string; receivedAt: Date; dueAt?: Date | null; channel: PersonalDataRequestChannel; lookupValue?: string | null }, actorId?: string) {
   const preview = await previewTarget(input.scope, input.targetId);
   if (!preview.targetExists) throw new WorkspaceError("Выбранный объект больше не существует. Обновите страницу.");
   let lookupType: PrivacyLookupType = "NONE";
@@ -98,7 +98,7 @@ export async function registerPrivacyRequest(input: { kind: PersonalDataRequestK
   }
   return prisma.$transaction(async tx => {
     const request = await tx.personalDataRequest.create({ data: { kind: input.kind, scope: input.scope, targetId: input.targetId, receivedAt: input.receivedAt, dueAt: input.dueAt, channel: input.channel, lookupType, lookupHash } });
-    await appendAudit(tx, { eventType: "PRIVACY_REQUEST_REGISTERED", entityType: "PERSONAL_DATA_REQUEST", entityId: request.id, metadata: { requestNumber: request.number, kind: request.kind, scope: request.scope, channel: request.channel } });
+    await appendAudit(tx, { eventType: "PRIVACY_REQUEST_REGISTERED", entityType: "PERSONAL_DATA_REQUEST", entityId: request.id, metadata: { requestNumber: request.number, kind: request.kind, scope: request.scope, channel: request.channel, actorId } });
     return request;
   });
 }
@@ -116,7 +116,7 @@ export function validateExclusions(scope: PersonalDataRequestScope, excluded: Pr
   if (scope === "CLIENT" && set.has("NOTIFICATIONS") && !set.has("PROJECTS")) throw new WorkspaceError("Уведомления проектов нельзя сохранить после удаления самих проектов.");
 }
 
-export async function preparePrivacyRequest(requestId: string, excluded: PrivacyCategory[], reason: string | null) {
+export async function preparePrivacyRequest(requestId: string, excluded: PrivacyCategory[], reason: string | null, actorId?: string) {
   const request = await prisma.personalDataRequest.findUnique({ where: { id: requestId } });
   if (!request?.targetId || request.status !== "REGISTERED") throw new WorkspaceError("Запрос уже изменён. Обновите страницу.");
   if (!request.scope) throw new WorkspaceError("Запрос уже очищен по сроку хранения.");
@@ -126,7 +126,7 @@ export async function preparePrivacyRequest(requestId: string, excluded: Privacy
   if (!preview.targetExists) throw new WorkspaceError("Целевой объект больше не существует.");
   return prisma.$transaction(async tx => {
     const updated = await tx.personalDataRequest.update({ where: { id: request.id }, data: { status: "READY", excludedCategories: excluded, exclusionReason: excluded.length ? reason!.trim() : null } });
-    await appendAudit(tx, { eventType: "PRIVACY_REQUEST_PREPARED", entityType: "PERSONAL_DATA_REQUEST", entityId: request.id, metadata: { requestNumber: request.number, excludedCategoryCount: excluded.length } });
+    await appendAudit(tx, { eventType: "PRIVACY_REQUEST_PREPARED", entityType: "PERSONAL_DATA_REQUEST", entityId: request.id, metadata: { requestNumber: request.number, excludedCategoryCount: excluded.length, actorId } });
     return updated;
   });
 }
@@ -167,7 +167,7 @@ async function eraseAuditLinks(tx: Prisma.TransactionClient, ids: string[]) {
   if (eventIds.length) await tx.auditEvent.deleteMany({ where: { id: { in: eventIds } } });
 }
 
-export async function executePrivacyRequest(requestId: string, confirmation: string) {
+export async function executePrivacyRequest(requestId: string, confirmation: string, actorId?: string) {
   const request = await prisma.personalDataRequest.findUnique({ where: { id: requestId } });
   if (!request?.targetId || request.status !== "READY") throw new WorkspaceError("Запрос не готов к исполнению. Обновите страницу.");
   if (confirmation.trim() !== `УДАЛИТЬ ${request.number}`) throw new WorkspaceError(`Введите точную фразу «УДАЛИТЬ ${request.number}».`);
@@ -223,7 +223,7 @@ export async function executePrivacyRequest(requestId: string, confirmation: str
       }
       const completedAt = new Date();
       await tx.personalDataRequest.update({ where: { id: request.id }, data: { targetId: null, kind: null, exclusionReason: null, status: "COMPLETED", completedAt, receiptExpiresAt: addPrivacyReceiptRetention(completedAt), destroyedCategories: destroyed.map(item => categoryLabels[item]), result: excluded.size ? "PARTIALLY_PRESERVED" : "DESTROYED", storageWarnings: 0 } });
-      await appendAudit(tx, { eventType: "PRIVACY_REQUEST_COMPLETED", entityType: "PERSONAL_DATA_REQUEST", entityId: request.id, metadata: { requestNumber: request.number, destroyedCategoryCount: destroyed.length, result: excluded.size ? "PARTIALLY_PRESERVED" : "DESTROYED", storageWarnings: 0 } });
+      await appendAudit(tx, { eventType: "PRIVACY_REQUEST_COMPLETED", entityType: "PERSONAL_DATA_REQUEST", entityId: request.id, metadata: { requestNumber: request.number, destroyedCategoryCount: destroyed.length, result: excluded.size ? "PARTIALLY_PRESERVED" : "DESTROYED", storageWarnings: 0, actorId } });
     });
   } catch (error) {
     await Promise.all(quarantined.flatMap(file => file.quarantine ? [rename(file.quarantine, file.source).catch(() => undefined)] : []));
