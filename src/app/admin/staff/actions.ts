@@ -7,6 +7,7 @@ import { hashAdminPassword } from "@/server/auth/admin-password";
 import { prisma } from "@/server/db/prisma";
 import { requireSameOrigin } from "@/server/security/request";
 import { appendAudit } from "@/server/security/audit-journal";
+import { deleteOperatorRecord, OperatorDeletionError } from "@/server/auth/delete-operator";
 import type { ActionState } from "@/app/client/actions";
 
 const username = z.string().trim().toLowerCase().regex(/^[a-z0-9._@+-]{3,100}$/);
@@ -45,4 +46,20 @@ export async function manageOperator(operatorId: string, command: string, _state
     revalidatePath("/admin/staff");
     return { ok: true, message: action === "block" ? "Доступ заблокирован, сеансы завершены." : action === "unblock" ? "Доступ восстановлен. Старые сеансы закрыты." : action === "reset" ? "Пароль изменён, все сеансы закрыты." : "Все сеансы оператора закрыты." };
   } catch (error) { return failure(error); }
+}
+
+export async function deleteOperator(operatorId: string, _state: ActionState, form: FormData): Promise<ActionState> {
+  await requireSameOrigin();
+  const owner = await requireOwner();
+  try {
+    const targetId = id.parse(operatorId);
+    if (form.get("confirmed") !== "yes" || form.get("confirmation") !== "УДАЛИТЬ") return { ok: false, message: "Подтвердите необратимое удаление и введите «УДАЛИТЬ»." };
+    await deleteOperatorRecord(owner.adminId, targetId);
+    revalidatePath("/admin/staff");
+    return { ok: true, message: "Оператор удалён. Все его сеансы завершены." };
+  } catch (error) {
+    if (error instanceof OperatorDeletionError) return { ok: false, message: error.message };
+    if (error instanceof z.ZodError) return { ok: false, message: "Некорректный идентификатор оператора." };
+    return { ok: false, message: "Не удалось удалить оператора. Повторите попытку." };
+  }
 }
