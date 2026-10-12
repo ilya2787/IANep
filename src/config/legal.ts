@@ -1,8 +1,8 @@
 export const LEGAL_DOCUMENTS = {
-  privacy: { version: "2026-10-11", effectiveDate: "даты публикации (редакция 11 октября 2026 года)" },
+  privacy: { version: "2026-10-11", effectiveDate: "12 октября 2026 года (редакция 11 октября 2026 года)" },
   briefConsent: { version: "1.0", effectiveDate: "6 октября 2026 года" },
-  cookies: { version: "2026-10-11", effectiveDate: "даты публикации (редакция 11 октября 2026 года)" },
-  clientTerms: { version: "2026-10-11", effectiveDate: "даты публикации (редакция 11 октября 2026 года)" },
+  cookies: { version: "2026-10-11", effectiveDate: "12 октября 2026 года (редакция 11 октября 2026 года)" },
+  clientTerms: { version: "2026-10-11", effectiveDate: "12 октября 2026 года (редакция 11 октября 2026 года)" },
 } as const;
 export const LEGAL_VERSIONS = {
   privacy: LEGAL_DOCUMENTS.privacy.version,
