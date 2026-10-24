@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const scriptPolicy = process.env.NODE_ENV === "production" ? "script-src 'self' 'unsafe-inline'" : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+const scriptPolicy = process.env.NODE_ENV === "production" ? "script-src 'self' 'unsafe-inline' https://mc.yandex.ru" : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mc.yandex.ru";
 const httpsOnlyDirectives = process.env.NODE_ENV === "production" && process.env.APP_BASE_URL?.startsWith("https://")
   ? "; upgrade-insecure-requests"
   : "";
@@ -23,8 +23,9 @@ const nextConfig: NextConfig = {
       { key: "X-Frame-Options", value: "DENY" },
       { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
       { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+      { key: "Referrer-Policy", value: "no-referrer" },
       ...(process.env.NODE_ENV === "production" ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }] : []),
-      { key: "Content-Security-Policy", value: `default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; ${scriptPolicy}; connect-src 'self'${httpsOnlyDirectives}` },
+      { key: "Content-Security-Policy", value: `default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; img-src 'self' data: blob: https://mc.yandex.ru https://mc.yandex.com; font-src 'self' data:; style-src 'self' 'unsafe-inline'; ${scriptPolicy}; connect-src 'self' https://mc.yandex.ru https://mc.yandex.com${httpsOnlyDirectives}` },
     ] }, ...["/admin", "/admin/:path*", "/client", "/client/:path*", "/api", "/api/:path*"].map(source => ({ source, headers: noindex }))];
   },
 };

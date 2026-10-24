@@ -93,6 +93,19 @@ model PersonalDataRequest {
   @@map("personal_data_requests")
 }
 
+model AnalyticsConsentEvent {
+  id            String   @id @default(uuid()) @db.Uuid
+  visitorId     String   @db.Uuid @map("visitor_id")
+  choice        String   @db.VarChar(16)
+  policyVersion String   @db.VarChar(32) @map("policy_version")
+  occurredAt    DateTime @default(now()) @map("occurred_at")
+  expiresAt     DateTime @map("expires_at")
+
+  @@index([visitorId, occurredAt])
+  @@index([expiresAt])
+  @@map("analytics_consent_events")
+}
+
 model BriefRequest {
   project     ClientProject?
   id          String             @id @default(uuid()) @db.Uuid

@@ -17,6 +17,7 @@ import styles from "./Brief.module.css";
 import Link from "next/link";
 import { LEGAL_ROUTES } from "@/config/legal";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { trackNewBrief } from "@/lib/metrika";
 
 type Errors = Record<string, string>;
 
@@ -199,6 +200,7 @@ export function Brief() {
         try { sessionStorage.setItem('ianep-brief-receipt', body.data.receipt); } catch {}
       }
       setStatus('success');
+      trackNewBrief(response.status, body.data);
     } catch {
       setErrorMessage('Не удалось получить подтверждение отправки. Проверьте соединение. Ответы сохранены; при повторной отправке возможна повторная заявка.');
       setStatus('error');
