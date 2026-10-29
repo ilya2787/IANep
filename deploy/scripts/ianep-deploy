@@ -29,23 +29,58 @@ git_app merge-base --is-ancestor "$current" "$target" || die 'Fast-forward is no
 
 changed=$(git_app diff --name-only "$current" "$target" --)
 migration=false
+metrika_release=false
 prisma_changed=$(git_app diff --name-only "$current" "$target" -- prisma)
 if [[ -n "$prisma_changed" ]]; then
   readonly rbac_base=0e1b38266be85c090cf00130ea23a5dae584e1df
   readonly rbac_sql=prisma/migrations/20261011120000_admin_roles/migration.sql
   readonly rbac_sql_sha256=eb5b9c2f010eff4f3789d8cc99079d7dd2fadea562d2775594fff2bb6fdfe3ba
   expected_prisma=$(printf '%s\n%s' "$rbac_sql" 'prisma/schema.prisma')
-  [[ "$current" == "$rbac_base" && "$prisma_changed" == "$expected_prisma" ]] || die 'Prisma change requires a reviewed manual migration plan'
-  actual_sql_sha256=$(git_app show "$target:$rbac_sql" | sha256sum | cut -d ' ' -f 1)
-  [[ "$actual_sql_sha256" == "$rbac_sql_sha256" ]] || die 'Reviewed migration checksum mismatch'
-  readonly recovery="$repo/.release-recovery/release-20261012"
-  [[ -d "$recovery" && ! -L "$recovery" && -f "$recovery/manifest.json" ]] || die 'Verified recovery set is missing'
-  as_app bash -c 'cd "$1" && sha256sum -c SHA256SUMS >/dev/null && pg_restore --list database.dump >/dev/null && tar -tzf storage.tar.gz >/dev/null' _ "$recovery" || die 'Recovery set verification failed'
+  if [[ "$current" == "$rbac_base" && "$prisma_changed" == "$expected_prisma" ]]; then
+    actual_sql_sha256=$(git_app show "$target:$rbac_sql" | sha256sum | cut -d ' ' -f 1)
+    [[ "$actual_sql_sha256" == "$rbac_sql_sha256" ]] || die 'Reviewed migration checksum mismatch'
+    readonly recovery="$repo/.release-recovery/release-20261012"
+    [[ -d "$recovery" && ! -L "$recovery" && -f "$recovery/manifest.json" ]] || die 'Verified recovery set is missing'
+    as_app bash -c 'cd "$1" && sha256sum -c SHA256SUMS >/dev/null && pg_restore --list database.dump >/dev/null && tar -tzf storage.tar.gz >/dev/null' _ "$recovery" || die 'Recovery set verification failed'
+  else
+    readonly metrika_base=9a3b04bfc582b91d67d76319dc63a6e070837d42
+    readonly metrika_reviewed=fb6a47188e69e1dbab5136f7021d669e1919e20e
+    readonly metrika_sql=prisma/migrations/20261024210000_analytics_consent_evidence/migration.sql
+    readonly metrika_sql_sha256=0badbba1f6d2c20187b3a1cd16ef352f74856dc1af696d774b0d8e62a883bfa7
+    expected_prisma=$(printf '%s\n%s' "$metrika_sql" 'prisma/schema.prisma')
+    [[ "$current" == "$metrika_base" && "$prisma_changed" == "$expected_prisma" ]] || die 'Prisma change requires a reviewed manual migration plan'
+    [[ $(git_app rev-parse "$target^") == "$metrika_reviewed" ]] || die 'Unexpected Metrika release parent'
+    supplemental=$(git_app diff --name-only "$metrika_reviewed" "$target" --)
+    [[ "$supplemental" == "$(printf '%s\n%s' 'deploy/scripts/ianep-deploy' 'docs/METRIKA_PRODUCTION_RELEASE_2026-10-29.md')" ]] || die 'Unexpected files after reviewed Metrika commit'
+    actual_sql_sha256=$(git_app show "$target:$metrika_sql" | sha256sum | cut -d ' ' -f 1)
+    [[ "$actual_sql_sha256" == "$metrika_sql_sha256" ]] || die 'Reviewed Metrika migration checksum mismatch'
+    readonly recovery=/var/backups/ianep/20261029T003457Z-a7594a6c
+    [[ -d "$recovery" && ! -L "$recovery" && -f "$recovery/manifest.json" ]] || die 'Metrika recovery set is missing'
+    jq -e '.state == "success" and .verified == true' "$recovery/manifest.json" >/dev/null || die 'Metrika recovery set is not verified'
+    ( cd "$recovery" && sha256sum -c SHA256SUMS >/dev/null && pg_restore --list database.dump >/dev/null && tar -tzf storage.tar.gz >/dev/null ) || die 'Metrika recovery set verification failed'
+    [[ $(find /var/lib/ianep/storage -type f | wc -l) -eq 0 ]] || die 'Live storage changed after reviewed restore drill'
+    [[ $(runuser -u postgres -- psql -d ianep_prod -Atc 'SELECT count(*) FROM public.stored_files') == 0 ]] || die 'Stored files appeared after reviewed restore drill'
+    (
+      set -Eeuo pipefail
+      drill_db="ianep_metrika_drill_$$"
+      drill_dir=$(mktemp -d /var/tmp/ianep-metrika-drill.XXXXXX)
+      cleanup() { runuser -u postgres -- dropdb --if-exists "$drill_db" >/dev/null; rm -rf -- "$drill_dir"; }
+      trap cleanup EXIT
+      runuser -u postgres -- createdb "$drill_db"
+      runuser -u postgres -- pg_restore --exit-on-error --no-owner --no-acl -d "$drill_db" < "$recovery/database.dump"
+      [[ $(runuser -u postgres -- psql -d "$drill_db" -Atc "SELECT count(*) FROM public._prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL") == 20 ]]
+      [[ $(runuser -u postgres -- psql -d "$drill_db" -Atc 'SELECT count(*) FROM public.stored_files') == 0 ]]
+      tar -tzf "$recovery/storage.tar.gz" | awk '/^\// || /(^|\/)\.\.($|\/)/ {bad=1} END {exit bad}'
+      tar -xzf "$recovery/storage.tar.gz" --no-same-owner --no-same-permissions -C "$drill_dir"
+      [[ $(find "$drill_dir" -type f | wc -l) -eq 0 ]]
+    ) || die 'Metrika isolated restore drill failed'
+    metrika_release=true
+  fi
   migration=true
 fi
 packages=false
 if printf '%s\n' "$changed" | grep -Eq '^(package\.json|package-lock\.json)$'; then packages=true; fi
-log "Preflight: current=$current target=$target clean=yes package_change=$packages reviewed_migration=$migration"
+log "Preflight: current=$current target=$target clean=yes package_change=$packages reviewed_migration=$migration metrika_release=$metrika_release"
 
 if [[ "$current" != "$target" ]]; then git_app merge --ff-only "$target"; fi
 if [[ "$packages" == true ]]; then log 'Installing dependencies'; as_app npm --prefix "$repo" ci; fi
