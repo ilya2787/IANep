@@ -10,7 +10,7 @@ test('Компактные настройки cookie доступны с кла�
     for (const theme of ['light', 'dark']) {
       await page.setViewportSize({ width, height: 900 });
       await page.addInitScript((value) => {
-        localStorage.setItem('ianep-analytics-choice-v1', 'necessary');
+        localStorage.setItem('ianep-analytics-choice-v2', 'necessary');
         localStorage.setItem('ianep-theme', value);
       }, theme);
       await page.goto('/legal/cookies');
@@ -55,7 +55,7 @@ test('Метрика: согласие, отказ и отзыв без внеш
   expect(requests).toEqual([]);
   await page.getByRole('button', { name: 'Настройки cookie' }).click();
   await page.getByRole('button', { name: 'Разрешить аналитику' }).click();
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('ianep-analytics-choice-v1'))).toBe('allowed');
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('ianep-analytics-choice-v2'))).toBe('allowed');
   await expect.poll(() => requests.length).toBe(1);
   expect(page.url()).toBe('http://localhost:3000/legal/cookies');
   expect(requests[0]).toBe(`https://mc.yandex.ru/metrika/tag.js?id=${metrikaId}`);
@@ -74,4 +74,32 @@ test('Метрика: согласие, отказ и отзыв без внеш
   expect(requests[2]).toBe(`https://mc.yandex.ru/metrika/tag.js?id=${metrikaId}`);
   await page.goto('/admin/login');
   expect(requests).toHaveLength(3);
+});
+
+
+test('Прежнее разрешение требует нового выбора без загрузки Метрики', async ({ page }) => {
+  const requests: string[] = [];
+  await page.route(/https:\/\/(?:[^/]+\.)?yandex\.(?:ru|com)\//, async (route) => { requests.push(route.request().url()); await route.abort(); });
+  await page.addInitScript(() => localStorage.setItem('ianep-analytics-choice-v1', 'allowed'));
+  await page.goto('/legal/cookies?contact=private@example.com');
+  await expect(page.getByRole('button', { name: 'Разрешить аналитику' })).toBeVisible();
+  expect(requests).toEqual([]);
+  await page.reload();
+  expect(requests).toEqual([]);
+  await page.getByRole('button', { name: 'Только необходимые' }).click();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('ianep-analytics-choice-v2'))).toBe('necessary');
+  expect(requests).toEqual([]);
+});
+
+
+test('Прежний отказ действует без повторного запроса; в кабинетах плашка не мешает работе', async ({ page }) => {
+  const requests: string[] = [];
+  await page.route(/https:\/\/(?:[^/]+\.)?yandex\.(?:ru|com)\//, async (route) => { requests.push(route.request().url()); await route.abort(); });
+  await page.addInitScript(() => localStorage.setItem('ianep-analytics-choice-v1', 'necessary'));
+  await page.goto('/legal/cookies');
+  await expect(page.getByRole('button', { name: 'Настройки cookie' })).toBeVisible();
+  expect(requests).toEqual([]);
+  await page.goto('/client/login');
+  await expect(page.getByRole('heading', { name: 'Аналитика и файлы cookie' })).toHaveCount(0);
+  expect(requests).toEqual([]);
 });

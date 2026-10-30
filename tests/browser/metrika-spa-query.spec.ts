@@ -6,7 +6,7 @@ test('тестовый счётчик не передаёт query при SPA н�
   page.on('request', (request) => {
     if (/https:\/\/(?:[^/]+\.)?yandex\.(?:ru|com)\//.test(request.url())) yandexRequests.push(request.url());
   });
-  await page.addInitScript(() => localStorage.setItem('ianep-analytics-choice-v1', 'allowed'));
+  await page.addInitScript(() => localStorage.setItem('ianep-analytics-choice-v2', 'allowed'));
   await page.goto('/legal/cookies');
   await expect.poll(() => yandexRequests.some((url) => url.includes('113771221')), { timeout: 15_000 }).toBe(true);
   await page.evaluate((value) => history.pushState({}, '', `/legal/cookies?contact=${value}`), marker);

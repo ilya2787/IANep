@@ -11,6 +11,7 @@ import { ANALYTICS_CHANGE_EVENT, analyticsChoice, setAnalyticsChoice, startMetri
 export function CookieNotice() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const privateArea = pathname.startsWith('/client') || pathname.startsWith('/admin');
   const choice = useSyncExternalStore(
     (notify) => {
       const onStorage = () => { if (analyticsChoice() !== 'allowed') stopMetrika(); notify(); };
@@ -42,10 +43,10 @@ export function CookieNotice() {
     } finally { setPending(false); }
   }
   return <>
-    {ready && (choice === null || editing) && <aside className={styles.notice} aria-labelledby="cookie-notice-title" aria-describedby="cookie-notice-description">
+    {ready && !privateArea && (choice === null || editing) && <aside className={styles.notice} aria-labelledby="cookie-notice-title" aria-describedby="cookie-notice-description">
       <div className={styles.content}>
         <h2 className={styles.title} id="cookie-notice-title">Аналитика и файлы cookie</h2>
-        <p className={styles.description} id="cookie-notice-description">Необходимые данные помогают работе сайта. С вашего разрешения Яндекс Метрика будет собирать статистику посещений и новых заявок. <Link href={LEGAL_ROUTES.cookies}>О файлах cookie</Link> и <Link href={LEGAL_ROUTES.privacy}>об обработке данных</Link>.</p>
+        <p className={styles.description} id="cookie-notice-description">Необходимые данные помогают работе сайта. После вашего разрешения Яндекс Метрика будет собирать статистику посещений и новых заявок; допустимые рекламные метки могут передаваться вместе с адресом страницы. Для редакции от 30 октября 2026 года требуется отдельный выбор. <Link href={LEGAL_ROUTES.cookies}>О файлах cookie</Link> и <Link href={LEGAL_ROUTES.privacy}>об обработке данных</Link>.</p>
         {error && <p role="alert" className={styles.description}>Не удалось записать выбор. Аналитика не включена; повторите действие позже.</p>}
         <div className={styles.actions}>
           <Button className={styles.action} variant="secondary" disabled={pending} onClick={() => void select('necessary')}>Только необходимые</Button>

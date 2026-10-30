@@ -1,7 +1,8 @@
 import { ANALYTICS_CONSENT_VERSION, ANALYTICS_VISITOR_KEY } from "@/config/analytics-consent";
 const localTestId = process.env.NODE_ENV === "production" ? NaN : Number(process.env.NEXT_PUBLIC_METRIKA_TEST_ID);
 export const METRIKA_ID = Number.isInteger(localTestId) && localTestId > 0 ? localTestId : 113770883;
-export const ANALYTICS_CHOICE_KEY = 'ianep-analytics-choice-v1';
+export const ANALYTICS_CHOICE_KEY = 'ianep-analytics-choice-v2';
+const LEGACY_ANALYTICS_CHOICE_KEY = 'ianep-analytics-choice-v1';
 export const ANALYTICS_CHANGE_EVENT = 'ianep:analytics-choice-change';
 const disableKey = `disableYaCounter${METRIKA_ID}`;
 let started = false;
@@ -70,7 +71,8 @@ export function analyticsChoice(): 'allowed' | 'necessary' | null {
   if (typeof window === 'undefined') return null;
   try {
     const value = localStorage.getItem(ANALYTICS_CHOICE_KEY);
-    return value === 'allowed' || value === 'necessary' ? value : null;
+    if (value === 'allowed' || value === 'necessary') return value;
+    return localStorage.getItem(LEGACY_ANALYTICS_CHOICE_KEY) === 'necessary' ? 'necessary' : null;
   } catch { return null; }
 }
 
@@ -103,12 +105,13 @@ function visitorId() {
 
 export async function setAnalyticsChoice(choice: 'allowed' | 'necessary') {
   const previous = analyticsChoice();
+  const legacyAllowed = localStorage.getItem(LEGACY_ANALYTICS_CHOICE_KEY) === 'allowed';
   if (choice === 'necessary') stopMetrika();
   if (choice === 'necessary') {
     localStorage.setItem(ANALYTICS_CHOICE_KEY, choice);
     window.dispatchEvent(new Event(ANALYTICS_CHANGE_EVENT));
   }
-  const action = choice === 'necessary' && previous === 'allowed' ? 'revoked' : choice;
+  const action = choice === 'necessary' && (previous === 'allowed' || (previous === null && legacyAllowed)) ? 'revoked' : choice;
   const response = await fetch('/api/analytics-consent', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', cache: 'no-store',
     body: JSON.stringify({ visitorId: visitorId(), choice: action, version: ANALYTICS_CONSENT_VERSION }),
@@ -148,7 +151,7 @@ export function startMetrika() {
     ecommerce: false, trackHash: false,
     accurateTrackBounce: false, sendTitle: false,
   });
-  // Путь без query и hash: туда могут попасть введённые посетителем данные.
+  // URL содержит только допустимые рекламные метки; остальные параметры и фрагмент удалены.
   target.ym(METRIKA_ID, 'hit', pageUrl);
   lastPageUrl = pageUrl;
   const script = document.createElement('script');
