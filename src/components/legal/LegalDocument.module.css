@@ -45,7 +45,7 @@
 .section p + p { margin-top: var(--space-4); }
 .section ul { display: grid; gap: var(--space-3); padding-left: 1.25rem; }
 .section a, .footer a { color: var(--color-lavender); }
-.footer { padding-block: var(--space-6); border-top: 1px solid var(--color-border); color: var(--color-muted); font-size: var(--text-sm); }
+.footer { padding-block: var(--space-6) calc(var(--space-6) + 3.75rem); border-top: 1px solid var(--color-border); color: var(--color-muted); font-size: var(--text-sm); }
 .footerInner { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-4); }
 @media (max-width: 48rem) { .hero, .layout { grid-template-columns: 1fr; } .toc { position: static; padding-bottom: var(--space-6); border-bottom: 1px solid var(--color-border); } .headerInner { min-height: 4rem; } .section { scroll-margin-top: calc(4rem + env(safe-area-inset-top) + var(--space-4)); } .back { display: none; } }
 

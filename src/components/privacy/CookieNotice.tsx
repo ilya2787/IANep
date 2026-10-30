@@ -53,6 +53,11 @@ export function CookieNotice() {
         </div>
       </div>
     </aside>}
-    {ready && choice !== null && !editing && <button type="button" className={styles.reopen} onClick={() => setEditing(true)}>Настройки cookie</button>}
+    {ready && choice !== null && !editing && <button type="button" className={styles.reopen} aria-label="Настройки cookie" title="Настройки cookie" onClick={() => setEditing(true)}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+        <path d="M12 2.5a2.3 2.3 0 0 0 3.15 2.13 2.4 2.4 0 0 0 3.22 3.22A2.3 2.3 0 0 0 20.5 11a2.3 2.3 0 0 0 1 1.9A9.5 9.5 0 1 1 11.1 2.55a2.3 2.3 0 0 0 .9-.05Z" />
+        <circle cx="8" cy="9" r="1" fill="currentColor" stroke="none" /><circle cx="14" cy="11" r="1" fill="currentColor" stroke="none" /><circle cx="10" cy="16" r="1" fill="currentColor" stroke="none" />
+      </svg>
+    </button>}
   </>;
 }

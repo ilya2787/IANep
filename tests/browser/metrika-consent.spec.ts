@@ -1,5 +1,45 @@
 import { expect, test } from '@playwright/test';
 
+test('Компактные настройки cookie доступны с клавиатуры во всех темах и размерах', async ({ page }) => {
+  const requests: string[] = [];
+  await page.route(/https:\/\/(?:[^/]+\.)?yandex\.(?:ru|com)\//, async (route) => {
+    requests.push(route.request().url());
+    await route.abort();
+  });
+  for (const width of [320, 375, 430, 1440]) {
+    for (const theme of ['light', 'dark']) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.addInitScript((value) => {
+        localStorage.setItem('ianep-analytics-choice-v1', 'necessary');
+        localStorage.setItem('ianep-theme', value);
+      }, theme);
+      await page.goto('/legal/cookies');
+      const button = page.getByRole('button', { name: 'Настройки cookie' });
+      await expect(button).toBeVisible();
+      await expect(button).toHaveAttribute('title', 'Настройки cookie');
+      const bounds = await button.boundingBox();
+      expect(bounds?.width).toBeGreaterThanOrEqual(44);
+      expect(bounds?.height).toBeGreaterThanOrEqual(44);
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      const coveredLinks = await page.evaluate(() => {
+        const control = document.querySelector('button[title="Настройки cookie"]')!.getBoundingClientRect();
+        return [...document.querySelectorAll('footer a')].filter((link) => {
+          const rect = link.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 && rect.left < control.right && rect.right > control.left && rect.top < control.bottom && rect.bottom > control.top;
+        }).map((link) => link.textContent);
+      });
+      expect(coveredLinks, `${width}px ${theme}`).toEqual([]);
+      await button.focus();
+      await expect(button).toBeFocused();
+      await page.keyboard.press('Enter');
+      await expect(page.getByRole('heading', { name: 'Аналитика и файлы cookie' })).toBeVisible();
+      await expect(button).toHaveCount(0);
+      expect(requests).toEqual([]);
+    }
+  }
+});
+
 test('Метрика: согласие, отказ и отзыв без внешней отправки', async ({ page }) => {
   const metrikaId = Number(process.env.NEXT_PUBLIC_METRIKA_TEST_ID) || 113770883;
   const requests: string[] = [];

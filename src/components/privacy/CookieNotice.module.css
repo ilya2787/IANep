@@ -36,7 +36,9 @@
 
 .actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .action { flex: 1 1 12rem; white-space: normal; line-height: 1.2; }
-.reopen { position: fixed; inset-inline-end: max(var(--space-3), env(safe-area-inset-right)); inset-block-end: max(var(--space-3), env(safe-area-inset-bottom)); z-index: 89; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: .5rem .75rem; color: var(--color-text); background: var(--color-surface); font: inherit; font-size: var(--text-sm); cursor: pointer; }
+.reopen { position: fixed; inset-inline-end: max(var(--space-3), env(safe-area-inset-right)); inset-block-end: max(var(--space-3), env(safe-area-inset-bottom)); z-index: 89; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--color-border); border-radius: 50%; color: var(--color-text); background: var(--color-surface); cursor: pointer; }
+.reopen svg { width: 22px; height: 22px; }
+.reopen:hover { color: var(--color-lavender); border-color: currentColor; }
 .reopen:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 
 @keyframes notice-in {
