@@ -18,3 +18,18 @@ test('тестовый счётчик не передаёт query при SPA н�
   expect(yandexRequests.some((url) => url.includes(marker))).toBe(false);
   expect(yandexRequests.filter((url) => url.includes('/watch')).every((url) => url.includes('113771221'))).toBe(true);
 });
+
+test('тестовый счётчик получает только разрешённые рекламные метки после согласия', async ({ page }) => {
+  const requests: string[] = [];
+  page.on('request', (request) => {
+    if (/https:\/\/(?:[^/]+\.)?yandex\.(?:ru|com)\//.test(request.url())) requests.push(request.url());
+  });
+  await page.goto('/legal/cookies?yclid=AbCd12345678&utm_source=yandex&utm_medium=cpc&utm_campaign=ianep_search_ru&utm_content=12345&utm_term=private@example.com&contact=private@example.com#private@example.com');
+  expect(requests).toEqual([]);
+  await page.getByRole('button', { name: 'Разрешить аналитику' }).click();
+  await expect.poll(() => page.url()).not.toContain('private@example.com');
+  await expect.poll(() => requests.some((url) => url.includes('/watch/113771221')), { timeout: 20_000 }).toBe(true);
+  expect(requests.some((url) => url.includes('private%40example.com') || url.includes('private@example.com'))).toBe(false);
+  expect(requests.some((url) => url.includes('AbCd12345678'))).toBe(true);
+  expect(requests.every((url) => !url.includes('/watch/') || url.includes('113771221'))).toBe(true);
+});

@@ -8,9 +8,35 @@ let started = false;
 let lastPageUrl: string | null = null;
 let navigationGuardInstalled = false;
 const publicPaths = new Set(["/", "/legal/privacy", "/legal/cookies", "/legal/brief-consent", "/legal/client-terms", "/projects/onyx-cleaning", "/projects/pass-system"]);
+function campaignQuery(url: URL) {
+  const allowed = new URLSearchParams();
+  const rules: Record<string, RegExp> = {
+    yclid: /^[A-Za-z0-9_-]{8,80}$/,
+    utm_source: /^yandex$/,
+    utm_medium: /^cpc$/,
+    utm_campaign: /^ianep_search_ru$/,
+    utm_content: /^[0-9]{1,20}$/,
+  };
+  for (const [key, rule] of Object.entries(rules)) {
+    const values = url.searchParams.getAll(key);
+    if (values.length === 1 && rule.test(values[0])) allowed.set(key, values[0]);
+  }
+  const query = allowed.toString();
+  return query ? `?${query}` : '';
+}
+function cleanPublicAddress() {
+  const url = new URL(location.href);
+  const path = url.pathname === '/' ? '/' : url.pathname.replace(/\/$/, '');
+  if (url.origin !== location.origin || !publicPaths.has(path)) return false;
+  const safe = `${url.pathname}${campaignQuery(url)}`;
+  if (`${url.pathname}${url.search}${url.hash}` !== safe) history.replaceState(history.state, '', safe);
+  return true;
+}
 function safePageUrl() {
   const path = location.pathname === "/" ? "/" : location.pathname.replace(/\/$/, "");
-  return !location.search && publicPaths.has(path) ? `${location.origin}${path}` : null;
+  if (!publicPaths.has(path)) return null;
+  const url = new URL(location.href);
+  return !url.hash && url.search === campaignQuery(url) ? `${location.origin}${path}${url.search}` : null;
 }
 
 type MetrikaWindow = Window & {
@@ -36,7 +62,7 @@ function guardNavigation() {
 }
 function safeUrl(url: URL) {
   const path = url.pathname === '/' ? '/' : url.pathname.replace(/\/$/, '');
-  return url.origin === location.origin && !url.search && publicPaths.has(path);
+  return url.origin === location.origin && publicPaths.has(path) && !url.hash && url.search === campaignQuery(url);
 }
 export function stopMetrika() { if (typeof window !== 'undefined') { disableCounter(true); clearMetrikaStorage(); } }
 
@@ -102,6 +128,7 @@ export async function setAnalyticsChoice(choice: 'allowed' | 'necessary') {
 export function startMetrika() {
   if (typeof window === 'undefined' || analyticsChoice() !== 'allowed') return;
   guardNavigation();
+  if (!cleanPublicAddress()) { if (started) stopMetrika(); return; }
   const pageUrl = safePageUrl();
   if (!pageUrl) { if (started) { stopMetrika(); lastPageUrl = null; } return; }
   const target = metrikaWindow();

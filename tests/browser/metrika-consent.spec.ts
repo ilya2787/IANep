@@ -56,10 +56,12 @@ test('Метрика: согласие, отказ и отзыв без внеш
   await page.getByRole('button', { name: 'Настройки cookie' }).click();
   await page.getByRole('button', { name: 'Разрешить аналитику' }).click();
   await expect.poll(() => page.evaluate(() => localStorage.getItem('ianep-analytics-choice-v1'))).toBe('allowed');
-  expect(requests).toEqual([]);
-  await page.goto('/legal/cookies');
   await expect.poll(() => requests.length).toBe(1);
+  expect(page.url()).toBe('http://localhost:3000/legal/cookies');
   expect(requests[0]).toBe(`https://mc.yandex.ru/metrika/tag.js?id=${metrikaId}`);
+  await page.goto('/legal/cookies');
+  await expect.poll(() => requests.length).toBe(2);
+  expect(requests[1]).toBe(`https://mc.yandex.ru/metrika/tag.js?id=${metrikaId}`);
   const calls = await page.evaluate(() => (window as Window & { ym?: { a?: unknown[][] } }).ym?.a ?? []);
   expect(calls.map((call) => call[1])).toEqual(['init', 'hit']);
   expect(calls[0][2]).toMatchObject({ defer: true, clickmap: false, webvisor: false, ecommerce: false, trackHash: false, trackLinks: false });
@@ -68,8 +70,8 @@ test('Метрика: согласие, отказ и отзыв без внеш
   await page.getByRole('button', { name: 'Только необходимые' }).click();
   await page.getByRole('button', { name: 'Настройки cookie' }).click();
   await page.getByRole('button', { name: 'Разрешить аналитику' }).click();
-  await expect.poll(() => requests.length).toBe(2);
-  expect(requests[1]).toBe(`https://mc.yandex.ru/metrika/tag.js?id=${metrikaId}`);
+  await expect.poll(() => requests.length).toBe(3);
+  expect(requests[2]).toBe(`https://mc.yandex.ru/metrika/tag.js?id=${metrikaId}`);
   await page.goto('/admin/login');
-  expect(requests).toHaveLength(2);
+  expect(requests).toHaveLength(3);
 });
