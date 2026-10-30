@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('Метрика: согласие, отказ и отзыв без внешней отправки', async ({ page }) => {
+  const metrikaId = Number(process.env.NEXT_PUBLIC_METRIKA_TEST_ID) || 113770883;
   const requests: string[] = [];
   await page.route(/https:\/\/(?:[^/]+\.)?yandex\.(?:ru|com)\//, async (route) => {
     requests.push(route.request().url());
@@ -14,10 +15,11 @@ test('Метрика: согласие, отказ и отзыв без внеш
   expect(requests).toEqual([]);
   await page.getByRole('button', { name: 'Настройки cookie' }).click();
   await page.getByRole('button', { name: 'Разрешить аналитику' }).click();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('ianep-analytics-choice-v1'))).toBe('allowed');
   expect(requests).toEqual([]);
   await page.goto('/legal/cookies');
   await expect.poll(() => requests.length).toBe(1);
-  expect(requests[0]).toBe('https://mc.yandex.ru/metrika/tag.js?id=113770883');
+  expect(requests[0]).toBe(`https://mc.yandex.ru/metrika/tag.js?id=${metrikaId}`);
   const calls = await page.evaluate(() => (window as Window & { ym?: { a?: unknown[][] } }).ym?.a ?? []);
   expect(calls.map((call) => call[1])).toEqual(['init', 'hit']);
   expect(calls[0][2]).toMatchObject({ defer: true, clickmap: false, webvisor: false, ecommerce: false, trackHash: false, trackLinks: false });
@@ -27,7 +29,7 @@ test('Метрика: согласие, отказ и отзыв без внеш
   await page.getByRole('button', { name: 'Настройки cookie' }).click();
   await page.getByRole('button', { name: 'Разрешить аналитику' }).click();
   await expect.poll(() => requests.length).toBe(2);
-  expect(requests[1]).toBe('https://mc.yandex.ru/metrika/tag.js?id=113770883');
+  expect(requests[1]).toBe(`https://mc.yandex.ru/metrika/tag.js?id=${metrikaId}`);
   await page.goto('/admin/login');
   expect(requests).toHaveLength(2);
 });
